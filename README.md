@@ -1,4 +1,4 @@
-# 🎮 Escape Room
+# 🎮 Jogo de Escape Room
 
 > Projeto escolar desenvolvido em dupla utilizando HTML, CSS e JavaScript.
 
@@ -14,7 +14,7 @@ O objetivo é criar uma experiência interativa que combine **lógica, programa�
 * **CSS3** — estilos, layout e aparência
 * **JavaScript** — lógica, interações e funcionamento do jogo
 * **Git + GitHub** — versionamento e colaboração
-* **Vercel** - Hospedagem
+* **Vercel** — Hospedagem
 
 ## 📁 Estrutura do projeto
 
@@ -100,7 +100,6 @@ cd escapeRoom
 🚧 **Em desenvolvimento**
 
 O projeto está sendo desenvolvido e novas funcionalidades, desafios e melhorias serão adicionados ao longo do trabalho.
-
 ---
 
-⭐ Projeto desenvolvido para fins escolares.
+⭐ Projeto desenvolvido para fins escolar
