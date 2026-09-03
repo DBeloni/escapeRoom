@@ -3,62 +3,80 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moderno e Simples</title>
+    <title>Mundo Infinito com Limites</title>
     <style>
         body {
             margin: 0;
-            background-color: #f0f0f0;
             overflow: hidden;
             height: 100vh;
-            position: relative;
+            background-color: #e5e5e5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
+        /* O cenário gigante que vai se mover */
+        #cenario {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            /* Cria um chão quadriculado simples para você ver o movimento */
+            background-image: 
+                linear-gradient(to right, #ccc 1px, transparent 1px),
+                linear-gradient(to bottom, #ccc 1px, transparent 1px);
+            background-size: 40px 40px; 
+        }
+
+        /* O bloco azul fica FIXO no centro da tela agora */
         #bloco {
             width: 50px;
             height: 50px;
             background-color: blue;
-            position: absolute;
-            top: 200px;
-            left: 200px;
+            z-index: 10; /* Garante que o bloco fique acima do cenário */
         }
     </style>
 </head>
 <body>
 
+    <div id="cenario"></div>
     <div id="bloco"></div>
 
     <script>
-        const bloco = document.getElementById('bloco');
+        const cenario = document.getElementById('cenario');
         
-        // Variáveis simples e diretas
-        let x = 200;
-        let y = 200;
+        // Posição do jogador no mundo
+        let x = 0;
+        let y = 0;
         const velocidade = 6;
 
-        // O jeito mais simples e moderno de guardar as teclas pressionadas
+        // Limites do mundo (Ex: o mundo tem 1000px para cada lado)
+        const limiteMaximo = 1000;
+        const limiteMinimo = -1000;
+
         const teclas = {};
 
-        // Quando aperta a tecla, ela vira "true" dentro do objeto
         window.addEventListener('keydown', (e) => teclas[e.key.toLowerCase()] = true);
-
-        // Quando solta a tecla, ela deixa de ser "true" (deletamos ela)
         window.addEventListener('keyup', (e) => delete teclas[e.key.toLowerCase()]);
 
-        // Loop do jogo ultra simples e limpo
         const loop = () => {
             if (teclas.w) y -= velocidade;
             if (teclas.s) y += velocidade;
             if (teclas.a) x -= velocidade;
             if (teclas.d) x += velocidade;
 
-            // Atualiza a tela usando o padrão moderno de crases (Template Strings)
-            bloco.style.top = `${y}px`;
-            bloco.style.left = `${x}px`;
+            // TRAVA DE LIMITE (Se passar do limite, ele volta para o limite)
+            if (x > limiteMaximo) x = limiteMaximo;
+            if (x < limiteMinimo) x = limiteMinimo;
+            if (y > limiteMaximo) y = limiteMaximo;
+            if (y < limiteMinimo) y = limiteMinimo;
+
+            // O TRUQUE: Movemos o cenário ao contrário! 
+            // Se o jogador vai para a direita (+x), o cenário vai para a esquerda (-x)
+            cenario.style.backgroundPosition = `${-x}px ${-y}px`;
 
             requestAnimationFrame(loop);
         };
 
-        // Inicia o movimento suave
         loop();
     </script>
 </body>
