@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo Infinito com Limites</title>
+    <title>Mundo com Obstáculo</title>
     <style>
         body {
             margin: 0;
@@ -15,41 +15,55 @@
             align-items: center;
         }
 
-        /* O cenário gigante que vai se mover */
         #cenario {
             position: absolute;
             width: 100vw;
             height: 100vh;
-            /* Cria um chão quadriculado simples para você ver o movimento */
             background-image: 
                 linear-gradient(to right, #ccc 1px, transparent 1px),
                 linear-gradient(to bottom, #ccc 1px, transparent 1px);
             background-size: 40px 40px; 
         }
 
-        /* O bloco azul fica FIXO no centro da tela agora */
+        /* O bloco azul do jogador (fixo no centro) */
         #bloco {
             width: 50px;
             height: 50px;
             background-color: blue;
-            z-index: 10; /* Garante que o bloco fique acima do cenário */
+            z-index: 10;
+        }
+
+        /* O obstáculo vermelho */
+        #obstaculo {
+            width: 80px;
+            height: 80px;
+            background-color: red;
+            position: absolute;
+            z-index: 5;
         }
     </style>
 </head>
 <body>
 
     <div id="cenario"></div>
+    <!-- Adicionamos o obstáculo no HTML -->
+    <div id="obstaculo"></div>
     <div id="bloco"></div>
 
     <script>
         const cenario = document.getElementById('cenario');
+        const obstaculo = document.getElementById('obstaculo');
         
         // Posição do jogador no mundo
         let x = 0;
         let y = 0;
         const velocidade = 6;
+        const tamanhoJogador = 50;
 
-        // Limites do mundo (Ex: o mundo tem 1000px para cada lado)
+        // Posição fixa do obstáculo no mundo (X: 200, Y: 100)
+        const obs = { x: 200, y: 100, largura: 80, altura: 80 };
+
+        // Limites do mundo
         const limiteMaximo = 1000;
         const limiteMinimo = -1000;
 
@@ -59,20 +73,45 @@
         window.addEventListener('keyup', (e) => delete teclas[e.key.toLowerCase()]);
 
         const loop = () => {
-            if (teclas.w) y -= velocidade;
-            if (teclas.s) y += velocidade;
-            if (teclas.a) x -= velocidade;
-            if (teclas.d) x += velocidade;
+            // Guardamos a posição antiga caso a gente precise voltar atrás (se bater)
+            let proximoX = x;
+            let proximoY = y;
 
-            // TRAVA DE LIMITE (Se passar do limite, ele volta para o limite)
-            if (x > limiteMaximo) x = limiteMaximo;
-            if (x < limiteMinimo) x = limiteMinimo;
-            if (y > limiteMaximo) y = limiteMaximo;
-            if (y < limiteMinimo) y = limiteMinimo;
+            if (teclas.w) proximoY -= velocidade;
+            if (teclas.s) proximoY += velocidade;
+            if (teclas.a) proximoX -= velocidade;
+            if (teclas.d) proximoX += velocidade;
 
-            // O TRUQUE: Movemos o cenário ao contrário! 
-            // Se o jogador vai para a direita (+x), o cenário vai para a esquerda (-x)
+            // TRAVA DE LIMITE DO MUNDO
+            if (proximoX > limiteMaximo) proximoX = limiteMaximo;
+            if (proximoX < limiteMinimo) proximoX = limiteMinimo;
+            if (proximoY > limiteMaximo) proximoY = limiteMaximo;
+            if (proximoY < limiteMinimo) proximoY = limiteMinimo;
+
+            // DETECÇÃO DE COLISÃO (A matemática para ver se dois quadrados se sobrepõem)
+            const bateuNoObstaculo = 
+                proximoX < obs.x + obs.largura &&
+                proximoX + tamanhoJogador > obs.x &&
+                proximoY < obs.y + obs.altura &&
+                proximoY + tamanhoJogador > obs.y;
+
+            // Se NÃO bateu, nós aceitamos a nova posição do jogador
+            if (!bateuNoObstaculo) {
+                x = proximoX;
+                y = proximoY;
+            }
+
+            // Move o fundo do cenário
             cenario.style.backgroundPosition = `${-x}px ${-y}px`;
+
+            // Move o obstáculo na tela baseado na posição da "câmera"
+            // Como o jogador está no centro (0,0 da tela), calculamos a distância dele para o obstáculo
+            const telaCentroX = window.innerWidth / 2;
+            const telaCentroY = window.innerHeight / 2;
+            
+            // Posiciona a caixa vermelha no lugar certo do mundo em relação ao jogador
+            obstaculo.style.left = `${telaCentroX - (tamanhoJogador / 2) + (obs.x - x)}px`;
+            obstaculo.style.top = `${telaCentroY - (tamanhoJogador / 2) + (obs.y - y)}px`;
 
             requestAnimationFrame(loop);
         };
