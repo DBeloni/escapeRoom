@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo com Inventário FIFO</title>
+    <title>Mundo com Inventário FIFO (Modernizado)</title>
     <style>
         body { margin: 0; overflow: hidden; height: 100vh; background-color: #e5e5e5; display: flex; justify-content: center; align-items: center; font-family: Arial, sans-serif;}
         #cenario { position: absolute; width: 100vw; height: 100vh; background-image: linear-gradient(to right, #ccc 1px, transparent 1px), linear-gradient(to bottom, #ccc 1px, transparent 1px); background-size: 40px 40px; }
         
         #bloco { width: 50px; height: 50px; background-color: blue; z-index: 10; }
-        #obstaculo { width: 80px; height: 80px; background-color: red; position: absolute; z-index: 5; }
+        #obstaculo { width: 80px; height: 80px; background-color: red; position: absolute; z-index: 5; left: 0; top: 0; }
         
-        /* Nova Interface do Inventário */
+        /* Interface do Inventário */
         #ui-inventario { position: absolute; top: 20px; left: 20px; background: white; border: 2px solid black; padding: 10px; z-index: 20; min-width: 150px; font-weight: bold;}
         #lista-itens { list-style: none; padding: 0; margin: 10px 0 0 0; }
         #lista-itens li { padding: 5px; margin-bottom: 5px; border-radius: 4px; color: white; text-align: center; text-shadow: 1px 1px 2px black;}
         
         /* Container para desenhar os itens no chão */
         #chao { position: absolute; width: 100vw; height: 100vh; z-index: 4; }
-        .item-chao { width: 30px; height: 30px; border-radius: 50%; position: absolute; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);}
+        .item-chao { width: 30px; height: 30px; border-radius: 50%; position: absolute; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5); left: 0; top: 0; }
     </style>
 </head>
 <body>
@@ -29,7 +29,7 @@
     </div>
 
     <div id="cenario"></div>
-    <div id="chao"></div> <!-- Onde os itens vão aparecer -->
+    <div id="chao"></div>
     <div id="obstaculo"></div>
     <div id="bloco"></div>
 
@@ -39,18 +39,15 @@
         const chao = document.getElementById('chao');
         const listaUI = document.getElementById('lista-itens');
 
-        let x = 0;
-        let y = 0;
+        let x = 0, y = 0;
         const velocidade = 6;
         const tamanhoJogador = 50;
         const obs = { x: 200, y: 100, largura: 80, altura: 80 };
 
         // --- SISTEMA DE INVENTÁRIO E ITENS ---
-        let inventario = []; // Fila do inventário
-        const raioColeta = 60; // Distância máxima para conseguir pegar
-        const tamanhoItem = 30;
-
-        // Itens espalhados pelo mapa
+        const inventario = []; 
+        const raioColeta = 60; 
+        
         let itensNoMapa = [
             { nome: 'Moeda de Ouro', cor: 'gold', x: 300, y: 0 },
             { nome: 'Cristal Roxo', cor: 'purple', x: -200, y: 150 },
@@ -59,61 +56,43 @@
 
         const teclas = {};
 
-        // Atualiza a tela de UI do inventário
+        // Atualiza a tela de UI do inventário usando .map() e .join() (Adeus innerHTML em loop)
         const atualizarInventarioUI = () => {
-            listaUI.innerHTML = '';
-            if(inventario.length === 0) listaUI.innerHTML = '<li style="color:black; font-weight:normal;">Vazio</li>';
-            inventario.forEach(item => {
-                listaUI.innerHTML += `<li style="background-color: ${item.cor};">${item.nome}</li>`;
-            });
+            listaUI.innerHTML = inventario.length 
+                ? inventario.map(item => `<li style="background-color: ${item.cor};">${item.nome}</li>`).join('')
+                : '<li style="color:black; font-weight:normal;">Vazio</li>';
         };
         atualizarInventarioUI();
 
-        // Fórmula de distância entre dois pontos (Teorema de Pitágoras)
-        const calcularDistancia = (x1, y1, x2, y2) => {
-            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-        };
-
-        window.addEventListener('keydown', (e) => {
-            const tecla = e.key.toLowerCase();
+        // Window Events com desestruturação ({ key })
+        window.addEventListener('keydown', ({ key }) => {
+            const tecla = key.toLowerCase();
             teclas[tecla] = true;
 
-            // --- LÓGICA DE AÇÃO (E = Coletar, Q = Largar) ---
             if (tecla === 'e') {
-                for (let i = 0; i < itensNoMapa.length; i++) {
-                    const item = itensNoMapa[i];
-                    // Calcula distância do centro do jogador para o centro do item
-                    const dist = calcularDistancia(x + 25, y + 25, item.x + 15, item.y + 15);
-                    
-                    if (dist <= raioColeta) {
-                        inventario.push(item); // Adiciona no fim da fila
-                        itensNoMapa.splice(i, 1); // Remove do mapa
-                        atualizarInventarioUI();
-                        break; // Coleta apenas 1 por vez
-                    }
+                // Usa findIndex e Math.hypot em vez do for e cálculo manual de Pitágoras
+                const index = itensNoMapa.findIndex(item => 
+                    Math.hypot((x + 25) - (item.x + 15), (y + 25) - (item.y + 15)) <= raioColeta
+                );
+
+                if (index !== -1) {
+                    inventario.push(...itensNoMapa.splice(index, 1)); // Remove do mapa e joga no fim da fila
+                    atualizarInventarioUI();
                 }
             }
 
             if (tecla === 'q' && inventario.length > 0) {
-                const itemLargado = inventario.shift(); // Remove o PRIMEIRO item (FIFO)
-                // Coloca o item exatamente onde o jogador está agora
-                itemLargado.x = x;
-                itemLargado.y = y;
-                itensNoMapa.push(itemLargado); // Devolve pro mapa
+                // Remove o PRIMEIRO (Shift) e já mescla as coordenadas novas (x, y) com Spread Operator
+                itensNoMapa.push({ ...inventario.shift(), x, y }); 
                 atualizarInventarioUI();
             }
         });
         
-        window.addEventListener('keyup', (e) => delete teclas[e.key.toLowerCase()]);
+        window.addEventListener('keyup', ({ key }) => delete teclas[key.toLowerCase()]);
 
         const loop = () => {
-            let proximoX = x;
-            let proximoY = y;
-
-            if (teclas.w) proximoY -= velocidade;
-            if (teclas.s) proximoY += velocidade;
-            if (teclas.a) proximoX -= velocidade;
-            if (teclas.d) proximoX += velocidade;
+            let proximoX = x + (teclas.d ? velocidade : 0) - (teclas.a ? velocidade : 0);
+            let proximoY = y + (teclas.s ? velocidade : 0) - (teclas.w ? velocidade : 0);
 
             const bateuNoObstaculo =
                 proximoX < obs.x + obs.largura && proximoX + tamanhoJogador > obs.x &&
@@ -124,25 +103,22 @@
                 y = proximoY;
             }
 
+            // Otimização de Performance: Usando Transform / Translate em vez de Top/Left
             cenario.style.backgroundPosition = `${-x}px ${-y}px`;
 
             const telaCentroX = window.innerWidth / 2;
             const telaCentroY = window.innerHeight / 2;
 
-            obstaculo.style.left = `${telaCentroX - (tamanhoJogador / 2) + (obs.x - x)}px`;
-            obstaculo.style.top = `${telaCentroY - (tamanhoJogador / 2) + (obs.y - y)}px`;
+            obstaculo.style.transform = `translate(${telaCentroX - (tamanhoJogador / 2) + (obs.x - x)}px, ${telaCentroY - (tamanhoJogador / 2) + (obs.y - y)}px)`;
 
-            // --- DESENHANDO OS ITENS NO CHÃO ---
-            chao.innerHTML = ''; // Limpa os itens antigos da tela
-            itensNoMapa.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'item-chao';
-                div.style.backgroundColor = item.cor;
-                // Posiciona baseado na câmera, igual fazemos com o obstáculo
-                div.style.left = `${telaCentroX - (tamanhoJogador / 2) + (item.x - x)}px`;
-                div.style.top = `${telaCentroY - (tamanhoJogador / 2) + (item.y - y)}px`;
-                chao.appendChild(div);
-            });
+            // --- DESENHANDO OS ITENS NO CHÃO COM TEMPLATE LITERALS ---
+            // Substitui totalmente o document.createElement() por uma geração de string declarativa
+            chao.innerHTML = itensNoMapa.map(item => `
+                <div class="item-chao" style="
+                    background-color: ${item.cor}; 
+                    transform: translate(${telaCentroX - (tamanhoJogador / 2) + (item.x - x)}px, ${telaCentroY - (tamanhoJogador / 2) + (item.y - y)}px);">
+                </div>
+            `).join('');
 
             requestAnimationFrame(loop);
         };
