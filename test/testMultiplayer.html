@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mundo Multiplayer - Colisão Blindada</title>
+    <title>Mundo Multiplayer - Empurra-Empurra</title>
     <style>
-        /* Reset rigoroso para evitar que margens invisíveis quebrem a colisão */
+        /* Reset rigoroso */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,7 +13,7 @@
         }
 
         body {
-            overflow: hidden; /* Remove barras de rolagem */
+            overflow: hidden;
             background-color: #e5e5e5;
             width: 100vw;
             height: 100vh;
@@ -57,7 +57,6 @@
     <div id="jogador4" class="objeto-solido"></div>
 
     <script>
-        // Garante que o tamanho da tela será o tamanho exato da janela
         const LARGURA_TELA = window.innerWidth;
         const ALTURA_TELA = window.innerHeight;
         const VELOCIDADE = 6;
@@ -79,7 +78,6 @@
         window.addEventListener('keydown', (e) => teclas[e.key.toLowerCase()] = true);
         window.addEventListener('keyup', (e) => delete teclas[e.key.toLowerCase()]);
 
-        // Função de colisão AABB (Axis-Aligned Bounding Box)
         function colidiu(x1, y1, w1, h1, x2, y2, w2, h2) {
             return x1 < x2 + w2 &&
                    x1 + w1 > x2 &&
@@ -101,52 +99,100 @@
                 if (dx !== 0) {
                     let novoX = jog.x + dx;
                     let podeMover = true;
+                    let jogadoresParaEmpurrar = [];
 
-                    // Borda da tela
+                    // Borda da tela e Obstáculo para o jogador atual
                     if (novoX < 0 || novoX + jog.w > LARGURA_TELA) podeMover = false;
-
-                    // Obstáculo
                     if (podeMover && colidiu(novoX, jog.y, jog.w, jog.h, obs.x, obs.y, obs.w, obs.h)) podeMover = false;
 
-                    // Outros jogadores
                     if (podeMover) {
                         for (let i = 0; i < jogadores.length; i++) {
                             if (i !== index) {
                                 let outro = jogadores[i];
+                                // Se bati em outro jogador...
                                 if (colidiu(novoX, jog.y, jog.w, jog.h, outro.x, outro.y, outro.w, outro.h)) {
-                                    podeMover = false;
-                                    break;
+                                    
+                                    let outroNovoX = outro.x + dx;
+                                    let outroPodeMover = true;
+
+                                    // Verifica se o outro jogador pode ser empurrado para a nova posição
+                                    if (outroNovoX < 0 || outroNovoX + outro.w > LARGURA_TELA) outroPodeMover = false;
+                                    if (colidiu(outroNovoX, outro.y, outro.w, outro.h, obs.x, obs.y, obs.w, obs.h)) outroPodeMover = false;
+
+                                    // Verifica se o outro jogador não vai bater em um TERCEIRO jogador (sem trenzinhos)
+                                    for (let j = 0; j < jogadores.length; j++) {
+                                        if (j !== index && j !== i) {
+                                            let terceiro = jogadores[j];
+                                            if (colidiu(outroNovoX, outro.y, outro.w, outro.h, terceiro.x, terceiro.y, terceiro.w, terceiro.h)) {
+                                                outroPodeMover = false;
+                                            }
+                                        }
+                                    }
+
+                                    if (outroPodeMover) {
+                                        jogadoresParaEmpurrar.push(outro);
+                                    } else {
+                                        podeMover = false; // Se ele não pode se mover, eu também não posso
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                    if (podeMover) jog.x = novoX;
+
+                    if (podeMover) {
+                        jog.x = novoX;
+                        // Aplica o movimento nos jogadores que foram empurrados
+                        jogadoresParaEmpurrar.forEach(j => j.x += dx);
+                    }
                 }
 
                 // --- MOVIMENTO Y ---
                 if (dy !== 0) {
                     let novoY = jog.y + dy;
                     let podeMover = true;
+                    let jogadoresParaEmpurrar = [];
 
-                    // Borda da tela
+                    // Borda da tela e Obstáculo para o jogador atual
                     if (novoY < 0 || novoY + jog.h > ALTURA_TELA) podeMover = false;
-
-                    // Obstáculo
                     if (podeMover && colidiu(jog.x, novoY, jog.w, jog.h, obs.x, obs.y, obs.w, obs.h)) podeMover = false;
 
-                    // Outros jogadores
                     if (podeMover) {
                         for (let i = 0; i < jogadores.length; i++) {
                             if (i !== index) {
                                 let outro = jogadores[i];
                                 if (colidiu(jog.x, novoY, jog.w, jog.h, outro.x, outro.y, outro.w, outro.h)) {
-                                    podeMover = false;
-                                    break;
+                                    
+                                    let outroNovoY = outro.y + dy;
+                                    let outroPodeMover = true;
+
+                                    if (outroNovoY < 0 || outroNovoY + outro.h > ALTURA_TELA) outroPodeMover = false;
+                                    if (colidiu(outro.x, outroNovoY, outro.w, outro.h, obs.x, obs.y, obs.w, obs.h)) outroPodeMover = false;
+
+                                    for (let j = 0; j < jogadores.length; j++) {
+                                        if (j !== index && j !== i) {
+                                            let terceiro = jogadores[j];
+                                            if (colidiu(outro.x, outroNovoY, outro.w, outro.h, terceiro.x, terceiro.y, terceiro.w, terceiro.h)) {
+                                                outroPodeMover = false;
+                                            }
+                                        }
+                                    }
+
+                                    if (outroPodeMover) {
+                                        jogadoresParaEmpurrar.push(outro);
+                                    } else {
+                                        podeMover = false;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                    if (podeMover) jog.y = novoY;
+
+                    if (podeMover) {
+                        jog.y = novoY;
+                        jogadoresParaEmpurrar.forEach(j => j.y += dy);
+                    }
                 }
 
                 // Renderiza na tela
