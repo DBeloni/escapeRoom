@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mundo com Inventário FIFO</title>
+    <style>
+        body { margin: 0; overflow: hidden; height: 100vh; background-color: #e5e5e5; display: flex; justify-content: center; align-items: center; font-family: Arial, sans-serif;}
+        #cenario { position: absolute; width: 100vw; height: 100vh; background-image: linear-gradient(to right, #ccc 1px, transparent 1px), linear-gradient(to bottom, #ccc 1px, transparent 1px); background-size: 40px 40px; }
+        
+        #bloco { width: 50px; height: 50px; background-color: blue; z-index: 10; }
+        #obstaculo { width: 80px; height: 80px; background-color: red; position: absolute; z-index: 5; }
+        
+        /* Nova Interface do Inventário */
+        #ui-inventario { position: absolute; top: 20px; left: 20px; background: white; border: 2px solid black; padding: 10px; z-index: 20; min-width: 150px; font-weight: bold;}
+        #lista-itens { list-style: none; padding: 0; margin: 10px 0 0 0; }
+        #lista-itens li { padding: 5px; margin-bottom: 5px; border-radius: 4px; color: white; text-align: center; text-shadow: 1px 1px 2px black;}
+        
+        /* Container para desenhar os itens no chão */
+        #chao { position: absolute; width: 100vw; height: 100vh; z-index: 4; }
+        .item-chao { width: 30px; height: 30px; border-radius: 50%; position: absolute; border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5);}
+    </style>
+</head>
+<body>
+    <div id="ui-inventario">
+        Inventário (FIFO)
+        <ul id="lista-itens"></ul>
+        <small style="font-weight:normal; font-size:12px;">E = Coletar | Q = Largar</small>
+    </div>
+
+    <div id="cenario"></div>
+    <div id="chao"></div> <!-- Onde os itens vão aparecer -->
+    <div id="obstaculo"></div>
+    <div id="bloco"></div>
+
+    <script>
+        const cenario = document.getElementById('cenario');
+        const obstaculo = document.getElementById('obstaculo');
+        const chao = document.getElementById('chao');
+        const listaUI = document.getElementById('lista-itens');
+
+        let x = 0;
+        let y = 0;
+        const velocidade = 6;
+        const tamanhoJogador = 50;
+        const obs = { x: 200, y: 100, largura: 80, altura: 80 };
+
+        // --- SISTEMA DE INVENTÁRIO E ITENS ---
+        let inventario = []; // Fila do inventário
+        const raioColeta = 60; // Distância máxima para conseguir pegar
+        const tamanhoItem = 30;
+
+        // Itens espalhados pelo mapa
+        let itensNoMapa = [
+            { nome: 'Moeda de Ouro', cor: 'gold', x: 300, y: 0 },
+            { nome: 'Cristal Roxo', cor: 'purple', x: -200, y: 150 },
+            { nome: 'Esmeralda', cor: 'green', x: 100, y: -250 }
+        ];
+
+        const teclas = {};
+
+        // Atualiza a tela de UI do inventário
+        const atualizarInventarioUI = () => {
+            listaUI.innerHTML = '';
+            if(inventario.length === 0) listaUI.innerHTML = '<li style="color:black; font-weight:normal;">Vazio</li>';
+            inventario.forEach(item => {
+                listaUI.innerHTML += `<li style="background-color: ${item.cor};">${item.nome}</li>`;
+            });
+        };
+        atualizarInventarioUI();
+
+        // Fórmula de distância entre dois pontos (Teorema de Pitágoras)
+        const calcularDistancia = (x1, y1, x2, y2) => {
+            return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+        };
+
+        window.addEventListener('keydown', (e) => {
+            const tecla = e.key.toLowerCase();
+            teclas[tecla] = true;
+
+            // --- LÓGICA DE AÇÃO (E = Coletar, Q = Largar) ---
+            if (tecla === 'e') {
+                for (let i = 0; i < itensNoMapa.length; i++) {
+                    const item = itensNoMapa[i];
+                    // Calcula distância do centro do jogador para o centro do item
+                    const dist = calcularDistancia(x + 25, y + 25, item.x + 15, item.y + 15);
+                    
+                    if (dist <= raioColeta) {
+                        inventario.push(item); // Adiciona no fim da fila
+                        itensNoMapa.splice(i, 1); // Remove do mapa
+                        atualizarInventarioUI();
+                        break; // Coleta apenas 1 por vez
+                    }
+                }
+            }
+
+            if (tecla === 'q' && inventario.length > 0) {
+                const itemLargado = inventario.shift(); // Remove o PRIMEIRO item (FIFO)
+                // Coloca o item exatamente onde o jogador está agora
+                itemLargado.x = x;
+                itemLargado.y = y;
+                itensNoMapa.push(itemLargado); // Devolve pro mapa
+                atualizarInventarioUI();
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => delete teclas[e.key.toLowerCase()]);
+
+        const loop = () => {
+            let proximoX = x;
+            let proximoY = y;
+
+            if (teclas.w) proximoY -= velocidade;
+            if (teclas.s) proximoY += velocidade;
+            if (teclas.a) proximoX -= velocidade;
+            if (teclas.d) proximoX += velocidade;
+
+            const bateuNoObstaculo =
+                proximoX < obs.x + obs.largura && proximoX + tamanhoJogador > obs.x &&
+                proximoY < obs.y + obs.altura && proximoY + tamanhoJogador > obs.y;
+
+            if (!bateuNoObstaculo) {
+                x = proximoX;
+                y = proximoY;
+            }
+
+            cenario.style.backgroundPosition = `${-x}px ${-y}px`;
+
+            const telaCentroX = window.innerWidth / 2;
+            const telaCentroY = window.innerHeight / 2;
+
+            obstaculo.style.left = `${telaCentroX - (tamanhoJogador / 2) + (obs.x - x)}px`;
+            obstaculo.style.top = `${telaCentroY - (tamanhoJogador / 2) + (obs.y - y)}px`;
+
+            // --- DESENHANDO OS ITENS NO CHÃO ---
+            chao.innerHTML = ''; // Limpa os itens antigos da tela
+            itensNoMapa.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-chao';
+                div.style.backgroundColor = item.cor;
+                // Posiciona baseado na câmera, igual fazemos com o obstáculo
+                div.style.left = `${telaCentroX - (tamanhoJogador / 2) + (item.x - x)}px`;
+                div.style.top = `${telaCentroY - (tamanhoJogador / 2) + (item.y - y)}px`;
+                chao.appendChild(div);
+            });
+
+            requestAnimationFrame(loop);
+        };
+
+        loop();
+    </script>
+</body>
+</html>
