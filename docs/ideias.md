@@ -2,7 +2,7 @@
 
 ---
 
-## 1. Pegada Backrooms - Beloni
+## 1. Pegada Backrooms com Combate - Beloni
 **Conceito:** Um labirinto de espaços liminares focando em exploração confusa e combate direto para abrir novos caminhos.
 * **Atmosfera:** Surreal, opressiva e desconfortável. Sensação de estar perdido em um lugar que não deveria existir.
 * **Mecânicas Principais:** Combate, uso de portais para fast-travel/atalhos, e coleta de chaves em áreas de risco.
