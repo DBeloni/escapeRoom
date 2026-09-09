@@ -32,6 +32,9 @@ escape-room/
 ├── pages/
 │   └── ...
 │
+├── docs/
+│   └── ...
+│
 ├── assets/
 │   ├── images/
 │   └── ...
