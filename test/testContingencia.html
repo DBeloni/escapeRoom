@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Teste Mecânicas - O2</title>
+</head>
+<body>
+    <h2>Mecânica: Suporte de Vida (O2)</h2>
+    
+    <p>Nível de Oxigênio: <span id="o2-valor">100</span>%</p>
+    <progress id="o2-barra" value="100" max="100" style="width: 300px;"></progress>
+    
+    <br><br>
+    
+    <button id="btn-valvula" onclick="girarValvula()">Girar Válvula (+20%)</button>
+    
+    <p id="status-msg" style="color: red; font-weight: bold;"></p>
+
+    <script>
+        // ESTADO DO JOGO
+        let oxigenio = 100;
+        
+        // ELEMENTOS DO DOM
+        const displayO2 = document.getElementById('o2-valor');
+        const barraO2 = document.getElementById('o2-barra');
+        const statusMsg = document.getElementById('status-msg');
+        const btnValvula = document.getElementById('btn-valvula');
+
+        // LÓGICA DE CONSUMO (Timer)
+        const loopOxigenio = setInterval(() => {
+            oxigenio -= 5; // Drena 5% por segundo
+            
+            if (oxigenio <= 0) {
+                oxigenio = 0;
+                clearInterval(loopOxigenio); // Para o timer
+                statusMsg.innerText = "FALHA CRÍTICA: ASFIXIA!";
+                btnValvula.disabled = true;  // Trava o botão
+            }
+            
+            atualizarInterface();
+        }, 1000);
+
+        // LÓGICA DO BOTÃO
+        function girarValvula() {
+            if (oxigenio > 0) {
+                oxigenio += 20; // Recupera 20%
+                if (oxigenio > 100) oxigenio = 100; // Trava no máximo de 100%
+                atualizarInterface();
+            }
+        }
+
+        // ATUALIZA O HTML
+        function atualizarInterface() {
+            displayO2.innerText = oxigenio;
+            barraO2.value = oxigenio;
+        }
+    </script>
+</body>
+</html>
