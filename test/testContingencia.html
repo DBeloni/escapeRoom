@@ -2,55 +2,101 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Teste Mecânicas - O2</title>
+    <title>Teste Mecânicas - O2 e Energia</title>
 </head>
-<body>
-    <h2>Mecânica: Suporte de Vida (O2)</h2>
-    
+<body id="tela-jogo">
+    <h2>Mecânica 1: Suporte de Vida (O2)</h2>
     <p>Nível de Oxigênio: <span id="o2-valor">100</span>%</p>
     <progress id="o2-barra" value="100" max="100" style="width: 300px;"></progress>
-    
     <br><br>
-    
-    <button id="btn-valvula" onclick="girarValvula()">Girar Válvula (+20%)</button>
-    
+    <button id="btn-valvula" onclick="girarValvula()">Girar Válvula de O2 (+20%)</button>
     <p id="status-msg" style="color: red; font-weight: bold;"></p>
 
+    <hr>
+
+    <h2>Mecânica 2: LME (Energia / Blackout)</h2>
+    <p>Status da Energia: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
+    <button id="btn-disjuntor" onclick="resetarEnergia()" disabled>Resetar Disjuntor Mestre</button>
+
     <script>
-        // ESTADO DO JOGO
+        // --- ESTADO DO JOGO ---
         let oxigenio = 100;
+        let energiaLigada = true;
+        let jogoAtivo = true;
         
-        // ELEMENTOS DO DOM
+        // --- ELEMENTOS DO DOM ---
         const displayO2 = document.getElementById('o2-valor');
         const barraO2 = document.getElementById('o2-barra');
         const statusMsg = document.getElementById('status-msg');
         const btnValvula = document.getElementById('btn-valvula');
+        
+        const telaJogo = document.getElementById('tela-jogo');
+        const energiaStatus = document.getElementById('energia-status');
+        const btnDisjuntor = document.getElementById('btn-disjuntor');
 
-        // LÓGICA DE CONSUMO (Timer)
+        // --- LÓGICA DE O2 (A cada 1 segundo) ---
         const loopOxigenio = setInterval(() => {
-            oxigenio -= 5; // Drena 5% por segundo
+            if (!jogoAtivo) return;
+            
+            oxigenio -= 5;
             
             if (oxigenio <= 0) {
                 oxigenio = 0;
-                clearInterval(loopOxigenio); // Para o timer
+                jogoAtivo = false;
                 statusMsg.innerText = "FALHA CRÍTICA: ASFIXIA!";
-                btnValvula.disabled = true;  // Trava o botão
+                btnValvula.disabled = true;
+                btnDisjuntor.disabled = true;
             }
-            
-            atualizarInterface();
+            atualizarInterfaceO2();
         }, 1000);
 
-        // LÓGICA DO BOTÃO
+        // --- LÓGICA DE ENERGIA (Verifica a cada 2 segundos) ---
+        const loopEnergia = setInterval(() => {
+            if (!jogoAtivo) return;
+
+            // 30% de chance da energia cair se ela estiver ligada
+            if (energiaLigada && Math.random() < 0.3) {
+                energiaLigada = false;
+                
+                // Aplica o blackout
+                telaJogo.style.backgroundColor = "#111111"; // Fundo escuro
+                telaJogo.style.color = "#777777";           // Texto apagado
+                energiaStatus.innerText = "FALHA - SISTEMA OFFLINE";
+                energiaStatus.style.color = "red";
+                
+                // Trava o O2 e libera o disjuntor
+                btnValvula.disabled = true; 
+                btnDisjuntor.disabled = false;
+            }
+        }, 2000);
+
+        // --- AÇÕES DOS BOTÕES ---
         function girarValvula() {
-            if (oxigenio > 0) {
-                oxigenio += 20; // Recupera 20%
-                if (oxigenio > 100) oxigenio = 100; // Trava no máximo de 100%
-                atualizarInterface();
+            if (oxigenio > 0 && energiaLigada) {
+                oxigenio += 20;
+                if (oxigenio > 100) oxigenio = 100;
+                atualizarInterfaceO2();
             }
         }
 
-        // ATUALIZA O HTML
-        function atualizarInterface() {
+        function resetarEnergia() {
+            if (!jogoAtivo) return;
+
+            energiaLigada = true;
+            
+            // Remove o blackout
+            telaJogo.style.backgroundColor = ""; 
+            telaJogo.style.color = "";
+            energiaStatus.innerText = "LIGADA";
+            energiaStatus.style.color = "green";
+            
+            // Destrava o O2 e trava o disjuntor
+            btnValvula.disabled = false;
+            btnDisjuntor.disabled = true;
+        }
+
+        // --- ATUALIZAÇÃO VISUAL ---
+        function atualizarInterfaceO2() {
             displayO2.innerText = oxigenio;
             barraO2.value = oxigenio;
         }
