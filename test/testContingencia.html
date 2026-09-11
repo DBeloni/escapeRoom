@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Teste Mecânicas - O2, Energia e Água</title>
+    <title>Teste Mecânicas - O2, Energia, Água e Reparo</title>
 </head>
 <body id="tela-jogo">
     <h2>Mecânica 1: Suporte de Vida (O2)</h2>
@@ -10,19 +10,27 @@
     <progress id="o2-barra" value="100" max="100" style="width: 300px;"></progress>
     <br><br>
     <button id="btn-valvula" onclick="girarValvula()">Girar Válvula de O2 (+20%)</button>
-    <p id="status-msg" style="color: red; font-weight: bold;"></p>
+    
+    <p id="status-msg" style="color: red; font-weight: bold; font-size: 20px;"></p>
 
     <hr>
 
     <h2>Mecânica 2: LME (Energia / Blackout)</h2>
     <p>Status da Energia: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
-    <button id="btn-disjuntor" onclick="resetarEnergia()" disabled>Resetar Disjuntor Mestre</button>
+    
+    <!-- Novo Painel de Reparo que fica escondido por padrão -->
+    <div id="painel-reparo" style="display: none; background: #333; padding: 15px; width: 270px; color: white; border: 2px solid red;">
+        <p style="margin-top: 0;">REBOOT NECESSÁRIO</p>
+        <p>Código de Segurança: <strong id="codigo-gerado" style="color: yellow; font-size: 18px; letter-spacing: 3px;">----</strong></p>
+        <input type="text" id="input-codigo" placeholder="Digite o código" autocomplete="off" style="width: 120px;">
+        <button onclick="tentarReboot()">Executar</button>
+        <p id="msg-erro-reboot" style="color: #ff5555; font-size: 12px; margin-bottom: 0;"></p>
+    </div>
 
     <hr>
 
     <h2>Mecânica 3: Pressão e Alagamento</h2>
     <p>Nível de Água na Ala: <span id="agua-valor">0</span>%</p>
-    <!-- Accent-color é um CSS nativo simples para mudar a cor da barra pra azul no navegador -->
     <progress id="agua-barra" value="0" max="100" style="width: 300px; accent-color: blue;"></progress>
     <br><br>
     <button id="btn-bomba" onclick="drenarAgua()">Ativar Bomba de Drenagem (-30%)</button>
@@ -33,6 +41,7 @@
         let nivelAgua = 0;
         let energiaLigada = true;
         let jogoAtivo = true;
+        let codigoAtual = ""; // Guarda a senha do momento
         
         // --- ELEMENTOS DO DOM ---
         const telaJogo = document.getElementById('tela-jogo');
@@ -43,7 +52,10 @@
         const btnValvula = document.getElementById('btn-valvula');
         
         const energiaStatus = document.getElementById('energia-status');
-        const btnDisjuntor = document.getElementById('btn-disjuntor');
+        const painelReparo = document.getElementById('painel-reparo');
+        const displayCodigo = document.getElementById('codigo-gerado');
+        const inputCodigo = document.getElementById('input-codigo');
+        const msgErroReboot = document.getElementById('msg-erro-reboot');
 
         const displayAgua = document.getElementById('agua-valor');
         const barraAgua = document.getElementById('agua-barra');
@@ -52,29 +64,16 @@
         // --- LÓGICA DE O2 (Cai fixo a cada 1 seg) ---
         const loopOxigenio = setInterval(() => {
             if (!jogoAtivo) return;
-            
             oxigenio -= 5;
-            
-            if (oxigenio <= 0) {
-                oxigenio = 0;
-                encerrarJogo("FALHA CRÍTICA: ASFIXIA!");
-            }
+            if (oxigenio <= 0) encerrarJogo("FALHA CRÍTICA: ASFIXIA!");
             atualizarInterfaceO2();
         }, 1000);
 
         // --- LÓGICA DA ÁGUA (Sobe aleatoriamente a cada 1.5 seg) ---
         const loopAgua = setInterval(() => {
             if (!jogoAtivo) return;
-
-            // 40% de chance da água subir um pouco devido a vazamentos
-            if (Math.random() < 0.4) {
-                nivelAgua += 10;
-            }
-
-            if (nivelAgua >= 100) {
-                nivelAgua = 100;
-                encerrarJogo("FALHA CRÍTICA: COLAPSO ESTRUTURAL / AFOGAMENTO!");
-            }
+            if (Math.random() < 0.4) nivelAgua += 10;
+            if (nivelAgua >= 100) encerrarJogo("FALHA CRÍTICA: COLAPSO ESTRUTURAL!");
             atualizarInterfaceAgua();
         }, 1500);
 
@@ -85,18 +84,28 @@
             if (energiaLigada && Math.random() < 0.3) {
                 energiaLigada = false;
                 
+                // Aplica o blackout visual
                 telaJogo.style.backgroundColor = "#111111";
                 telaJogo.style.color = "#777777";
                 energiaStatus.innerText = "FALHA - SISTEMA OFFLINE";
                 energiaStatus.style.color = "red";
                 
+                // Trava os botões
                 btnValvula.disabled = true; 
-                btnBomba.disabled = true; // Bomba de água para de funcionar no escuro!
-                btnDisjuntor.disabled = false;
+                btnBomba.disabled = true;
+                
+                // Gera um código numérico de 4 dígitos (ex: 1000 a 9999)
+                codigoAtual = Math.floor(1000 + Math.random() * 9000).toString();
+                displayCodigo.innerText = codigoAtual;
+                
+                // Exibe o painel de reparo e limpa o input anterior
+                painelReparo.style.display = "block";
+                inputCodigo.value = "";
+                msgErroReboot.innerText = "";
             }
         }, 2000);
 
-        // --- AÇÕES DOS BOTÕES ---
+        // --- AÇÕES DOS BOTÕES (O2 e Água) ---
         function girarValvula() {
             if (oxigenio > 0 && energiaLigada) {
                 oxigenio = Math.min(100, oxigenio + 20);
@@ -111,30 +120,42 @@
             }
         }
 
-        function resetarEnergia() {
+        // --- LÓGICA DO PAINEL DE REPARO ---
+        function tentarReboot() {
             if (!jogoAtivo) return;
 
-            energiaLigada = true;
-            
-            telaJogo.style.backgroundColor = ""; 
-            telaJogo.style.color = "";
-            energiaStatus.innerText = "LIGADA";
-            energiaStatus.style.color = "green";
-            
-            btnValvula.disabled = false;
-            btnBomba.disabled = false; // Religa a bomba
-            btnDisjuntor.disabled = true;
+            if (inputCodigo.value === codigoAtual) {
+                // SUCESSO! Religa a energia
+                energiaLigada = true;
+                telaJogo.style.backgroundColor = ""; 
+                telaJogo.style.color = "";
+                energiaStatus.innerText = "LIGADA";
+                energiaStatus.style.color = "green";
+                
+                btnValvula.disabled = false;
+                btnBomba.disabled = false;
+                painelReparo.style.display = "none"; // Esconde o painel
+            } else {
+                // ERROU A SENHA
+                msgErroReboot.innerText = "CÓDIGO INVÁLIDO! Tente novamente.";
+                inputCodigo.value = ""; // Limpa para digitar de novo
+                inputCodigo.focus();    // Mantém o cursor lá
+            }
         }
 
         function encerrarJogo(mensagem) {
             jogoAtivo = false;
+            oxigenio = Math.max(0, oxigenio);
+            nivelAgua = Math.min(100, nivelAgua);
+            atualizarInterfaceO2();
+            atualizarInterfaceAgua();
+            
             statusMsg.innerText = mensagem;
             btnValvula.disabled = true;
             btnBomba.disabled = true;
-            btnDisjuntor.disabled = true;
+            painelReparo.style.display = "none"; // Some com o teclado na hora da morte
         }
 
-        // --- ATUALIZAÇÃO VISUAL ---
         function atualizarInterfaceO2() {
             displayO2.innerText = oxigenio;
             barraO2.value = oxigenio;
