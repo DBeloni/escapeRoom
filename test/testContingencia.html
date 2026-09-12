@@ -35,6 +35,62 @@
         }
 
         /* BOTÕES E INPUTS */
+        button {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #666;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        input[type="text"] {
+            background-color: #111;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 8px;
+            font-family: inherit;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        /* LAYOUT RESPONSIVO (O segredo da modularidade) */
+    .container-paineis {
+        display: flex;
+        flex-wrap: wrap; /* Permite quebrar a linha se a tela for pequena */
+        justify-content: center;
+        align-items: flex-start;
+        gap: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Ajustamos o painel do Commit 2 para funcionar no Flexbox */
+    .painel {
+        background-color: #2a2a2a;
+        border: 1px solid #444;
+        border-radius: 8px;
+        padding: 20px;
+        flex: 1 1 300px; /* Cresce, encolhe e tem base de 300px (ideal celular) */
+        max-width: 350px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        box-sizing: border-box;
+    }
+
+    /* BOTÕES E INPUTS INDUSTRIAIS */
     button {
         background-color: #444;
         color: #fff;
@@ -46,16 +102,11 @@
         font-weight: bold;
         transition: 0.2s;
         margin-top: 10px;
+        width: 100%; /* Ocupa a largura total do painel no celular */
     }
     
-    button:hover:not(:disabled) {
-        background-color: #666;
-    }
-    
-    button:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-    }
+    button:hover:not(:disabled) { background-color: #666; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
     
     input[type="text"] {
         background-color: #111;
@@ -65,56 +116,59 @@
         font-family: inherit;
         text-align: center;
         font-size: 16px;
+        width: 100px;
     }
     </style>
 </head>
 
 <body id="tela-jogo">
-    <div class="painel">
-        <h2>Mecânica 1: Suporte de Vida (O2)</h2>
-        <p>Nível de Oxigênio: <span id="o2-valor">100</span>%</p>
-        <progress id="o2-barra" value="100" max="100" style="width: 300px;"></progress>
-        <br><br>
-        <button id="btn-valvula" onclick="girarValvula()">Girar Válvula de O2 (+20%)</button>
+    <div class="container-paineis">
+        <div class="painel">
+            <h2>Mecânica 1: Suporte de Vida (O2)</h2>
+            <p>Nível de Oxigênio: <span id="o2-valor">100</span>%</p>
+            <progress id="o2-barra" value="100" max="100" style="width: 300px;"></progress>
+            <br><br>
+            <button id="btn-valvula" onclick="girarValvula()">Girar Válvula de O2 (+20%)</button>
 
-        <p id="status-msg" style="color: red; font-weight: bold; font-size: 20px;"></p>
+            <p id="status-msg" style="color: red; font-weight: bold; font-size: 20px;"></p>
 
-    </div>
-
-    <hr>
-
-
-    <div class="painel">
-        <h2>Mecânica 2: LME (Energia / Blackout)</h2>
-        <p>Status da Energia: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
-
-        <div id="painel-reparo"
-            style="display: none; background: #333; padding: 15px; width: 270px; color: white; border: 2px solid red;">
-            <p style="margin-top: 0; color: #ff5555; font-weight: bold; animation: piscar 1s infinite;">ALERTA DE FALHA
-                EM CASCATA!</p>
-            <p>Código de Segurança: <strong id="codigo-gerado"
-                    style="color: yellow; font-size: 18px; letter-spacing: 3px;">----</strong></p>
-            <input type="text" id="input-codigo" placeholder="Digite o código" autocomplete="off" style="width: 120px;">
-            <button onclick="tentarReboot()">Executar</button>
-            <p id="msg-erro-reboot" style="color: #ff5555; font-size: 12px; margin-bottom: 0;"></p>
         </div>
+
+        <hr>
+
+
+        <div class="painel">
+            <h2>Mecânica 2: LME (Energia / Blackout)</h2>
+            <p>Status da Energia: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
+
+            <div id="painel-reparo"
+                style="display: none; background: #333; padding: 15px; width: 270px; color: white; border: 2px solid red;">
+                <p style="margin-top: 0; color: #ff5555; font-weight: bold; animation: piscar 1s infinite;">ALERTA DE
+                    FALHA
+                    EM CASCATA!</p>
+                <p>Código de Segurança: <strong id="codigo-gerado"
+                        style="color: yellow; font-size: 18px; letter-spacing: 3px;">----</strong></p>
+                <input type="text" id="input-codigo" placeholder="Digite o código" autocomplete="off"
+                    style="width: 120px;">
+                <button onclick="tentarReboot()">Executar</button>
+                <p id="msg-erro-reboot" style="color: #ff5555; font-size: 12px; margin-bottom: 0;"></p>
+            </div>
+        </div>
+
+        <hr>
+
+
+        <div class="painel">
+            <h2>Mecânica 3: Pressão e Alagamento</h2>
+            <p>Nível de Água na Ala: <span id="agua-valor">0</span>%</p>
+            <progress id="agua-barra" value="0" max="100" style="width: 300px; accent-color: blue;"></progress>
+            <br><br>
+            <button id="btn-bomba" onclick="drenarAgua()">Ativar Bomba de Drenagem (-30%)</button>
+
+        </div>
+
     </div>
 
-    <hr>
-
-
-    <div class="painel">
-        <h2>Mecânica 3: Pressão e Alagamento</h2>
-        <p>Nível de Água na Ala: <span id="agua-valor">0</span>%</p>
-        <progress id="agua-barra" value="0" max="100" style="width: 300px; accent-color: blue;"></progress>
-        <br><br>
-        <button id="btn-bomba" onclick="drenarAgua()">Ativar Bomba de Drenagem (-30%)</button>
-
-    </div>
-
-
-
-    <h2>Mecânica 3: Pressão e Alagamento</h2>
     <script>
         let oxigenio = 100;
         let nivelAgua = 0;
