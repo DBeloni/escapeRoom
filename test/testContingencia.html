@@ -5,104 +5,80 @@
     <meta charset="UTF-8">
     <title>Teste Mecânicas - O2, Energia, Água e Cascata</title>
     <style>
-        /* RESET E FUNDO */
-        body {
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            font-family: 'Courier New', Courier, monospace;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-            transition: background-color 0.3s;
-            /* Deixa o blackout mais suave */
-        }
-
-        h2 {
-            font-size: 1.2rem;
-            color: #aaaaaa;
-            border-bottom: 1px solid #444;
-            padding-bottom: 5px;
-        }
-
-        .painel {
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 15px auto;
-            max-width: 450px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
-        }
-
-        /* BOTÕES E INPUTS */
-        button {
-            background-color: #444;
-            color: #fff;
-            border: 1px solid #666;
-            border-radius: 4px;
-            padding: 10px 15px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: bold;
-            transition: 0.2s;
-            margin-top: 10px;
-        }
-
-        button:hover:not(:disabled) {
-            background-color: #666;
-        }
-
-        button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        input[type="text"] {
-            background-color: #111;
-            color: #00ff00;
-            border: 1px solid #555;
-            padding: 8px;
-            font-family: inherit;
-            text-align: center;
-            font-size: 16px;
-        }
-
-        /* LAYOUT RESPONSIVO (O segredo da modularidade) */
-    .container-paineis {
+/* RESET E FUNDO */
+    body {
+        background-color: #1a1a1a;
+        color: #e0e0e0;
+        font-family: 'Courier New', Courier, monospace;
+        text-align: center;
+        margin: 0;
+        padding: 10px; /* Reduzido para ganhar espaço no mobile */
+        transition: background-color 0.3s;
         display: flex;
-        flex-wrap: wrap; /* Permite quebrar a linha se a tela for pequena */
-        justify-content: center;
-        align-items: flex-start;
-        gap: 20px;
-        max-width: 1200px;
+        align-items: center; /* Centraliza tudo verticalmente na tela */
+        min-height: 100vh;   /* Garante que ocupe a tela toda */
+    }
+
+    h2 {
+        font-size: 1rem; /* Menor para caber no celular */
+        color: #aaaaaa;
+        border-bottom: 1px solid #444;
+        padding-bottom: 5px;
+        margin-top: 0;
+        margin-bottom: 10px;
+    }
+    
+    p {
+        margin: 8px 0; /* Textos mais compactos */
+        font-size: 0.9rem;
+    }
+
+    /* O SEGREDO DO DASHBOARD (CSS GRID) */
+    .container-paineis {
+        display: grid;
+        grid-template-columns: 1fr; /* No celular: 1 coluna empilhada */
+        gap: 10px; /* Espaço pequeno para não gerar scroll */
+        width: 100%;
+        max-width: 600px; /* Trava no PC para não ficar esticado e feio */
         margin: 0 auto;
     }
 
-    /* Ajustamos o painel do Commit 2 para funcionar no Flexbox */
     .painel {
         background-color: #2a2a2a;
         border: 1px solid #444;
         border-radius: 8px;
-        padding: 20px;
-        flex: 1 1 300px; /* Cresce, encolhe e tem base de 300px (ideal celular) */
-        max-width: 350px;
+        padding: 15px; /* Mais fino */
         box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-        box-sizing: border-box;
     }
 
-    /* BOTÕES E INPUTS INDUSTRIAIS */
+    /* Layout específico para telas maiores (PC/Tablet) */
+    @media (min-width: 600px) {
+        .container-paineis {
+            grid-template-columns: 1fr 1fr; /* Duas colunas */
+        }
+        .painel-energia {
+            grid-column: 1 / -1; /* O painel de energia ocupa a linha de baixo inteira */
+        }
+    }
+
+    /* BARRAS E BOTÕES RESPONSIVOS */
+    progress {
+        width: 100%; /* Adapta ao tamanho do painel */
+        height: 15px; /* Barras mais finas */
+    }
+
     button {
         background-color: #444;
         color: #fff;
         border: 1px solid #666;
         border-radius: 4px;
-        padding: 10px 15px;
+        padding: 10px;
         cursor: pointer;
         font-family: inherit;
         font-weight: bold;
         transition: 0.2s;
-        margin-top: 10px;
-        width: 100%; /* Ocupa a largura total do painel no celular */
+        margin-top: 5px;
+        width: 100%;
     }
     
     button:hover:not(:disabled) { background-color: #666; }
@@ -116,7 +92,7 @@
         font-family: inherit;
         text-align: center;
         font-size: 16px;
-        width: 100px;
+        width: 120px;
     }
     </style>
 </head>
@@ -126,7 +102,7 @@
         <div class="painel">
             <h2>Mecânica 1: Suporte de Vida (O2)</h2>
             <p>Nível de Oxigênio: <span id="o2-valor">100</span>%</p>
-            <progress id="o2-barra" value="100" max="100" style="width: 300px;"></progress>
+            <progress id="o2-barra" value="100" max="100"></progress>
             <br><br>
             <button id="btn-valvula" onclick="girarValvula()">Girar Válvula de O2 (+20%)</button>
 
@@ -137,7 +113,7 @@
         <hr>
 
 
-        <div class="painel">
+        <div class="painel painel-energia">
             <h2>Mecânica 2: LME (Energia / Blackout)</h2>
             <p>Status da Energia: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
 
