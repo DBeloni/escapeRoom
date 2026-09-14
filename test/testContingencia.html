@@ -149,6 +149,20 @@
     </div>
 
     <script>
+        let tempoSegundos = 0;
+        const relogioDisplay = document.getElementById('relogio-display');
+
+        const loopRelogio = setInterval(() => {
+            if (!jogoAtivo) return;
+            
+            tempoSegundos++;
+            
+            let minutos = Math.floor(tempoSegundos / 60).toString().padStart(2, '0');
+            let segundos = (tempoSegundos % 60).toString().padStart(2, '0');
+            
+            relogioDisplay.innerText = `${minutos}:${segundos}`;
+        }, 1000);
+
         let oxigenio = 100;
         let nivelAgua = 0;
         let energiaLigada = true;
