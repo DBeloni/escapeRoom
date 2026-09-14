@@ -163,6 +163,8 @@
             relogioDisplay.innerText = `${minutos}:${segundos}`;
         }, 1000);
 
+       
+
         let oxigenio = 100;
         let nivelAgua = 0;
         let energiaLigada = true;
@@ -276,11 +278,14 @@
             nivelAgua = Math.min(100, nivelAgua);
             atualizarInterfaceO2();
             atualizarInterfaceAgua();
-
-            statusMsg.innerText = mensagem;
+            
+            const tempoFinal = relogioDisplay.innerText;
+            
+            statusMsg.innerHTML = `${mensagem} <br><br> TEMPO DE SOBREVIVÊNCIA: <span style="color: yellow;">${tempoFinal}</span>`;
+            
             btnValvula.disabled = true;
             btnBomba.disabled = true;
-            painelReparo.style.display = "none";
+            painelReparo.style.display = "none"; 
         }
 
         function atualizarInterfaceO2() {
