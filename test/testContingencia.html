@@ -5,101 +5,107 @@
     <meta charset="UTF-8">
     <title>Teste Mecânicas - O2, Energia, Água e Cascata</title>
     <style>
-/* RESET E FUNDO */
-    body {
-        background-color: #1a1a1a;
-        color: #e0e0e0;
-        font-family: 'Courier New', Courier, monospace;
-        text-align: center;
-        margin: 0;
-        padding: 10px; /* Reduzido para ganhar espaço no mobile */
-        transition: background-color 0.3s;
-        display: flex;
-        align-items: center; /* Centraliza tudo verticalmente na tela */
-        min-height: 100vh;   /* Garante que ocupe a tela toda */
-    }
+        body {
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            margin: 0;
+            padding: 10px;
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            min-height: 100vh;
+        }
 
-    h2 {
-        font-size: 1rem; /* Menor para caber no celular */
-        color: #aaaaaa;
-        border-bottom: 1px solid #444;
-        padding-bottom: 5px;
-        margin-top: 0;
-        margin-bottom: 10px;
-    }
-    
-    p {
-        margin: 8px 0; /* Textos mais compactos */
-        font-size: 0.9rem;
-    }
+        h2 {
+            font-size: 1rem;
+            color: #aaaaaa;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
 
-    /* O SEGREDO DO DASHBOARD (CSS GRID) */
-    .container-paineis {
-        display: grid;
-        grid-template-columns: 1fr; /* No celular: 1 coluna empilhada */
-        gap: 10px; /* Espaço pequeno para não gerar scroll */
-        width: 100%;
-        max-width: 600px; /* Trava no PC para não ficar esticado e feio */
-        margin: 0 auto;
-    }
+        p {
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
 
-    .painel {
-        background-color: #2a2a2a;
-        border: 1px solid #444;
-        border-radius: 8px;
-        padding: 15px; /* Mais fino */
-        box-shadow: 0 4px 6px rgba(0,0,0,0.5);
-    }
-
-    /* Layout específico para telas maiores (PC/Tablet) */
-    @media (min-width: 600px) {
         .container-paineis {
-            grid-template-columns: 1fr 1fr; /* Duas colunas */
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        .painel-energia {
-            grid-column: 1 / -1; /* O painel de energia ocupa a linha de baixo inteira */
+
+        .painel {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            /* Mais fino */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
         }
-    }
 
-    /* BARRAS E BOTÕES RESPONSIVOS */
-    progress {
-        width: 100%; /* Adapta ao tamanho do painel */
-        height: 15px; /* Barras mais finas */
-    }
+        @media (min-width: 600px) {
+            .container-paineis {
+                grid-template-columns: 1fr 1fr;
+            }
 
-    button {
-        background-color: #444;
-        color: #fff;
-        border: 1px solid #666;
-        border-radius: 4px;
-        padding: 10px;
-        cursor: pointer;
-        font-family: inherit;
-        font-weight: bold;
-        transition: 0.2s;
-        margin-top: 5px;
-        width: 100%;
-    }
-    
-    button:hover:not(:disabled) { background-color: #666; }
-    button:disabled { opacity: 0.4; cursor: not-allowed; }
-    
-    input[type="text"] {
-        background-color: #111;
-        color: #00ff00;
-        border: 1px solid #555;
-        padding: 8px;
-        font-family: inherit;
-        text-align: center;
-        font-size: 16px;
-        width: 120px;
-    }
+            .painel-energia {
+                grid-column: 1 / -1;
+            }
+        }
+
+        progress {
+            width: 100%;
+            height: 15px;
+        }
+
+        button {
+            background-color: #444;
+            color: #fff;
+            border: 1px solid #666;
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: 0.2s;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        button:hover:not(:disabled) {
+            background-color: #666;
+        }
+
+        button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        input[type="text"] {
+            background-color: #111;
+            color: #00ff00;
+            border: 1px solid #555;
+            padding: 8px;
+            font-family: inherit;
+            text-align: center;
+            font-size: 16px;
+            width: 120px;
+        }
     </style>
 </head>
 
 <body id="tela-jogo">
-    <div id="painel-relogio" style="background: #222; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 0 auto 15px auto; width: 100%; max-width: 600px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">
-        <h2 style="margin: 0; color: #00e5ff; font-size: 1.8rem; border: none; padding: 0;">AUTONOMIA: <span id="relogio-display">00:00</span></h2>
+    <div id="painel-relogio"
+        style="background: #222; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 0 auto 15px auto; width: 100%; max-width: 600px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">
+        <h2 style="margin: 0; color: #00e5ff; font-size: 1.8rem; border: none; padding: 0;">AUTONOMIA: <span
+                id="relogio-display">00:00</span></h2>
     </div>
     <div class="container-paineis">
         <div class="painel">
@@ -152,18 +158,19 @@
         let tempoSegundos = 0;
         const relogioDisplay = document.getElementById('relogio-display');
 
+        // Atualiza o cronômetro da partida a cada segundo.
         const loopRelogio = setInterval(() => {
             if (!jogoAtivo) return;
-            
+
             tempoSegundos++;
-            
+
             let minutos = Math.floor(tempoSegundos / 60).toString().padStart(2, '0');
             let segundos = (tempoSegundos % 60).toString().padStart(2, '0');
-            
+
             relogioDisplay.innerText = `${minutos}:${segundos}`;
         }, 1000);
 
-       
+
 
         let oxigenio = 100;
         let nivelAgua = 0;
@@ -188,11 +195,11 @@
         const barraAgua = document.getElementById('agua-barra');
         const btnBomba = document.getElementById('btn-bomba');
 
-        // --- LÓGICA DE O2 (Agravada sem energia) ---
+        // Reduz o oxigênio continuamente.
+        // Com a energia desligada, o consumo é maior.
         const loopOxigenio = setInterval(() => {
             if (!jogoAtivo) return;
 
-            // Cai 5 normalmente, mas cai 10 se a energia estiver off
             let taxaQueda = energiaLigada ? 5 : 10;
             oxigenio -= taxaQueda;
 
@@ -200,11 +207,11 @@
             atualizarInterfaceO2();
         }, 1000);
 
-        // --- LÓGICA DA ÁGUA (Agravada sem energia) ---
+        // Simula o aumento aleatório do nível de água.
+        // A falta de energia aumenta tanto a chance quanto o volume da inundação.
         const loopAgua = setInterval(() => {
             if (!jogoAtivo) return;
 
-            // 40% de chance de subir 10. Se sem energia: 70% de chance de subir 20!
             let chanceSubir = energiaLigada ? 0.4 : 0.7;
             let volumeAgua = energiaLigada ? 10 : 20;
 
@@ -214,11 +221,11 @@
             atualizarInterfaceAgua();
         }, 1500);
 
-        // --- LÓGICA DE ENERGIA ---
+        // Verifica periodicamente se ocorre uma falha de energia.
         const loopEnergia = setInterval(() => {
             if (!jogoAtivo) return;
 
-            if (energiaLigada && Math.random() < 0.25) { // Reduzi a chance pra 25% pra ser justo
+            if (energiaLigada && Math.random() < 0.25) {
                 energiaLigada = false;
 
                 telaJogo.style.backgroundColor = "#111111";
@@ -252,6 +259,7 @@
             }
         }
 
+        // Confere o código de segurança e restaura a energia.
         function tentarReboot() {
             if (!jogoAtivo) return;
 
@@ -272,20 +280,21 @@
             }
         }
 
+        // Finaliza a partida quando uma das condições críticas é atingida.
         function encerrarJogo(mensagem) {
             jogoAtivo = false;
             oxigenio = Math.max(0, oxigenio);
             nivelAgua = Math.min(100, nivelAgua);
             atualizarInterfaceO2();
             atualizarInterfaceAgua();
-            
+
             const tempoFinal = relogioDisplay.innerText;
-            
+
             statusMsg.innerHTML = `${mensagem} <br><br> TEMPO DE SOBREVIVÊNCIA: <span style="color: yellow;">${tempoFinal}</span>`;
-            
+
             btnValvula.disabled = true;
             btnBomba.disabled = true;
-            painelReparo.style.display = "none"; 
+            painelReparo.style.display = "none";
         }
 
         function atualizarInterfaceO2() {
