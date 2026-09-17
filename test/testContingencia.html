@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
-    <title>Teste Mecânicas - O2, Energia, Água e Cascata</title>
+    <title>Teste Mecânicas - Dashboard Completo</title>
     <style>
+        /* RESET E FUNDO */
         body {
             background-color: #1a1a1a;
             color: #e0e0e0;
@@ -14,7 +14,9 @@
             padding: 10px;
             transition: background-color 0.3s;
             display: flex;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
             min-height: 100vh;
         }
 
@@ -26,12 +28,22 @@
             margin-top: 0;
             margin-bottom: 10px;
         }
+        
+        p { margin: 8px 0; font-size: 0.9rem; }
 
-        p {
-            margin: 8px 0;
-            font-size: 0.9rem;
+        /* MENSAGEM DE STATUS E RESTART */
+        #status-container { margin-bottom: 15px; }
+        #status-msg { color: red; font-weight: bold; font-size: 20px; margin: 0; }
+        #btn-restart {
+            display: none;
+            background-color: #880000;
+            margin: 15px auto 0 auto;
+            border-color: #ff5555;
+            max-width: 300px;
         }
+        #btn-restart:hover { background-color: #aa0000; }
 
+        /* LAYOUT DASHBOARD (CSS GRID) */
         .container-paineis {
             display: grid;
             grid-template-columns: 1fr;
@@ -46,25 +58,17 @@
             border: 1px solid #444;
             border-radius: 8px;
             padding: 15px;
-            /* Mais fino */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
         }
 
         @media (min-width: 600px) {
-            .container-paineis {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .painel-energia {
-                grid-column: 1 / -1;
-            }
+            .container-paineis { grid-template-columns: 1fr 1fr; }
+            .painel-energia { grid-column: 1 / -1; }
         }
 
-        progress {
-            width: 100%;
-            height: 15px;
-        }
-
+        /* BARRAS E BOTÕES */
+        progress { width: 100%; height: 15px; }
+        
         button {
             background-color: #444;
             color: #fff;
@@ -78,16 +82,10 @@
             margin-top: 5px;
             width: 100%;
         }
-
-        button:hover:not(:disabled) {
-            background-color: #666;
-        }
-
-        button:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
+        
+        button:hover:not(:disabled) { background-color: #666; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        
         input[type="text"] {
             background-color: #111;
             color: #00ff00;
@@ -100,90 +98,63 @@
         }
     </style>
 </head>
-
 <body id="tela-jogo">
-    <div id="painel-relogio"
-        style="background: #222; border: 1px solid #444; border-radius: 8px; padding: 15px; margin: 0 auto 15px auto; width: 100%; max-width: 600px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.5);">
-        <h2 style="margin: 0; color: #00e5ff; font-size: 1.8rem; border: none; padding: 0;">AUTONOMIA: <span
-                id="relogio-display">00:00</span></h2>
+
+    <div id="status-container">
+        <p id="status-msg"></p>
+        <button id="btn-restart" onclick="location.reload()">REINICIAR SIMULAÇÃO</button>
     </div>
+
     <div class="container-paineis">
+        <!-- PAINEL O2 -->
         <div class="painel">
-            <h2>Mecânica 1: Suporte de Vida (O2)</h2>
+            <h2>Mecânica 1: Suporte de Vida</h2>
             <p>Nível de Oxigênio: <span id="o2-valor">100</span>%</p>
             <progress id="o2-barra" value="100" max="100"></progress>
-            <br><br>
-            <button id="btn-valvula" onclick="girarValvula()">Girar Válvula de O2 (+20%)</button>
-
-            <p id="status-msg" style="color: red; font-weight: bold; font-size: 20px;"></p>
-
+            <button id="btn-valvula" onclick="girarValvula()">Girar Válvula (+20%)</button>
         </div>
 
-        <hr>
+        <!-- PAINEL ÁGUA -->
+        <div class="painel">
+            <h2>Mecânica 3: Pressão/Água</h2>
+            <p>Nível de Água: <span id="agua-valor">0</span>%</p>
+            <progress id="agua-barra" value="0" max="100" style="accent-color: blue;"></progress>
+            <button id="btn-bomba" onclick="drenarAgua()">Bomba de Drenagem (-30%)</button>
+        </div>
 
-
+        <!-- PAINEL ENERGIA -->
         <div class="painel painel-energia">
-            <h2>Mecânica 2: LME (Energia / Blackout)</h2>
-            <p>Status da Energia: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
-
-            <div id="painel-reparo"
-                style="display: none; background: #333; padding: 15px; width: 270px; color: white; border: 2px solid red;">
-                <p style="margin-top: 0; color: #ff5555; font-weight: bold; animation: piscar 1s infinite;">ALERTA DE
-                    FALHA
-                    EM CASCATA!</p>
-                <p>Código de Segurança: <strong id="codigo-gerado"
-                        style="color: yellow; font-size: 18px; letter-spacing: 3px;">----</strong></p>
-                <input type="text" id="input-codigo" placeholder="Digite o código" autocomplete="off"
-                    style="width: 120px;">
-                <button onclick="tentarReboot()">Executar</button>
-                <p id="msg-erro-reboot" style="color: #ff5555; font-size: 12px; margin-bottom: 0;"></p>
+            <h2>Mecânica 2: LME (Energia Principal)</h2>
+            <p>Status da Rede: <strong id="energia-status" style="color: green;">LIGADA</strong></p>
+            
+            <div id="painel-reparo" style="display: none; background: #111; padding: 10px; border: 1px solid red; margin-top: 10px;">
+                <p style="color: #ff5555; font-weight: bold; margin-top: 0;">FALHA EM CASCATA!</p>
+                <p>Código de Reboot: <strong id="codigo-gerado" style="color: yellow; font-size: 16px; letter-spacing: 2px;">----</strong></p>
+                <input type="text" id="input-codigo" placeholder="Digite..." autocomplete="off">
+                <button onclick="tentarReboot()" style="width: auto;">Executar</button>
+                <p id="msg-erro-reboot" style="color: #ff5555; font-size: 12px; margin: 5px 0 0 0;"></p>
             </div>
         </div>
-
-        <hr>
-
-
-        <div class="painel">
-            <h2>Mecânica 3: Pressão e Alagamento</h2>
-            <p>Nível de Água na Ala: <span id="agua-valor">0</span>%</p>
-            <progress id="agua-barra" value="0" max="100" style="width: 300px; accent-color: blue;"></progress>
-            <br><br>
-            <button id="btn-bomba" onclick="drenarAgua()">Ativar Bomba de Drenagem (-30%)</button>
-
-        </div>
-
     </div>
 
     <script>
-        let tempoSegundos = 0;
-        const relogioDisplay = document.getElementById('relogio-display');
-
-        // Atualiza o cronômetro da partida a cada segundo.
-        const loopRelogio = setInterval(() => {
-            if (!jogoAtivo) return;
-
-            tempoSegundos++;
-
-            let minutos = Math.floor(tempoSegundos / 60).toString().padStart(2, '0');
-            let segundos = (tempoSegundos % 60).toString().padStart(2, '0');
-
-            relogioDisplay.innerText = `${minutos}:${segundos}`;
-        }, 1000);
-
-
-
         let oxigenio = 100;
         let nivelAgua = 0;
         let energiaLigada = true;
         let jogoAtivo = true;
-        let codigoAtual = "";
-
+        let codigoAtual = ""; 
+        
         const telaJogo = document.getElementById('tela-jogo');
         const statusMsg = document.getElementById('status-msg');
-
+        const btnRestart = document.getElementById('btn-restart');
+        
         const displayO2 = document.getElementById('o2-valor');
         const barraO2 = document.getElementById('o2-barra');
         const btnValvula = document.getElementById('btn-valvula');
+        
+        const displayAgua = document.getElementById('agua-valor');
+        const barraAgua = document.getElementById('agua-barra');
+        const btnBomba = document.getElementById('btn-bomba');
 
         const energiaStatus = document.getElementById('energia-status');
         const painelReparo = document.getElementById('painel-reparo');
@@ -191,54 +162,41 @@
         const inputCodigo = document.getElementById('input-codigo');
         const msgErroReboot = document.getElementById('msg-erro-reboot');
 
-        const displayAgua = document.getElementById('agua-valor');
-        const barraAgua = document.getElementById('agua-barra');
-        const btnBomba = document.getElementById('btn-bomba');
-
-        // Reduz o oxigênio continuamente.
-        // Com a energia desligada, o consumo é maior.
+        // LOOP DE O2
         const loopOxigenio = setInterval(() => {
             if (!jogoAtivo) return;
-
-            let taxaQueda = energiaLigada ? 5 : 10;
+            let taxaQueda = energiaLigada ? 5 : 10; 
             oxigenio -= taxaQueda;
-
             if (oxigenio <= 0) encerrarJogo("FALHA CRÍTICA: ASFIXIA!");
             atualizarInterfaceO2();
         }, 1000);
 
-        // Simula o aumento aleatório do nível de água.
-        // A falta de energia aumenta tanto a chance quanto o volume da inundação.
+        // LOOP DA ÁGUA
         const loopAgua = setInterval(() => {
             if (!jogoAtivo) return;
-
             let chanceSubir = energiaLigada ? 0.4 : 0.7;
             let volumeAgua = energiaLigada ? 10 : 20;
-
             if (Math.random() < chanceSubir) nivelAgua += volumeAgua;
-
             if (nivelAgua >= 100) encerrarJogo("FALHA CRÍTICA: COLAPSO ESTRUTURAL!");
             atualizarInterfaceAgua();
         }, 1500);
 
-        // Verifica periodicamente se ocorre uma falha de energia.
+        // LOOP DE ENERGIA
         const loopEnergia = setInterval(() => {
             if (!jogoAtivo) return;
-
-            if (energiaLigada && Math.random() < 0.25) {
+            if (energiaLigada && Math.random() < 0.25) { 
                 energiaLigada = false;
-
+                
                 telaJogo.style.backgroundColor = "#111111";
-                telaJogo.style.color = "#777777";
-                energiaStatus.innerText = "FALHA - SISTEMA OFFLINE";
+                energiaStatus.innerText = "SISTEMA OFFLINE";
                 energiaStatus.style.color = "red";
-
-                btnValvula.disabled = true;
+                
+                btnValvula.disabled = true; 
                 btnBomba.disabled = true;
-
+                
                 codigoAtual = Math.floor(1000 + Math.random() * 9000).toString();
                 displayCodigo.innerText = codigoAtual;
-
+                
                 painelReparo.style.display = "block";
                 inputCodigo.value = "";
                 msgErroReboot.innerText = "";
@@ -259,42 +217,37 @@
             }
         }
 
-        // Confere o código de segurança e restaura a energia.
         function tentarReboot() {
             if (!jogoAtivo) return;
-
             if (inputCodigo.value === codigoAtual) {
                 energiaLigada = true;
-                telaJogo.style.backgroundColor = "";
-                telaJogo.style.color = "";
+                telaJogo.style.backgroundColor = ""; 
                 energiaStatus.innerText = "LIGADA";
                 energiaStatus.style.color = "green";
-
+                
                 btnValvula.disabled = false;
                 btnBomba.disabled = false;
-                painelReparo.style.display = "none";
+                painelReparo.style.display = "none"; 
             } else {
                 msgErroReboot.innerText = "CÓDIGO INVÁLIDO!";
-                inputCodigo.value = "";
-                inputCodigo.focus();
+                inputCodigo.value = ""; 
+                inputCodigo.focus();    
             }
         }
 
-        // Finaliza a partida quando uma das condições críticas é atingida.
         function encerrarJogo(mensagem) {
             jogoAtivo = false;
             oxigenio = Math.max(0, oxigenio);
             nivelAgua = Math.min(100, nivelAgua);
             atualizarInterfaceO2();
             atualizarInterfaceAgua();
-
-            const tempoFinal = relogioDisplay.innerText;
-
-            statusMsg.innerHTML = `${mensagem} <br><br> TEMPO DE SOBREVIVÊNCIA: <span style="color: yellow;">${tempoFinal}</span>`;
-
+            
+            statusMsg.innerText = mensagem;
+            btnRestart.style.display = "block"; // MOSTRA O BOTÃO NOVO
+            
             btnValvula.disabled = true;
             btnBomba.disabled = true;
-            painelReparo.style.display = "none";
+            painelReparo.style.display = "none"; 
         }
 
         function atualizarInterfaceO2() {
@@ -308,5 +261,4 @@
         }
     </script>
 </body>
-
 </html>
