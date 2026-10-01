@@ -1,0 +1,11 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #111; font-family: "Courier New", Courier, monospace; }
+canvas { display: block; width: 100%; height: 100%; }
+#hud { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.85); color: #fff; padding: 12px 24px; border-radius: 8px; border: 2px solid #444; text-align: center; pointer-events: none; z-index: 10; }
+#hud h1 { font-size: 1.6rem; color: #00e5ff; }
+#hud p { font-size: .9rem; color: #aaa; margin-top: 4px; }
+#spawn-alert { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); color: #ff0055; font-size: 1.2rem; font-weight: bold; text-shadow: 0 0 10px #ff0055; display: none; pointer-events: none; z-index: 10; }
+#game-over { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(15,15,15,.95); color: #fff; padding: 30px 50px; border-radius: 12px; border: 3px solid #ff0055; text-align: center; z-index: 20; }
+#game-over h2 { color: #ff0055; font-size: 2.2rem; margin-bottom: 10px; }
+#game-over p { font-size: 1.05rem; margin-bottom: 20px; color: #ddd; }
+#game-over span { color: #00e5ff; font-weight: bold; }

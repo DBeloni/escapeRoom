@@ -3,12 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        Index
-    </title>
+    <meta name="theme-color" content="#0b0f14">
+    <title>Escape Room</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/game.css">
+    <link rel="stylesheet" href="css/ui.css">
 </head>
 <body>
-    <h1>Página Principal</h1><hr>
-    <p>Esse é o index.html</p>
+    <main id="gameContainer" aria-label="Jogo Escape Room">
+        <canvas id="gameCanvas"></canvas>
+
+        <section id="controls" aria-live="polite">
+            <strong>Controles</strong><br>
+            WASD / Setas → Mover<br>
+            F3 → Debug
+        </section>
+
+        <section id="loading" aria-live="polite">Carregando...</section>
+    </main>
+
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

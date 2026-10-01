@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protótipo — Pega-Pega Survival</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="hud">
+        <h1 id="timer">TEMPO: 00:00.0</h1>
+        <p id="instructions">Mova-se para iniciar a caçada! | BOTS: <span id="bot-count">2</span></p>
+    </div>
+
+    <div id="spawn-alert">+1 BOT ENTROU NA CAÇADA!</div>
+
+    <div id="game-over">
+        <h2>VOCÊ FOI PEGO!</h2>
+        <p>Tempo de sobrevivência: <span id="final-time">00:00.0</span></p>
+        <p>Pressione [ESPAÇO] ou qualquer tecla de movimento para reiniciar</p>
+    </div>
+
+    <canvas id="game"></canvas>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
