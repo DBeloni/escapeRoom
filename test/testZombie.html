@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pega-Pega Survival - IA A* & Cerco Real</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background-color: #111;
+            width: 100vw;
+            height: 100vh;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        #hud {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 2px solid #444;
+            text-align: center;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #hud h1 {
+            font-size: 1.6rem;
+            color: #00e5ff;
+        }
+
+        #hud p {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 4px;
+        }
+
+        #alerta-spawn {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff0055;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px #ff0055;
+            display: none;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 15, 15, 0.95);
+            color: #fff;
+            padding: 30px 50px;
+            border-radius: 12px;
+            border: 3px solid #ff0055;
+            text-align: center;
+            z-index: 20;
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.5);
+        }
+
+        #game-over h2 {
+            color: #ff0055;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        #game-over p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        #game-over span {
+            color: #00e5ff;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="hud">
+        <h1 id="timer">TEMPO: 00:00.0</h1>
+        <p id="instrucoes">Mova-se para iniciar a caçada! | BOTS: <span id="qtd-bots" style="color: #ff0055;">2</span></p>
+    </div>
+
+    <div id="alerta-spawn">+1 BOT ENTROU NA CAÇADA!</div>
+
+    <div id="game-over">
+        <h2>VOCÊ FOI PEGO!</h2>
+        <p>Tempo de sobrevivência: <span id="tempo-final">00:00.0</span></p>
+        <p style="font-size: 0.85rem; color: #888;">Pressione [ESPAÇO] ou qualquer tecla para reiniciar</p>
+    </div>
+
+    <canvas id="jogo"></canvas>
+
+    <script>
+        const canvas = document.getElementById('jogo');
+        const ctx = canvas.getContext('2d');
+        const displayTimer = document.getElementById('timer');
+        const displayInstrucoes = document.getElementById('instrucoes');
+        const displayQtdBots = document.getElementById('qtd-bots');
+        const modalGameOver = document.getElementById('game-over');
+        const displayTempoFinal = document.getElementById('tempo-final');
+        const alertaSpawn = document.getElementById('alerta-spawn');
+
+        // Configurações do Mundo e Grade (A*)
+        const mundo = { largura: 2600, altura: 1800 };
+        const TAMANHO_GRID = 50;
+        const COLS = Math.floor(mundo.largura / TAMANHO_GRID);
+        const ROWS = Math.floor(mundo.altura / TAMANHO_GRID);
+
+        // Velocidades em pixels por segundo
+        const VELOCIDADE_JOGADOR = 480;
+        const VELOCIDADE_BOT = 336;
+
+        // Ajustes de movimento dos bots
+        const INTERVALO_RECALCULO_BOT = 0.24; // segundos
+        const SUAVIZACAO_BOT = 10;             // aceleração/virada
+        const DISTANCIA_WAYPOINT = 18;
+
+        const TAMANHO_ENTIDADE = 44;
+
+        function redimensionar() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', redimensionar);
+        redimensionar();
+
+        let jogoIniciado = false;
+        let gameOver = false;
+        let tempoInicio = 0;
+        let tempoAtual = 0;
+        let proximoSpawnBot = 15;
+
+        let ultimoFrame = performance.now();
+        let ultimaPosJogador = { x: mundo.largura / 2, y: mundo.altura / 2 };
+
+        const CORES_BOTS = ['#a855f7', '#ff0055', '#ff9900', '#eab308', '#10b981', '#ec4899', '#3b82f6'];
+
+        const jogador = {
+            cor: '#00e5ff',
+            x: mundo.largura / 2,
+            y: mundo.altura / 2,
+            w: TAMANHO_ENTIDADE,
+            h: TAMANHO_ENTIDADE
+        };
+
+        let bots = [];
+
+        // Obstáculos ajustados
+        const obstaculos = [
+            { x: mundo.largura / 2 - 200, y: mundo.altura / 2 - 250, w: 400, h: 100 },
+            { x: mundo.largura / 2 - 200, y: mundo.altura / 2 + 150, w: 400, h: 100 },
+            { x: 350, y: 350, w: 220, h: 180 },
+            { x: mundo.largura - 570, y: mundo.altura - 530, w: 220, h: 180 },
+            { x: 650, y: 1100, w: 300, h: 100 },
+            { x: mundo.largura - 910, y: 450, w: 100, h: 300 }
+        ];
+
+        // Construção do Mapa de Colisão para a Grade (A*)
+        const gridMatriz = Array.from({ length: COLS }, () => Array(ROWS).fill(0));
+
+        function atualizarMatrizGrid() {
+            for (let c = 0; c < COLS; c++) {
+                for (let r = 0; r < ROWS; r++) {
+                    let rx = c * TAMANHO_GRID;
+                    let ry = r * TAMANHO_GRID;
+                    gridMatriz[c][r] = 0;
+                    for (let obs of obstaculos) {
+                        if (rx < obs.x + obs.w && rx + TAMANHO_GRID > obs.x &&
+                            ry < obs.y + obs.h && ry + TAMANHO_GRID > obs.y) {
+                            gridMatriz[c][r] = 1; // Obstáculo
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        atualizarMatrizGrid();
+
+        // ALGORITMO DE PATHFINDING A*
+        function buscarCaminhoAStar(startCol, startRow, targetCol, targetRow) {
+            startCol = Math.max(0, Math.min(COLS - 1, startCol));
+            startRow = Math.max(0, Math.min(ROWS - 1, startRow));
+            targetCol = Math.max(0, Math.min(COLS - 1, targetCol));
+            targetRow = Math.max(0, Math.min(ROWS - 1, targetRow));
+
+            // Se o alvo for obstáculo, procura vizinho livre
+            if (gridMatriz[targetCol][targetRow] === 1) {
+                let vizinhos = [
+                    [0, -1], [0, 1], [-1, 0], [1, 0],
+                    [-1, -1], [1, -1], [-1, 1], [1, 1]
+                ];
+                let achou = false;
+                for (let [dx, dy] of vizinhos) {
+                    let nc = targetCol + dx;
+                    let nr = targetRow + dy;
+                    if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && gridMatriz[nc][nr] === 0) {
+                        targetCol = nc;
+                        targetRow = nr;
+                        achou = true;
+                        break;
+                    }
+                }
+                if (!achou) return [];
+            }
+
+            let openSet = [];
+            let closedSet = new Set();
+
+            function nodeKey(c, r) { return `${c},${r}`; }
+
+            let startNode = {
+                c: startCol, r: startRow,
+                g: 0,
+                h: Math.hypot(startCol - targetCol, startRow - targetRow),
+                parent: null
+            };
+            startNode.f = startNode.g + startNode.h;
+            openSet.push(startNode);
+
+            while (openSet.length > 0) {
+                openSet.sort((a, b) => a.f - b.f);
+                let current = openSet.shift();
+
+                if (current.c === targetCol && current.r === targetRow) {
+                    let path = [];
+                    let temp = current;
+                    while (temp) {
+                        path.push({
+                            x: temp.c * TAMANHO_GRID + TAMANHO_GRID / 2,
+                            y: temp.r * TAMANHO_GRID + TAMANHO_GRID / 2
+                        });
+                        temp = temp.parent;
+                    }
+                    return path.reverse();
+                }
+
+                closedSet.add(nodeKey(current.c, current.r));
+
+                let vizinhos = [
+                    [0, -1], [0, 1], [-1, 0], [1, 0],
+                    [-1, -1], [1, -1], [-1, 1], [1, 1]
+                ];
+
+                for (let [dc, dr] of vizinhos) {
+                    let nc = current.c + dc;
+                    let nr = current.r + dr;
+
+                    if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS) continue;
+                    if (gridMatriz[nc][nr] === 1) continue;
+                    if (closedSet.has(nodeKey(nc, nr))) continue;
+
+                    let custoMovimento = (dc !== 0 && dr !== 0) ? 1.414 : 1;
+                    let gCost = current.g + custoMovimento;
+
+                    let existing = openSet.find(n => n.c === nc && n.r === nr);
+                    if (!existing) {
+                        let hCost = Math.hypot(nc - targetCol, nr - targetRow);
+                        let neighbor = {
+                            c: nc, r: nr,
+                            g: gCost, h: hCost, f: gCost + hCost,
+                            parent: current
+                        };
+                        openSet.push(neighbor);
+                    } else if (gCost < existing.g) {
+                        existing.g = gCost;
+                        existing.f = existing.g + existing.h;
+                        existing.parent = current;
+                    }
+                }
+            }
+
+            return [];
+        }
+
+        // Offsets de Cerco por Posição na Matilha
+        const OFFSETS_CERCO = [
+            { dc: -3, dr: 0 },   // Esquerda
+            { dc: 3, dr: 0 },    // Direita
+            { dc: 0, dr: -3 },   // Cima
+            { dc: 0, dr: 3 },    // Baixo
+            { dc: -2, dr: -2 },  // Diagonal Sup-Esq
+            { dc: 2, dr: 2 },    // Diagonal Inf-Dir
+            { dc: 2, dr: -2 },   // Diagonal Sup-Dir
+            { dc: -2, dr: 2 }    // Diagonal Inf-Esq
+        ];
+
+        // Controles
+        const teclas = {};
+        window.addEventListener('keydown', (e) => {
+            const tecla = e.key.toLowerCase();
+            teclas[tecla] = true;
+
+            if (gameOver && (e.code === 'Space' || ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(tecla))) {
+                resetarJogo();
+                return;
+            }
+
+            if (!jogoIniciado && !gameOver && ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(tecla)) {
+                jogoIniciado = true;
+                tempoInicio = Date.now();
+                displayInstrucoes.innerText = "SOBREVIVA À MATILHA!";
+                displayInstrucoes.style.color = "#ff5555";
+            }
+        });
+        window.addEventListener('keyup', (e) => delete teclas[e.key.toLowerCase()]);
+
+        function colidiu(x1, y1, w1, h1, x2, y2, w2, h2) {
+            return x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2;
+        }
+
+        function podeOcupar(x, y, w, h) {
+            if (x < 0 || x + w > mundo.largura || y < 0 || y + h > mundo.altura) return false;
+            for (let obs of obstaculos) {
+                if (colidiu(x, y, w, h, obs.x, obs.y, obs.w, obs.h)) return false;
+            }
+            return true;
+        }
+
+        // Verifica se uma entidade consegue ir em linha reta entre dois pontos.
+        // Isso permite cortar vários "ziguezagues" do caminho do A*.
+        function linhaLivre(x1, y1, x2, y2, w, h) {
+            const distancia = Math.hypot(x2 - x1, y2 - y1);
+            const passos = Math.max(1, Math.ceil(distancia / 12));
+
+            for (let i = 1; i <= passos; i++) {
+                const t = i / passos;
+                const cx = x1 + (x2 - x1) * t;
+                const cy = y1 + (y2 - y1) * t;
+
+                if (!podeOcupar(cx - w / 2, cy - h / 2, w, h)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Remove pontos desnecessários do A* e mantém apenas os "pulos" úteis.
+        function suavizarCaminho(caminho, bot) {
+            if (caminho.length <= 1) return caminho;
+
+            const centroX = bot.x + bot.w / 2;
+            const centroY = bot.y + bot.h / 2;
+
+            let melhorInicio = 0;
+
+            // Descarta o ponto inicial do A*, que normalmente é apenas
+            // o centro da célula onde o bot já está.
+            while (
+                melhorInicio < caminho.length - 1 &&
+                Math.hypot(caminho[melhorInicio].x - centroX, caminho[melhorInicio].y - centroY) < 26
+            ) {
+                melhorInicio++;
+            }
+
+            const resultado = [];
+            let indiceAtual = melhorInicio;
+
+            while (indiceAtual < caminho.length) {
+                let melhorIndice = indiceAtual;
+
+                // Procura o waypoint mais distante que ainda seja visível.
+                const limite = Math.min(caminho.length - 1, indiceAtual + 7);
+
+                for (let i = limite; i > indiceAtual; i--) {
+                    const origemX = resultado.length
+                        ? resultado[resultado.length - 1].x
+                        : centroX;
+                    const origemY = resultado.length
+                        ? resultado[resultado.length - 1].y
+                        : centroY;
+
+                    if (linhaLivre(origemX, origemY, caminho[i].x, caminho[i].y, bot.w, bot.h)) {
+                        melhorIndice = i;
+                        break;
+                    }
+                }
+
+                resultado.push(caminho[melhorIndice]);
+
+                if (melhorIndice >= caminho.length - 1) break;
+                indiceAtual = melhorIndice + 1;
+            }
+
+            return resultado;
+        }
+
+        function criarBot(x, y) {
+            return {
+                cor: CORES_BOTS[bots.length % CORES_BOTS.length],
+                x: x,
+                y: y,
+                w: TAMANHO_ENTIDADE,
+                h: TAMANHO_ENTIDADE,
+
+                // Velocidade atual: evita o movimento "travado" de parar e arrancar.
+                vx: 0,
+                vy: 0,
+
+                caminho: [],
+                timerPath: INTERVALO_RECALCULO_BOT
+            };
+        }
+
+        function resetarJogo() {
+            jogoIniciado = false;
+            gameOver = false;
+            proximoSpawnBot = 15;
+            modalGameOver.style.display = 'none';
+
+            ultimoFrame = performance.now();
+
+            jogador.x = mundo.largura / 2 - TAMANHO_ENTIDADE / 2;
+            jogador.y = mundo.altura / 2 - TAMANHO_ENTIDADE / 2;
+
+            bots = [
+                criarBot(150, 150),
+                criarBot(mundo.largura - 200, mundo.altura - 200)
+            ];
+
+            displayQtdBots.innerText = bots.length;
+            displayTimer.innerText = "TEMPO: 00:00.0";
+            displayInstrucoes.innerText = "Mova-se para iniciar a caçada!";
+            displayInstrucoes.style.color = "#aaa";
+        }
+
+        function resolverColisaoEntreBots() {
+            for (let i = 0; i < bots.length; i++) {
+                for (let j = i + 1; j < bots.length; j++) {
+                    const b1 = bots[i];
+                    const b2 = bots[j];
+
+                    if (!colidiu(b1.x, b1.y, b1.w, b1.h, b2.x, b2.y, b2.w, b2.h)) {
+                        continue;
+                    }
+
+                    const cx1 = b1.x + b1.w / 2;
+                    const cy1 = b1.y + b1.h / 2;
+                    const cx2 = b2.x + b2.w / 2;
+                    const cy2 = b2.y + b2.h / 2;
+
+                    const overlapX = (b1.w / 2 + b2.w / 2) - Math.abs(cx1 - cx2);
+                    const overlapY = (b1.h / 2 + b2.h / 2) - Math.abs(cy1 - cy2);
+
+                    // Empurra os bots só um pouco, em vez de "teletransportá-los"
+                    // para fora da colisão a cada frame.
+                    const fatorSuave = 0.35;
+
+                    if (overlapX < overlapY) {
+                        const direcao = cx1 < cx2 ? -1 : 1;
+                        const empurrao = overlapX * fatorSuave;
+
+                        if (podeOcupar(b1.x + empurrao * direcao, b1.y, b1.w, b1.h)) {
+                            b1.x += empurrao * direcao;
+                        }
+                        if (podeOcupar(b2.x - empurrao * direcao, b2.y, b2.w, b2.h)) {
+                            b2.x -= empurrao * direcao;
+                        }
+
+                        b1.vx *= 0.7;
+                        b2.vx *= 0.7;
+                    } else {
+                        const direcao = cy1 < cy2 ? -1 : 1;
+                        const empurrao = overlapY * fatorSuave;
+
+                        if (podeOcupar(b1.x, b1.y + empurrao * direcao, b1.w, b1.h)) {
+                            b1.y += empurrao * direcao;
+                        }
+                        if (podeOcupar(b2.x, b2.y - empurrao * direcao, b2.w, b2.h)) {
+                            b2.y -= empurrao * direcao;
+                        }
+
+                        b1.vy *= 0.7;
+                        b2.vy *= 0.7;
+                    }
+                }
+            }
+        }
+
+        function dispararAlertaSpawn() {
+            alertaSpawn.style.display = 'block';
+            setTimeout(() => { alertaSpawn.style.display = 'none'; }, 2000);
+        }
+
+        function atualizarFisica() {
+            if (gameOver) return;
+
+            // Delta time deixa o movimento consistente mesmo se o FPS oscilar.
+            const agora = performance.now();
+            const dt = Math.min((agora - ultimoFrame) / 1000, 0.033);
+            ultimoFrame = agora;
+
+            // Movimento do jogador
+            let dx = 0;
+            let dy = 0;
+
+            if (teclas['w'] || teclas['arrowup']) dy -= 1;
+            if (teclas['s'] || teclas['arrowdown']) dy += 1;
+            if (teclas['a'] || teclas['arrowleft']) dx -= 1;
+            if (teclas['d'] || teclas['arrowright']) dx += 1;
+
+            if (dx !== 0 || dy !== 0) {
+                const comprimento = Math.hypot(dx, dy);
+                dx /= comprimento;
+                dy /= comprimento;
+
+                const movimentoX = dx * VELOCIDADE_JOGADOR * dt;
+                const movimentoY = dy * VELOCIDADE_JOGADOR * dt;
+
+                if (podeOcupar(jogador.x + movimentoX, jogador.y, jogador.w, jogador.h)) {
+                    jogador.x += movimentoX;
+                }
+                if (podeOcupar(jogador.x, jogador.y + movimentoY, jogador.w, jogador.h)) {
+                    jogador.y += movimentoY;
+                }
+            }
+
+            // Lógica dos bots
+            if (!jogoIniciado) return;
+
+            tempoAtual = (Date.now() - tempoInicio) / 1000;
+
+            let seg = Math.floor(tempoAtual % 60).toString().padStart(2, '0');
+            let min = Math.floor(tempoAtual / 60).toString().padStart(2, '0');
+            let ms = Math.floor((tempoAtual % 1) * 10);
+            displayTimer.innerText = `TEMPO: ${min}:${seg}.${ms}`;
+
+            if (tempoAtual >= proximoSpawnBot) {
+                proximoSpawnBot += 15;
+
+                const cantos = [
+                    { x: 150, y: 150 },
+                    { x: mundo.largura - 200, y: 150 },
+                    { x: 150, y: mundo.altura - 200 },
+                    { x: mundo.largura - 200, y: mundo.altura - 200 }
+                ];
+
+                // Escolhe o canto menos próximo do jogador.
+                const canto = cantos
+                    .map((ponto) => ({
+                        ...ponto,
+                        distancia: Math.hypot(
+                            ponto.x - jogador.x,
+                            ponto.y - jogador.y
+                        )
+                    }))
+                    .sort((a, b) => b.distancia - a.distancia)[0];
+
+                bots.push(criarBot(canto.x, canto.y));
+                displayQtdBots.innerText = bots.length;
+                dispararAlertaSpawn();
+            }
+
+            const jogCol = Math.floor((jogador.x + jogador.w / 2) / TAMANHO_GRID);
+            const jogRow = Math.floor((jogador.y + jogador.h / 2) / TAMANHO_GRID);
+
+            bots.forEach((bot, index) => {
+                bot.timerPath += dt;
+
+                // Recalcula em intervalos curtos, mas não a cada poucos frames.
+                if (bot.timerPath >= INTERVALO_RECALCULO_BOT || bot.caminho.length === 0) {
+                    bot.timerPath = 0;
+
+                    const offset = OFFSETS_CERCO[index % OFFSETS_CERCO.length];
+                    const alvoCol = jogCol + offset.dc;
+                    const alvoRow = jogRow + offset.dr;
+
+                    const botCol = Math.floor((bot.x + bot.w / 2) / TAMANHO_GRID);
+                    const botRow = Math.floor((bot.y + bot.h / 2) / TAMANHO_GRID);
+
+                    let novoCaminho = buscarCaminhoAStar(
+                        botCol,
+                        botRow,
+                        alvoCol,
+                        alvoRow
+                    );
+
+                    if (novoCaminho.length === 0) {
+                        novoCaminho = buscarCaminhoAStar(
+                            botCol,
+                            botRow,
+                            jogCol,
+                            jogRow
+                        );
+                    }
+
+                    bot.caminho = suavizarCaminho(novoCaminho, bot);
+                }
+
+                let desejoX = 0;
+                let desejoY = 0;
+
+                if (bot.caminho.length > 0) {
+                    const alvoPonto = bot.caminho[0];
+                    const bx = bot.x + bot.w / 2;
+                    const by = bot.y + bot.h / 2;
+
+                    const dirX = alvoPonto.x - bx;
+                    const dirY = alvoPonto.y - by;
+                    const dist = Math.hypot(dirX, dirY);
+
+                    if (dist < DISTANCIA_WAYPOINT) {
+                        bot.caminho.shift();
+                    } else if (dist > 0) {
+                        desejoX = (dirX / dist) * VELOCIDADE_BOT;
+                        desejoY = (dirY / dist) * VELOCIDADE_BOT;
+                    }
+                }
+
+                // Aceleração suave: o bot gira e freia gradualmente.
+                const fatorSuavizacao = 1 - Math.exp(-SUAVIZACAO_BOT * dt);
+                bot.vx += (desejoX - bot.vx) * fatorSuavizacao;
+                bot.vy += (desejoY - bot.vy) * fatorSuavizacao;
+
+                // Evita microdeslizamentos quando o alvo fica para trás.
+                if (Math.abs(bot.vx) < 0.5) bot.vx = 0;
+                if (Math.abs(bot.vy) < 0.5) bot.vy = 0;
+
+                const proximoX = bot.x + bot.vx * dt;
+                const proximoY = bot.y + bot.vy * dt;
+
+                // Colisão por eixo para permitir "escorregar" pelas paredes.
+                if (podeOcupar(proximoX, bot.y, bot.w, bot.h)) {
+                    bot.x = proximoX;
+                } else {
+                    bot.vx = 0;
+                }
+
+                if (podeOcupar(bot.x, proximoY, bot.w, bot.h)) {
+                    bot.y = proximoY;
+                } else {
+                    bot.vy = 0;
+                }
+
+                // Colisão Bot x Jogador
+                if (colidiu(
+                    jogador.x, jogador.y, jogador.w, jogador.h,
+                    bot.x, bot.y, bot.w, bot.h
+                )) {
+                    gameOver = true;
+                    displayTempoFinal.innerText = displayTimer.innerText.replace('TEMPO: ', '');
+                    modalGameOver.style.display = 'block';
+                }
+            });
+
+            resolverColisaoEntreBots();
+        }
+
+        function desenhar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            let camX = jogador.x + (jogador.w / 2) - (canvas.width / 2);
+            let camY = jogador.y + (jogador.h / 2) - (canvas.height / 2);
+
+            camX = Math.max(0, Math.min(camX, mundo.largura - canvas.width));
+            camY = Math.max(0, Math.min(camY, mundo.altura - canvas.height));
+
+            ctx.translate(-camX, -camY);
+
+            // Chão e Grid
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, mundo.largura, mundo.altura);
+
+            ctx.strokeStyle = '#282828';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let x = 0; x <= mundo.largura; x += 50) { ctx.moveTo(x, 0); ctx.lineTo(x, mundo.altura); }
+            for (let y = 0; y <= mundo.altura; y += 50) { ctx.moveTo(0, y); ctx.lineTo(mundo.largura, y); }
+            ctx.stroke();
+
+            // Bordas
+            ctx.strokeStyle = '#ff5555';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(0, 0, mundo.largura, mundo.altura);
+
+            // Obstáculos
+            ctx.fillStyle = '#444';
+            obstaculos.forEach(obs => ctx.fillRect(obs.x, obs.y, obs.w, obs.h));
+
+            // Jogador
+            ctx.fillStyle = jogador.cor;
+            ctx.fillRect(jogador.x, jogador.y, jogador.w, jogador.h);
+
+            // Bots
+            bots.forEach(bot => {
+                // Corpo
+                ctx.fillStyle = bot.cor;
+                ctx.fillRect(bot.x, bot.y, bot.w, bot.h);
+
+                // "Olhos" acompanham a direção do movimento.
+                const cx = bot.x + bot.w / 2;
+                const cy = bot.y + bot.h / 2;
+                const intensidade = Math.min(1, Math.hypot(bot.vx, bot.vy) / VELOCIDADE_BOT);
+
+                let olharX = bot.vx;
+                let olharY = bot.vy;
+                const olharDist = Math.hypot(olharX, olharY);
+
+                if (olharDist > 0.01) {
+                    olharX /= olharDist;
+                    olharY /= olharDist;
+                }
+
+                const olhoOffsetX = olharX * 3;
+                const olhoOffsetY = olharY * 3;
+
+                ctx.fillStyle = '#111';
+                ctx.fillRect(cx - 11 + olhoOffsetX, cy - 7 + olhoOffsetY, 7, 7);
+                ctx.fillRect(cx + 4 + olhoOffsetX, cy - 7 + olhoOffsetY, 7, 7);
+
+                if (intensidade > 0.15) {
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(cx - 9 + olhoOffsetX, cy - 5 + olhoOffsetY, 3, 3);
+                    ctx.fillRect(cx + 6 + olhoOffsetX, cy - 5 + olhoOffsetY, 3, 3);
+                }
+            });
+
+            ctx.restore();
+        }
+
+        function loop() {
+            atualizarFisica();
+            desenhar();
+            requestAnimationFrame(loop);
+        }
+
+        resetarJogo();
+        loop();
+    </script>
+</body>
+</html>
