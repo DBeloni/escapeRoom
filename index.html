@@ -3,25 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b0f14">
-    <title>Escape Room</title>
-    <link rel="stylesheet" href="css/base.css">
-    <link rel="stylesheet" href="css/game.css">
-    <link rel="stylesheet" href="css/ui.css">
+    <meta name="description" content="Site oficial do Escape Room escolar em HTML5, CSS3 e JavaScript Vanilla.">
+    <title>Escape Room — Quarantine Protocol</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-    <main id="gameContainer" aria-label="Jogo Escape Room">
-        <canvas id="gameCanvas"></canvas>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="index.html" aria-label="Escape Room — página inicial">
+                <span class="brand-mark" aria-hidden="true">ER</span>
+                <span>ESCAPE ROOM <small>QUARANTINE PROTOCOL</small></span>
+            </a>
+            <nav class="site-nav" aria-label="Navegação principal">
+                <ul>
+                    <li><a href="index.html" aria-current="page">Início</a></li>
+                    <li><a href="pages/historia.html">História</a></li>
+                    <li><a href="pages/cenarios.html">Cenários</a></li>
+                    <li><a href="pages/itens.html">Itens</a></li>
+                    <li><a href="pages/enigmas.html">Enigmas</a></li>
+                    <li><a href="pages/finais.html">Finais</a></li>
+                    <li><a href="pages/como-jogar.html">Como jogar</a></li>
+                    <li><a href="pages/desenvolvedores.html">Equipe</a></li>
+                    <li><a href="pages/tecnologia.html">Tecnologia</a></li>
+                    <li><a href="pages/galeria.html">Galeria</a></li>
+                    <li><a href="pages/contato.html">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-        <section id="controls" aria-live="polite">
-            <strong>Controles</strong><br>
-            WASD / Setas → Mover<br>
-            F3 → Debug
+    <main id="conteudo">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="container hero-content">
+                <p class="eyebrow">Protocolo de emergência ativo</p>
+                <h1 id="hero-title">Você entrou.<br>Agora precisa sair.</h1>
+                <p class="lead">Um Escape Room escolar em HTML5, CSS3 e JavaScript Vanilla. Explore, investigue, conecte pistas e encontre a rota de fuga antes que o ambiente decida por você.</p>
+                <div class="actions">
+                    <a class="button" href="html/mapaPrincipal.html">Jogar agora</a>
+                    <a class="button secondary" href="pages/historia.html">Conhecer a história</a>
+                </div>
+            </div>
         </section>
 
-        <section id="loading" aria-live="polite">Carregando...</section>
+        <section class="section" aria-labelledby="sobre-titulo">
+            <div class="container">
+                <div class="section-head">
+                    <div>
+                        <span class="kicker">Briefing</span>
+                        <h2 id="sobre-titulo">Um jogo feito para testar decisões</h2>
+                    </div>
+                    <p class="muted">2–5 min · exploração · enigmas · múltiplos finais</p>
+                </div>
+
+                <div class="grid">
+                    <article class="card">
+                        <div class="icon-box" aria-hidden="true">01</div>
+                        <h3>Explore</h3>
+                        <p>O mapa atual do protótipo trabalha com navegação top-down e transição entre a cidade e a casa.</p>
+                        <a href="pages/cenarios.html">Ver cenários →</a>
+                    </article>
+                    <article class="card">
+                        <div class="icon-box" aria-hidden="true">02</div>
+                        <h3>Investigue</h3>
+                        <p>Itens, mecanismos e pistas devem ser observados com atenção. Uma descoberta pode mudar outro ponto do mapa.</p>
+                        <a href="pages/itens.html">Ver itens →</a>
+                    </article>
+                    <article class="card">
+                        <div class="icon-box" aria-hidden="true">03</div>
+                        <h3>Escape</h3>
+                        <p>O objetivo não é simplesmente chegar ao fim: tempo, decisões e informações encontradas podem alterar o desfecho.</p>
+                        <a href="pages/enigmas.html">Ver enigmas →</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" aria-labelledby="dados-titulo">
+            <div class="container">
+                <div class="section-head">
+                    <div>
+                        <span class="kicker">Ficha técnica</span>
+                        <h2 id="dados-titulo">O que já existe no projeto</h2>
+                    </div>
+                </div>
+                <div class="table-shell">
+                    <table>
+                        <caption>Resumo da estrutura atual do protótipo, com base no repositório enviado.</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Área</th>
+                                <th scope="col">Implementação</th>
+                                <th scope="col">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Engine</td><td>Canvas + loop de jogo</td><td>Base criada</td></tr>
+                            <tr><td>Mapa</td><td>Mapa top-down em pixel art</td><td>Funcionando</td></tr>
+                            <tr><td>Cenários</td><td>Cidade + Casa</td><td>Registrados no código</td></tr>
+                            <tr><td>Jogador</td><td>Movimento + animação</td><td>Base criada</td></tr>
+                            <tr><td>Sistemas</td><td>Inventário, puzzles, pontos, timer e interação</td><td>Estrutura criada</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" aria-labelledby="audio-titulo">
+            <div class="container">
+                <div class="callout">
+                    <article class="card">
+                        <span class="kicker">Ambientação</span>
+                        <h2 id="audio-titulo">O silêncio também faz parte do jogo.</h2>
+                        <p>O site inclui uma faixa simples de teste em HTML5 para demonstrar mídia local e permitir uma futura ambientação sonora mais completa.</p>
+                        <audio controls preload="metadata">
+                            <source src="assets/audio/ambientacao.wav" type="audio/wav">
+                            Seu navegador não suporta o elemento de áudio.
+                        </audio>
+                    </article>
+                    <aside class="notice" aria-label="Aviso sobre o protótipo">
+                        <strong>Nota de projeto</strong>
+                        <p>Os nomes de cenários, itens e enigmas podem mudar enquanto a parte de gameplay evolui. Esta página foi construída para servir de base ao site oficial sem travar o desenvolvimento do jogo.</p>
+                    </aside>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <script type="module" src="js/main.js"></script>
+    <footer class="footer">
+        <div class="container footer-grid">
+            <section aria-labelledby="footer-projeto">
+                <h2 id="footer-projeto">Escape Room</h2>
+                <p>Projeto escolar em desenvolvimento. O site apresenta o universo, a equipe e a parte técnica do jogo.</p>
+                <p class="mono">STATUS: <strong>EM DESENVOLVIMENTO</strong></p>
+            </section>
+            <section aria-labelledby="footer-navegacao">
+                <h2 id="footer-navegacao">Acesso rápido</h2>
+                <ul>
+                    <li><a href="html/mapaPrincipal.html">Abrir o jogo</a></li>
+                    <li><a href="docs/ideias.md">Documento de ideias</a></li>
+                    <li><a href="pages/desenvolvedores.html">Desenvolvedores</a></li>
+                </ul>
+            </section>
+            <section aria-labelledby="footer-links">
+                <h2 id="footer-links">Links externos</h2>
+                <ul>
+                    <li><a href="https://github.com/DBeloni/escapeRoom" target="_blank" rel="noopener noreferrer">GitHub do projeto</a></li>
+                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/HTML" target="_blank" rel="noopener noreferrer">MDN — HTML</a></li>
+                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">MDN — JavaScript</a></li>
+                </ul>
+            </section>
+        </div>
+        <div class="container footer-bottom">
+            <small class="muted">© <span data-year>2026</span> — Projeto desenvolvido para fins escolares.</small>
+        </div>
+    </footer>
+    <script src="js/site.js" defer></script>
 </body>
 </html>

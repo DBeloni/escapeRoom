@@ -1,20 +1,13 @@
 export function createPointSystem() {
-    let score = 0;
-
     return {
-        get() {
-            return score;
+        total: 0,
+
+        add(amount) {
+            this.total += amount;
         },
-        add(value) {
-            score += value;
-            return score;
-        },
-        subtract(value) {
-            score -= value;
-            return score;
-        },
+
         reset() {
-            score = 0;
+            this.total = 0;
         }
     };
 }

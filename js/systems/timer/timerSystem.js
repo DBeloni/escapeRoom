@@ -1,22 +1,25 @@
 export function createTimerSystem() {
-    let elapsed = 0;
-    let running = false;
-
     return {
+        running: false,
+        elapsed: 0,
+
         start() {
-            running = true;
+            this.running = true;
         },
+
         stop() {
-            running = false;
+            this.running = false;
         },
+
         reset() {
-            elapsed = 0;
+            this.elapsed = 0;
+            this.running = false;
         },
-        getSeconds() {
-            return elapsed;
-        },
+
         update(deltaSeconds) {
-            if (running) elapsed += deltaSeconds;
+            if (this.running) {
+                this.elapsed += deltaSeconds;
+            }
         }
     };
 }

@@ -1,4 +1,4 @@
-export function startGameLoop({ update, render }) {
+export function startGameLoop(update, render) {
     function frame(currentTime) {
         update(currentTime);
         render();

@@ -1,7 +1,6 @@
 export function createGameState() {
     return {
         sceneId: "cidade",
-
         flags: {
             gameStarted: false,
             mapLoaded: false,
@@ -9,20 +8,17 @@ export function createGameState() {
             waterLoaded: false,
             debug: false
         },
-
         map: {
             width: 0,
             height: 0
         },
-
         camera: {
             x: 0,
             y: 0
         },
-
         player: {
-            x: 0,
-            y: 0,
+            x: 650,
+            y: 580,
             width: 32,
             height: 37,
             collisionWidth: 20,
@@ -32,29 +28,18 @@ export function createGameState() {
             frame: 0,
             animationTime: 0
         },
-
-        input: {
-            keys: Object.create(null)
-        },
-
         loop: {
             previousTime: 0
         },
-
         world: {
             waterMask: null,
             waterDebugImage: null
         },
-
-        runtime: {
-            zoom: 1.8,
-            drownThresholdPercent: 35,
-            waterPercent: 0
+        input: {
+            keys: {}
         },
-
-        systems: {},
-        metrics: {
-            currentBarrierCount: 0
+        runtime: {
+            waterPercent: 0
         }
     };
 }

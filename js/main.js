@@ -1,6 +1,6 @@
 import { startGame } from "./core/game.js";
 
-startGame().catch((error) => {
+startGame().catch(error => {
     console.error(error);
 
     const loading = document.getElementById("loading");

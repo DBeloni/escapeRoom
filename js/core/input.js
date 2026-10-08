@@ -1,5 +1,5 @@
 export function bindInput(state, handlers = {}) {
-    function onKeyDown(event) {
+    window.addEventListener("keydown", event => {
         const key = event.key.toLowerCase();
 
         if (key === "f3") {
@@ -18,23 +18,13 @@ export function bindInput(state, handlers = {}) {
         if (key.startsWith("arrow")) {
             event.preventDefault();
         }
-    }
+    });
 
-    function onKeyUp(event) {
-        delete state.input.keys[event.key.toLowerCase()];
-    }
+    window.addEventListener("keyup", event => {
+        state.input.keys[event.key.toLowerCase()] = false;
+    });
 
-    function onBlur() {
-        state.input.keys = Object.create(null);
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    window.addEventListener("blur", onBlur);
-
-    return () => {
-        window.removeEventListener("keydown", onKeyDown);
-        window.removeEventListener("keyup", onKeyUp);
-        window.removeEventListener("blur", onBlur);
-    };
+    window.addEventListener("blur", () => {
+        state.input.keys = {};
+    });
 }

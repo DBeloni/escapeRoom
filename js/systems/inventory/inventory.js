@@ -1,35 +1,21 @@
-export function createInventorySystem(maxSlots = 10) {
-    const items = [];
-
+export function createInventorySystem() {
     return {
-        maxSlots,
+        items: [],
 
         add(item) {
-            if (items.length >= maxSlots) return false;
-            items.push({ ...item });
-            return true;
+            this.items.push(item);
         },
 
-        removeFirst() {
-            return items.shift() ?? null;
+        remove(itemId) {
+            this.items = this.items.filter(item => item.id !== itemId);
         },
 
-        removeById(id) {
-            const index = items.findIndex((item) => item.id === id);
-            if (index < 0) return null;
-            return items.splice(index, 1)[0];
-        },
-
-        has(id) {
-            return items.some((item) => item.id === id);
-        },
-
-        list() {
-            return items.map((item) => ({ ...item }));
+        has(itemId) {
+            return this.items.some(item => item.id === itemId);
         },
 
         clear() {
-            items.length = 0;
+            this.items = [];
         }
     };
 }

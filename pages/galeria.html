@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Site oficial do Escape Room escolar desenvolvido em HTML, CSS e JavaScript.">
+    <title>Escape Room — Galeria</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/site.css">
+</head>
+<body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="../index.html" aria-label="Escape Room — página inicial">
+                <span class="brand-mark" aria-hidden="true">ER</span>
+                <span>ESCAPE ROOM <small>QUARANTINE PROTOCOL</small></span>
+            </a>
+            <nav class="site-nav" aria-label="Navegação principal">
+                <ul>
+                    <li><a href="../index.html">Início</a></li>
+                    <li><a href="historia.html">História</a></li>
+                    <li><a href="cenarios.html">Cenários</a></li>
+                    <li><a href="itens.html">Itens</a></li>
+                    <li><a href="enigmas.html">Enigmas</a></li>
+                    <li><a href="finais.html">Finais</a></li>
+                    <li><a href="como-jogar.html">Como jogar</a></li>
+                    <li><a href="desenvolvedores.html">Equipe</a></li>
+                    <li><a href="tecnologia.html">Tecnologia</a></li>
+                    <li><a href="galeria.html" aria-current="page">Galeria</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="conteudo">
+        
+        <div class="container page-head">
+            <span class="eyebrow">Arquivo visual</span>
+            <h1>Galeria</h1>
+            <p>Materiais que já fazem parte do projeto e ajudam a visualizar a direção de arte.</p>
+        </div>
+        <section class="section" aria-labelledby="mapas">
+            <div class="container grid two">
+                <figure class="card media-card"><img src="../assets/maps/mapa.png" alt="Mapa principal em pixel art, com água, casas danificadas, cercas e área portuária."><figcaption>Mapa principal — versão atual do protótipo.</figcaption></figure>
+                <figure class="card media-card"><img src="../assets/maps/mapa2.png" alt="Mapa alternativo em pixel art, com casas, água e uma ponte quebrada."><figcaption>Mapa alternativo — material visual já presente no repositório.</figcaption></figure>
+            </div>
+        </section>
+        <section class="section" aria-labelledby="direcao">
+            <div class="container grid two">
+                <article class="card"><span class="kicker">Direção de arte</span><h2 id="direcao">Pixel art com leitura rápida</h2><p>O mapa usa formas grandes, obstáculos bem definidos e cores contrastantes para facilitar a localização durante o jogo.</p></article>
+                <aside class="card"><span class="kicker">Atenção</span><h2>Imagens também precisam de contexto.</h2><p>As imagens possuem texto alternativo descritivo para que o conteúdo não dependa apenas da visão.</p></aside>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-grid">
+            <section aria-labelledby="footer-projeto">
+                <h2 id="footer-projeto">Escape Room</h2>
+                <p>Projeto escolar em desenvolvimento. O site apresenta o universo, a equipe e a parte técnica do jogo.</p>
+                <p class="mono">STATUS: <strong>EM DESENVOLVIMENTO</strong></p>
+            </section>
+            <section aria-labelledby="footer-navegacao">
+                <h2 id="footer-navegacao">Acesso rápido</h2>
+                <ul>
+                    <li><a href="../html/mapaPrincipal.html">Abrir o jogo</a></li>
+                    <li><a href="../docs/ideias.md">Documento de ideias</a></li>
+                    <li><a href="desenvolvedores.html">Desenvolvedores</a></li>
+                </ul>
+            </section>
+            <section aria-labelledby="footer-links">
+                <h2 id="footer-links">Links externos</h2>
+                <ul>
+                    <li><a href="https://github.com/DBeloni/escapeRoom" target="_blank" rel="noopener noreferrer">GitHub do projeto</a></li>
+                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/HTML" target="_blank" rel="noopener noreferrer">MDN — HTML</a></li>
+                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">MDN — JavaScript</a></li>
+                </ul>
+            </section>
+        </div>
+        <div class="container footer-bottom">
+            <small class="muted">© <span data-year>2026</span> — Projeto desenvolvido para fins escolares.</small>
+        </div>
+    </footer>
+    <script src="../js/site.js" defer></script>
+</body>
+</html>

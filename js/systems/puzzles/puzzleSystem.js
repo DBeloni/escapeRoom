@@ -1,21 +1,13 @@
 export function createPuzzleSystem() {
-    const puzzles = new Map();
-
     return {
-        register(id, puzzle) {
-            puzzles.set(id, puzzle);
+        solved: new Set(),
+
+        solve(puzzleId) {
+            this.solved.add(puzzleId);
         },
 
-        get(id) {
-            return puzzles.get(id);
-        },
-
-        solve(id, context) {
-            const puzzle = puzzles.get(id);
-            if (!puzzle) return false;
-            return puzzle.solve?.(context) ?? false;
-        },
-
-        update() {}
+        isSolved(puzzleId) {
+            return this.solved.has(puzzleId);
+        }
     };
 }

@@ -33,8 +33,12 @@ export function hasSolidCollision(state, scene, x, y) {
         return true;
     }
 
-    for (const barrier of scene.barriers ?? []) {
-        if (rectanglesOverlap(hitbox, barrier)) {
+    if (scene.id === "casa") {
+        return false;
+    }
+
+    for (const [x0, y0, width, height] of scene.barriers ?? []) {
+        if (rectanglesOverlap(hitbox, { x: x0, y: y0, width, height })) {
             return true;
         }
     }

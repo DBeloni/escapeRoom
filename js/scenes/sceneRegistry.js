@@ -1,7 +1,7 @@
-import { CITY_SCENE } from "./cidade/cityScene.js";
-import { HOUSE_SCENE } from "./casa/houseScene.js";
+import { CITY_SCENE } from "./cidade/city.js";
+import { HOUSE_SCENE } from "./casa/house.js";
 
 export const SCENES = {
-    [CITY_SCENE.id]: CITY_SCENE,
-    [HOUSE_SCENE.id]: HOUSE_SCENE
+    cidade: CITY_SCENE,
+    casa: HOUSE_SCENE
 };

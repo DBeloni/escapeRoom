@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Site oficial do Escape Room escolar desenvolvido em HTML, CSS e JavaScript.">
+    <title>Escape Room — História</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/site.css">
+</head>
+<body>
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="../index.html" aria-label="Escape Room — página inicial">
+                <span class="brand-mark" aria-hidden="true">ER</span>
+                <span>ESCAPE ROOM <small>QUARANTINE PROTOCOL</small></span>
+            </a>
+            <nav class="site-nav" aria-label="Navegação principal">
+                <ul>
+                    <li><a href="../index.html">Início</a></li>
+                    <li><a href="historia.html" aria-current="page">História</a></li>
+                    <li><a href="cenarios.html">Cenários</a></li>
+                    <li><a href="itens.html">Itens</a></li>
+                    <li><a href="enigmas.html">Enigmas</a></li>
+                    <li><a href="finais.html">Finais</a></li>
+                    <li><a href="como-jogar.html">Como jogar</a></li>
+                    <li><a href="desenvolvedores.html">Equipe</a></li>
+                    <li><a href="tecnologia.html">Tecnologia</a></li>
+                    <li><a href="galeria.html">Galeria</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main id="conteudo">
+        
+        <div class="container page-head anchor-target" id="topo">
+            <span class="eyebrow">Arquivo 001 // narrativa</span>
+            <h1>História</h1>
+            <p>O jogador acorda em uma área isolada, sem entender exatamente por que foi parar ali. Portões fechados, instalações abandonadas e sinais de que alguém deixou a região às pressas transformam cada detalhe em uma pista.</p>
+        </div>
+        <section class="section" aria-labelledby="historia-base">
+            <div class="container grid two">
+                <article class="card">
+                    <span class="kicker">O incidente</span>
+                    <h2 id="historia-base">A cidade parou.</h2>
+                    <p>O ambiente apresentado pelo protótipo é uma zona de quarentena com construções danificadas, água cercando parte do mapa e estruturas que parecem ter sido evacuadas de forma repentina.</p>
+                    <p>O objetivo inicial é simples: encontrar uma rota segura para fora. O problema é que cada caminho revela novas travas.</p>
+                </article>
+                <figure class="card media-card">
+                    <img src="../assets/maps/mapa.png" alt="Mapa em pixel art com casas abandonadas, água, cercas e estruturas danificadas.">
+                    <figcaption>O mapa atual do projeto serve como base visual para a exploração.</figcaption>
+                </figure>
+            </div>
+        </section>
+        <section class="section" aria-labelledby="linha-do-tempo">
+            <div class="container">
+                <span class="kicker">Linha do tempo</span>
+                <h2 id="linha-do-tempo">Como o mistério pode crescer</h2>
+                <div class="grid">
+                    <article class="card"><span class="card-number">01</span><h3>Entrada</h3><p>O jogador percebe que não pode simplesmente voltar pelo caminho de onde veio.</p></article>
+                    <article class="card"><span class="card-number">02</span><h3>Investigação</h3><p>Objetos, documentos e mecanismos conectam partes que pareciam sem relação.</p></article>
+                    <article class="card"><span class="card-number">03</span><h3>Decisão</h3><p>O jogador escolhe entre caminhos mais rápidos, mais seguros ou mais arriscados.</p></article>
+                </div>
+            </div>
+        </section>
+        <section class="section" aria-labelledby="canon">
+            <div class="container">
+                <blockquote class="quote">“Nem toda saída é uma fuga. Algumas só levam você mais fundo.”<cite>— frase-tema provisória do projeto</cite></blockquote>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-grid">
+            <section aria-labelledby="footer-projeto">
+                <h2 id="footer-projeto">Escape Room</h2>
+                <p>Projeto escolar em desenvolvimento. O site apresenta o universo, a equipe e a parte técnica do jogo.</p>
+                <p class="mono">STATUS: <strong>EM DESENVOLVIMENTO</strong></p>
+            </section>
+            <section aria-labelledby="footer-navegacao">
+                <h2 id="footer-navegacao">Acesso rápido</h2>
+                <ul>
+                    <li><a href="../html/mapaPrincipal.html">Abrir o jogo</a></li>
+                    <li><a href="../docs/ideias.md">Documento de ideias</a></li>
+                    <li><a href="desenvolvedores.html">Desenvolvedores</a></li>
+                </ul>
+            </section>
+            <section aria-labelledby="footer-links">
+                <h2 id="footer-links">Links externos</h2>
+                <ul>
+                    <li><a href="https://github.com/DBeloni/escapeRoom" target="_blank" rel="noopener noreferrer">GitHub do projeto</a></li>
+                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/HTML" target="_blank" rel="noopener noreferrer">MDN — HTML</a></li>
+                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">MDN — JavaScript</a></li>
+                </ul>
+            </section>
+        </div>
+        <div class="container footer-bottom">
+            <small class="muted">© <span data-year>2026</span> — Projeto desenvolvido para fins escolares.</small>
+        </div>
+    </footer>
+    <script src="../js/site.js" defer></script>
+</body>
+</html>

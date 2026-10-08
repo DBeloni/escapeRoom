@@ -1,23 +1,17 @@
 export function createInteractionSystem() {
-    let target = null;
-
     return {
-        setTarget(value) {
-            target = value;
+        currentTarget: null,
+
+        setTarget(target) {
+            this.currentTarget = target;
         },
 
         clearTarget() {
-            target = null;
+            this.currentTarget = null;
         },
 
-        getTarget() {
-            return target;
-        },
-
-        interact(context) {
-            return target?.interact?.(context) ?? false;
-        },
-
-        update() {}
+        interact() {
+            this.currentTarget?.interact?.();
+        }
     };
 }
