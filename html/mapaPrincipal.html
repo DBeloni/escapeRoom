@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo Top Down</title>
+    <title>Escape Room — Teste de Mapas</title>
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -15,6 +15,25 @@
             WASD / Setas → Mover<br>
             F3 → Mostrar barreiras e hitbox
         </div>
+
+        <section id="mobileControls" aria-label="Controles para celular">
+            <div id="mobileJoystick" class="mobile-joystick" aria-label="Joystick virtual">
+                <div class="mobile-joystick-ring">
+                    <div id="mobileJoystickThumb" class="mobile-joystick-thumb"></div>
+                </div>
+            </div>
+
+            <div class="mobile-actions">
+                <button id="mobileDebug" class="mobile-action" type="button" aria-label="Alternar modo debug">DEBUG</button>
+                <button id="mobileBack" class="mobile-action" type="button" aria-label="Voltar ou sair da casa">VOLTAR</button>
+            </div>
+        </section>
+
+        <nav id="mapSelector" aria-label="Escolher mapa para teste">
+            <span>Mapa em teste</span>
+            <a href="mapaPrincipal.html?map=atual" data-map="atual">Atual</a>
+            <a href="mapaPrincipal.html?map=remaster" data-map="remaster">Zona Costeira</a>
+        </nav>
 
         <div id="loading">Carregando...</div>
     </main>

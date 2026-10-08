@@ -4,6 +4,29 @@ const contexto = canvas.getContext("2d");
 const aviso = document.getElementById("loading");
 const controles = document.getElementById("controls");
 
+// Cada opção é independente: o mapa atual continua intacto e a Zona Costeira
+// pode ser testada pelo seletor no canto superior direito.
+const mapasDisponiveis = {
+    atual: {
+        id: "atual",
+        nome: "Quarantine Protocol",
+        src: "../assets/maps/mapa.png",
+        spawn: { x: 650, y: 580 },
+        usaLayoutOriginal: true
+    },
+    remaster: {
+        id: "remaster",
+        nome: "Remaster — Zona Costeira",
+        src: "../assets/maps/mapa-remaster-zona-costeira.png",
+        spawn: { x: 620, y: 620 },
+        usaLayoutOriginal: false,
+        bloqueiaAgua: true
+    }
+};
+
+const mapaSolicitado = new URLSearchParams(window.location.search).get("map");
+const mapaSelecionado = mapasDisponiveis[mapaSolicitado] ?? mapasDisponiveis.atual;
+
 // O tamanho real do mapa é atualizado quando mapa.png termina de carregar.
 let larguraMapa = 0;
 let alturaMapa = 0;
@@ -13,8 +36,8 @@ const imagemPersonagem = new Image();
 
 // Um objeto agrupa informações. Exemplo: jogador.x é a posição horizontal.
 const jogador = {
-    x: 650,
-    y: 580,
+    x: mapaSelecionado.spawn.x,
+    y: mapaSelecionado.spawn.y,
     largura: 32,
     altura: 37,
 
@@ -41,19 +64,178 @@ let aguaCarregada = false;
 let jogoIniciado = false;
 let modoDebug = false;
 
+// ============================================================================
+// CONTROLES PARA CELULAR
+// ============================================================================
+// O computador continua usando teclado. No celular, o mesmo estado `teclas`
+// é alimentado por um joystick virtual e por botões equivalentes a F3/Esc.
+const entradaMobile = {
+    ativa: false,
+    pointerId: null,
+    centroX: 0,
+    centroY: 0,
+    raio: 48,
+    maxDeslocamento: 34
+};
+
+const teclasMovimento = ["w", "a", "s", "d"];
+
+function dispositivoPareceTouch() {
+    return (
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0 ||
+        navigator.msMaxTouchPoints > 0
+    );
+}
+
+function limparEntradaMobile() {
+    entradaMobile.ativa = false;
+    entradaMobile.pointerId = null;
+
+    for (const tecla of teclasMovimento) {
+        delete teclas[tecla];
+    }
+
+    const thumb = document.getElementById("mobileJoystickThumb");
+    if (thumb) {
+        thumb.style.transform = "translate(-50%, -50%)";
+    }
+}
+
+function atualizarJoystickMobile(clientX, clientY) {
+    const dx = clientX - entradaMobile.centroX;
+    const dy = clientY - entradaMobile.centroY;
+    const distancia = Math.hypot(dx, dy);
+    const limite = entradaMobile.maxDeslocamento;
+    const fator = distancia > limite ? limite / distancia : 1;
+    const deslocamentoX = dx * fator;
+    const deslocamentoY = dy * fator;
+
+    // Zera as teclas do joystick antes de aplicar a direção atual.
+    for (const tecla of teclasMovimento) {
+        delete teclas[tecla];
+    }
+
+    const deadZone = 10;
+
+    if (Math.abs(dx) > deadZone) {
+        if (dx > 0) teclas.d = true;
+        else teclas.a = true;
+    }
+
+    if (Math.abs(dy) > deadZone) {
+        if (dy > 0) teclas.s = true;
+        else teclas.w = true;
+    }
+
+    const thumb = document.getElementById("mobileJoystickThumb");
+    if (thumb) {
+        thumb.style.transform = `translate(calc(-50% + ${deslocamentoX}px), calc(-50% + ${deslocamentoY}px))`;
+    }
+}
+
+function configurarControlesMobile() {
+    const joystick = document.getElementById("mobileJoystick");
+    const ring = joystick?.querySelector(".mobile-joystick-ring");
+    const debugButton = document.getElementById("mobileDebug");
+    const backButton = document.getElementById("mobileBack");
+
+    if (!joystick || !ring || !debugButton || !backButton) {
+        return;
+    }
+
+    // Em aparelho touch deixamos os controles sempre visíveis.
+    if (dispositivoPareceTouch()) {
+        document.body.classList.add("touch-device");
+    }
+
+    function iniciarJoystick(evento) {
+        entradaMobile.ativa = true;
+        entradaMobile.pointerId = evento.pointerId;
+
+        const rect = ring.getBoundingClientRect();
+        entradaMobile.centroX = rect.left + rect.width / 2;
+        entradaMobile.centroY = rect.top + rect.height / 2;
+        entradaMobile.raio = Math.min(rect.width, rect.height) / 2;
+
+        joystick.setPointerCapture?.(evento.pointerId);
+        atualizarJoystickMobile(evento.clientX, evento.clientY);
+        evento.preventDefault();
+    }
+
+    function moverJoystick(evento) {
+        if (!entradaMobile.ativa || evento.pointerId !== entradaMobile.pointerId) {
+            return;
+        }
+
+        atualizarJoystickMobile(evento.clientX, evento.clientY);
+        evento.preventDefault();
+    }
+
+    function finalizarJoystick(evento) {
+        if (evento.pointerId !== entradaMobile.pointerId) {
+            return;
+        }
+
+        limparEntradaMobile();
+        evento.preventDefault();
+    }
+
+    joystick.addEventListener("pointerdown", iniciarJoystick, { passive: false });
+    joystick.addEventListener("pointermove", moverJoystick, { passive: false });
+    joystick.addEventListener("pointerup", finalizarJoystick, { passive: false });
+    joystick.addEventListener("pointercancel", finalizarJoystick, { passive: false });
+    joystick.addEventListener("lostpointercapture", limparEntradaMobile);
+
+    debugButton.addEventListener("click", () => {
+        alternarModoDebug();
+    });
+
+    backButton.addEventListener("click", () => {
+        if (cenarioAtual === "casa") {
+            mudarCenario("cidade");
+        } else {
+            // Fora da casa, o botão funciona como um equivalente seguro de Esc:
+            // em vez de fechar a página, volta para a página anterior quando existir.
+            if (window.history.length > 1) {
+                window.history.back();
+            }
+        }
+    });
+
+    window.addEventListener("touchmove", event => {
+        if (event.target.closest?.("#mobileControls")) {
+            event.preventDefault();
+        }
+    }, { passive: false });
+
+    window.addEventListener("pagehide", limparEntradaMobile);
+    window.addEventListener("blur", limparEntradaMobile);
+}
+
 // O cenário pode ser "cidade" ou "casa".
 let cenarioAtual = "cidade";
 
 // Spawn usado quando o jogador se afoga.
-const spawn = {
-    x: 650,
-    y: 580
-};
+const spawn = { ...mapaSelecionado.spawn };
 
-// Entrada da casa.
+// Entrada da casa do mapa principal.
 const portaEsquerda = 160;
 const portaDireita = 236;
 const portaY = 575;
+
+// Entradas visíveis e abertas da Zona Costeira.
+// Cada porta deixa um corredor livre na barreira da construção.
+const portasZonaCosteira = [
+    { id: "casa-costeira-01", left: 348, right: 382, y: 389, spawnY: 407 },
+    { id: "casa-costeira-02", left: 699, right: 741, y: 418, spawnY: 436 },
+    { id: "casa-costeira-03", left: 497, right: 539, y: 585, spawnY: 603 },
+    { id: "casa-costeira-04", left: 631, right: 670, y: 748, spawnY: 766 },
+    { id: "casa-costeira-05", left: 946, right: 984, y: 688, spawnY: 706 }
+];
+
+// Última porta usada, para o Esc devolver o jogador exatamente à entrada.
+let ultimaPortaEntrada = null;
 
 // Quanto da hitbox precisa estar na água para o jogador se afogar.
 const porcentagemAfogamento = 35;
@@ -62,8 +244,9 @@ const porcentagemAfogamento = 35;
 // ============================================================================
 // ÁGUA DO MAPA
 // ============================================================================
-// Em vez de usar retângulos aproximados, a água é detectada diretamente
-// no mapa.png. Assim o sistema acompanha o contorno real da água.
+// A água é detectada diretamente na imagem do mapa. A Zona Costeira também
+// considera lagoas internas, para que elas sejam exibidas no F3 e bloqueiem
+// a passagem do jogador.
 
 let mascaraAgua = null;
 let imagemAguaDebug = null;
@@ -102,8 +285,9 @@ function criarMascaraAgua() {
     ).data;
 
     // 0 = não parece água
-    // 1 = parece água, mas ainda não sabemos se é oceano
-    // 2 = água confirmada e conectada à borda do mapa
+    // 1 = candidata ainda não classificada
+    // 2 = oceano conectado à borda
+    // 3 = lagoa interna grande (usada na Zona Costeira)
     const candidatos = new Uint8Array(total);
 
     for (let y = 0; y < altura; y++) {
@@ -204,6 +388,11 @@ function criarMascaraAgua() {
         }
     }
 
+    if (mapaSelecionado.bloqueiaAgua) {
+        removerCandidatosEmConstrucoes(candidatos, largura);
+        classificarLagoasInternas(candidatos, largura, altura);
+    }
+
     mascaraAgua = candidatos;
 
     // Criamos a camada azul usada pelo modo debug.
@@ -215,14 +404,14 @@ function criarMascaraAgua() {
     const camada = contextoDebug.createImageData(largura, altura);
 
     for (let i = 0; i < total; i++) {
-        if (mascaraAgua[i] === 2) {
+        if (mascaraAgua[i] === 2 || mascaraAgua[i] === 3) {
             const indicePixel = i * 4;
 
             camada.data[indicePixel] = 25;
             camada.data[indicePixel + 1] = 145;
             camada.data[indicePixel + 2] = 255;
 
-            camada.data[indicePixel + 3] = 72;
+            camada.data[indicePixel + 3] = 92;
         }
     }
 
@@ -230,6 +419,61 @@ function criarMascaraAgua() {
 
     imagemAguaDebug = canvasDebug;
     aguaCarregada = true;
+}
+
+function removerCandidatosEmConstrucoes(candidatos, largura) {
+    // O telhado azul do mercado possui tons parecidos com água. Ele já tem
+    // barreira física própria, então não deve aparecer como área alagada no F3.
+    const regioesSolidas = [
+        [568, 640, 152, 126]
+    ];
+
+    for (const [x, y, larguraRegiao, alturaRegiao] of regioesSolidas) {
+        for (let py = y; py < y + alturaRegiao; py++) {
+            const inicio = py * largura + x;
+            candidatos.fill(0, inicio, inicio + larguraRegiao);
+        }
+    }
+}
+
+function classificarLagoasInternas(candidatos, largura, altura) {
+    const total = largura * altura;
+    const fila = new Int32Array(total);
+    const areaMinimaDeAgua = 1000;
+
+    for (let inicio = 0; inicio < total; inicio++) {
+        if (candidatos[inicio] !== 1) continue;
+
+        let inicioFila = 0;
+        let fimFila = 1;
+        fila[0] = inicio;
+        candidatos[inicio] = 4;
+
+        while (inicioFila < fimFila) {
+            const posicao = fila[inicioFila++];
+            const x = posicao % largura;
+            const y = Math.floor(posicao / largura);
+
+            const vizinhos = [
+                x > 0 ? posicao - 1 : -1,
+                x < largura - 1 ? posicao + 1 : -1,
+                y > 0 ? posicao - largura : -1,
+                y < altura - 1 ? posicao + largura : -1
+            ];
+
+            for (const vizinho of vizinhos) {
+                if (vizinho >= 0 && candidatos[vizinho] === 1) {
+                    candidatos[vizinho] = 4;
+                    fila[fimFila++] = vizinho;
+                }
+            }
+        }
+
+        const tipoFinal = fimFila >= areaMinimaDeAgua ? 3 : 0;
+        for (let indice = 0; indice < fimFila; indice++) {
+            candidatos[fila[indice]] = tipoFinal;
+        }
+    }
 }
 
 function pixelEhAgua(x, y) {
@@ -246,11 +490,11 @@ function pixelEhAgua(x, y) {
         return false;
     }
 
-    return (
-        mascaraAgua[
-            Math.floor(y) * larguraMapa + Math.floor(x)
-        ] === 2
-    );
+    const tipo = mascaraAgua[
+        Math.floor(y) * larguraMapa + Math.floor(x)
+    ];
+
+    return tipo === 2 || tipo === 3;
 }
 
 function porcentagemHitboxNaAgua(x, y) {
@@ -315,21 +559,40 @@ function porcentagemHitboxNaAgua(x, y) {
 // CENÁRIO / PORTA
 // ============================================================================
 
-function mudarCenario(destino) {
+function mudarCenario(destino, porta = null) {
     cenarioAtual = destino;
 
     if (destino === "casa") {
 
-        jogador.x = 650;
-        jogador.y = 580;
+        if (mapaSelecionado.usaLayoutOriginal) {
+            jogador.x = 650;
+            jogador.y = 580;
+        } else if (porta) {
+            jogador.x = (porta.left + porta.right) / 2;
+            jogador.y = 580;
+            ultimaPortaEntrada = porta;
+        }
+
         jogador.direcao = "cima";
 
         atualizarTextoControles();
 
     } else {
 
-        jogador.x = 198;
-        jogador.y = 605;
+        if (
+            mapaSelecionado.usaLayoutOriginal ||
+            ultimaPortaEntrada === null
+        ) {
+            jogador.x = 198;
+            jogador.y = 605;
+        } else {
+            jogador.x = (
+                ultimaPortaEntrada.left +
+                ultimaPortaEntrada.right
+            ) / 2;
+            jogador.y = ultimaPortaEntrada.spawnY;
+        }
+
         jogador.direcao = "baixo";
 
         atualizarTextoControles();
@@ -434,6 +697,126 @@ const obstaculos = [
     [710, 1057, 50, 107],
     [588, 1080, 123, 72]
 ];
+
+// Colisões desenhadas especificamente sobre a Zona Costeira (1375 × 1144).
+// Os retângulos protegem prédios, cercas, árvores densas, bloqueios e paredões.
+const obstaculosZonaCosteira = [
+    // Penhascos e limites naturais.
+    [48, 0, 1327, 134],
+    [48, 130, 126, 50],
+    [694, 130, 681, 92],
+    [830, 214, 545, 126],
+    [1180, 334, 195, 810],
+    [1086, 864, 289, 280],
+    [682, 1014, 508, 130],
+
+    // Penhasco que separa a praia da área interna, preservando as escadas.
+    [176, 175, 68, 463],
+
+    // Degraus/penhascos internos do lado esquerdo e inferior.
+    [242, 760, 48, 86],
+    [382, 760, 72, 110],
+    [454, 844, 40, 86],
+    [454, 928, 225, 86],
+    [830, 758, 88, 112],
+
+    // Jardim cercado no alto.
+    [248, 140, 445, 15],
+    [248, 140, 17, 248],
+    [676, 140, 17, 220],
+
+    // Obstáculos grandes dentro do jardim.
+    [274, 168, 52, 160],
+    [332, 294, 116, 128],
+    [603, 351, 59, 193],
+    [688, 318, 124, 104],
+
+    // Casas com portas abertas: a barreira é dividida para deixar
+    // a abertura da porta realmente atravessável.
+
+    // Casa superior esquerda.
+    [310, 291, 111, 56],
+    [310, 347, 38, 45],
+    [382, 347, 39, 45],
+
+    // Casa superior direita.
+    [671, 317, 141, 79],
+    [671, 396, 28, 27],
+    [741, 396, 71, 27],
+
+    // Hospital central.
+    [450, 458, 140, 85],
+    [450, 543, 47, 47],
+    [539, 543, 51, 47],
+
+    // Hospital inferior azul.
+    [558, 642, 133, 67],
+    [558, 709, 73, 44],
+    [670, 709, 21, 44],
+
+    // Casa da direita.
+    [896, 570, 168, 70],
+    [896, 640, 50, 48],
+    [984, 640, 80, 48],
+
+    // Casa inferior central: porta fechada/obstruída.
+    [672, 658, 140, 96],
+
+    // Estrutura do píer, que permanece inacessível por ficar sobre água.
+    [192, 816, 180, 47],
+    [192, 934, 180, 28],
+    [192, 816, 35, 120],
+    [337, 816, 35, 120],
+
+    // Muros, cercas, árvores densas, carros e barricadas.
+    [494, 346, 18, 80],
+    [560, 430, 25, 28],
+    [858, 349, 42, 220],
+    [845, 585, 40, 65],
+    [1074, 575, 24, 124],
+    [1040, 637, 42, 32],
+    [194, 632, 30, 36],
+    [276, 404, 45, 28],
+    [309, 454, 42, 27],
+    [547, 614, 28, 24],
+    [887, 611, 29, 40],
+    [900, 690, 42, 70],
+    [920, 758, 47, 130],
+    [1035, 718, 32, 88],
+    [1137, 718, 35, 90]
+];
+
+function obterObstaculosAtivos() {
+    return mapaSelecionado.usaLayoutOriginal
+        ? obstaculos
+        : obstaculosZonaCosteira;
+}
+
+function obterPortaZonaCosteira(x, y, novoY) {
+    if (
+        mapaSelecionado.usaLayoutOriginal ||
+        cenarioAtual !== "cidade" ||
+        novoY >= y
+    ) {
+        return null;
+    }
+
+    for (const porta of portasZonaCosteira) {
+        const dentroDaPorta =
+            x + jogador.larguraColisao / 2 >= porta.left &&
+            x - jogador.larguraColisao / 2 <= porta.right;
+
+        if (
+            dentroDaPorta &&
+            y >= porta.y &&
+            novoY <= porta.y
+        ) {
+            return porta;
+        }
+    }
+
+    return null;
+}
 
 
 // ============================================================================
@@ -566,14 +949,22 @@ function temColisao(x, y) {
         return false;
     }
 
+    if (
+        mapaSelecionado.bloqueiaAgua &&
+        porcentagemHitboxNaAgua(x, y) >= 10
+    ) {
+        return true;
+    }
+
+    const obstaculosAtivos = obterObstaculosAtivos();
+
     for (
         let i = 0;
-        i < obstaculos.length;
+        i < obstaculosAtivos.length;
         i++
     ) {
-
         const obstaculo =
-            obstaculos[i];
+            obstaculosAtivos[i];
 
         const retanguloObstaculo = {
             x: obstaculo[0],
@@ -720,8 +1111,9 @@ function moverJogador(segundos) {
         segundos;
 
 
-    // Entrada pela porta.
+    // Entrada pela porta do mapa principal.
     if (
+        mapaSelecionado.usaLayoutOriginal &&
         cenarioAtual === "cidade" &&
         vertical < 0 &&
         jogador.x +
@@ -734,6 +1126,18 @@ function moverJogador(segundos) {
         novoY <= portaY
     ) {
         mudarCenario("casa");
+        return;
+    }
+
+    // Entradas pelas portas abertas da Zona Costeira.
+    const portaZonaCosteira = obterPortaZonaCosteira(
+        jogador.x,
+        jogador.y,
+        novoY
+    );
+
+    if (portaZonaCosteira) {
+        mudarCenario("casa", portaZonaCosteira);
         return;
     }
 
@@ -1042,46 +1446,46 @@ function desenharDebug() {
 
 
         // Barreiras sólidas ficam vermelhas.
-        for (
-            let i = 0;
-            i < obstaculos.length;
-            i++
-        ) {
-
-            const obstaculo =
-                obstaculos[i];
+        const obstaculosAtivos = obterObstaculosAtivos();
+        for (let i = 0; i < obstaculosAtivos.length; i++) {
+            const obstaculo = obstaculosAtivos[i];
 
             desenharRetanguloDebug(
-
                 obstaculo[0],
                 obstaculo[1],
                 obstaculo[2],
                 obstaculo[3],
-
                 "rgba(255, 45, 45, 0.22)",
                 "rgba(255, 70, 70, 0.95)",
-
                 `B${i + 1}`
             );
         }
 
 
-        // Porta.
-        desenharRetanguloDebug(
-
-            portaEsquerda,
-            portaY - 8,
-
-            portaDireita -
+        // Porta do mapa principal.
+        if (mapaSelecionado.usaLayoutOriginal) {
+            desenharRetanguloDebug(
                 portaEsquerda,
-
-            16,
-
-            "rgba(0, 255, 255, 0.16)",
-            "rgba(0, 255, 255, 0.95)",
-
-            "PORTA"
-        );
+                portaY - 8,
+                portaDireita - portaEsquerda,
+                16,
+                "rgba(0, 255, 255, 0.16)",
+                "rgba(0, 255, 255, 0.95)",
+                "PORTA"
+            );
+        } else {
+            for (const porta of portasZonaCosteira) {
+                desenharRetanguloDebug(
+                    porta.left,
+                    porta.y - 8,
+                    porta.right - porta.left,
+                    16,
+                    "rgba(0, 255, 255, 0.16)",
+                    "rgba(0, 255, 255, 0.95)",
+                    `PORTA ${porta.id.slice(-2)}`
+                );
+            }
+        }
 
 
         // Limite do mapa.
@@ -1173,10 +1577,18 @@ function desenharDebug() {
         0
     );
 
+    // No celular o seletor de mapa ocupa o canto superior direito.
+    // O painel de debug desce um pouco e fica no lado esquerdo para não cobrir
+    // os botões de mapa.
     const painelX =
-        larguraTela - 252;
+        larguraTela < 700
+            ? 10
+            : larguraTela - 252;
 
-    const painelY = 12;
+    const painelY =
+        larguraTela < 700
+            ? 74
+            : 12;
 
     contexto.fillStyle =
         "rgba(0, 0, 0, 0.78)";
@@ -1369,7 +1781,7 @@ function atualizarTextoControles() {
     } else {
 
         controles.innerHTML =
-            `<strong>Controles</strong><br>
+            `<strong>${mapaSelecionado.nome}</strong><br>
             WASD / Setas → Mover<br>
             F3 → ${
                 modoDebug
@@ -1389,6 +1801,13 @@ function alternarModoDebug() {
 
     modoDebug =
         !modoDebug;
+
+    const debugButton = document.getElementById("mobileDebug");
+
+    if (debugButton) {
+        debugButton.setAttribute("aria-pressed", String(modoDebug));
+        debugButton.textContent = modoDebug ? "DEBUG ON" : "DEBUG";
+    }
 
     atualizarTextoControles();
 }
@@ -1492,8 +1911,13 @@ window.addEventListener(
     "blur",
     function () {
         teclas = {};
+        limparEntradaMobile();
     }
 );
+
+window.addEventListener("orientationchange", () => {
+    window.setTimeout(ajustarTela, 50);
+});
 
 window.addEventListener(
     "resize",
@@ -1550,7 +1974,7 @@ imagemMapa.onerror =
     function () {
 
         aviso.textContent =
-            "Erro ao carregar mapa.png.";
+            `Erro ao carregar ${mapaSelecionado.nome}.`;
     };
 
 
@@ -1563,9 +1987,17 @@ imagemPersonagem.onerror =
 
 
 ajustarTela();
+configurarControlesMobile();
 
-imagemMapa.src =
-    "../assets/maps/mapa.png";
+const linkSelecionado = document.querySelector(
+    `#mapSelector a[data-map="${mapaSelecionado.id}"]`
+);
+
+if (linkSelecionado) {
+    linkSelecionado.setAttribute("aria-current", "page");
+}
+
+imagemMapa.src = mapaSelecionado.src;
 
 imagemPersonagem.src =
     "../assets/maps/personagem.png";

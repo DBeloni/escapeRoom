@@ -47,6 +47,50 @@ body {
     pointer-events: none;
 }
 
+/* Seletor para comparar a cidade atual com a Zona Costeira remasterizada. */
+#mapSelector {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    max-width: calc(100vw - 24px);
+    padding: 7px;
+    color: #e9e4d2;
+    background: rgba(9, 15, 12, .88);
+    border: 1px solid rgba(187, 79, 49, .72);
+    border-radius: 5px;
+    font-size: 11px;
+    line-height: 1;
+    z-index: 2;
+}
+
+#mapSelector > span {
+    margin-right: 3px;
+    color: #b9b7a7;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+#mapSelector a {
+    padding: 7px 8px;
+    color: #d8d8ca;
+    border: 1px solid rgba(216, 216, 202, .26);
+    border-radius: 3px;
+    text-decoration: none;
+}
+
+#mapSelector a:hover,
+#mapSelector a:focus-visible,
+#mapSelector a[aria-current="page"] {
+    color: #fff;
+    background: #8d3828;
+    border-color: #d98a52;
+    outline: none;
+}
+
 /* Posiciona o aviso de carregamento no centro da tela. */
 #loading {
     top: 50%;
@@ -60,5 +104,189 @@ body {
     #controls {
         padding: 6px 8px;
         font-size: 10px;
+    }
+
+    #mapSelector {
+        top: 8px;
+        right: 8px;
+        left: 8px;
+        justify-content: flex-end;
+        padding: 6px;
+        font-size: 10px;
+    }
+
+    #mapSelector > span {
+        display: none;
+    }
+
+    #mapSelector a {
+        padding: 6px;
+    }
+}
+
+
+/* ==========================================================================
+   CONTROLES TOUCH / CELULAR
+   ========================================================================== */
+#mobileControls {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    display: none;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.mobile-joystick {
+    position: absolute;
+    left: max(18px, env(safe-area-inset-left));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    width: 148px;
+    height: 148px;
+    display: grid;
+    place-items: center;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.mobile-joystick-ring {
+    position: relative;
+    width: 122px;
+    height: 122px;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.38);
+    box-shadow: inset 0 0 0 10px rgba(255, 255, 255, 0.035), 0 8px 24px rgba(0, 0, 0, 0.3);
+    touch-action: none;
+}
+
+.mobile-joystick-ring::before,
+.mobile-joystick-ring::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: rgba(255, 255, 255, 0.12);
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+
+.mobile-joystick-ring::before {
+    width: 54px;
+    height: 2px;
+}
+
+.mobile-joystick-ring::after {
+    width: 2px;
+    height: 54px;
+}
+
+.mobile-joystick-thumb {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 54px;
+    height: 54px;
+    transform: translate(-50%, -50%);
+    border: 2px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    background: rgba(141, 56, 40, 0.9);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.mobile-actions {
+    position: absolute;
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+    display: grid;
+    gap: 12px;
+    pointer-events: auto;
+}
+
+.mobile-action {
+    min-width: 88px;
+    min-height: 54px;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.24);
+    border-radius: 14px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.62);
+    font: 700 12px/1 Arial, Helvetica, sans-serif;
+    letter-spacing: 0.08em;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.26);
+}
+
+.mobile-action:active {
+    transform: scale(0.96);
+    background: rgba(141, 56, 40, 0.86);
+}
+
+body.touch-device #mobileControls {
+    display: block;
+}
+
+body.touch-device #controls {
+    display: none;
+}
+
+body.touch-device #mapSelector {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+}
+
+@media (max-width: 700px), (pointer: coarse) {
+    #mobileControls {
+        display: block;
+    }
+
+    #controls {
+        display: none;
+    }
+
+    #mapSelector {
+        left: auto;
+        right: max(8px, env(safe-area-inset-right));
+        max-width: calc(100vw - 16px);
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 420px) {
+    .mobile-joystick {
+        width: 132px;
+        height: 132px;
+        left: max(10px, env(safe-area-inset-left));
+        bottom: max(10px, env(safe-area-inset-bottom));
+    }
+
+    .mobile-joystick-ring {
+        width: 108px;
+        height: 108px;
+    }
+
+    .mobile-joystick-thumb {
+        width: 48px;
+        height: 48px;
+    }
+
+    .mobile-actions {
+        right: max(10px, env(safe-area-inset-right));
+        bottom: max(10px, env(safe-area-inset-bottom));
+        gap: 8px;
+    }
+
+    .mobile-action {
+        min-width: 78px;
+        min-height: 48px;
+        padding: 8px 10px;
+        font-size: 11px;
     }
 }
