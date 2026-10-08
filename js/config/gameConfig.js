@@ -2,8 +2,8 @@ export const GAME_CONFIG = {
     zoom: 1.8,
     drownThresholdPercent: 35,
     assets: {
-        map: "mapa.png",
-        player: "personagem.png"
+        map: "../assets/maps/mapa.png",
+        player: "../assets/maps/personagem.png"
     },
     player: {
         width: 32,

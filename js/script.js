@@ -1565,7 +1565,7 @@ imagemPersonagem.onerror =
 ajustarTela();
 
 imagemMapa.src =
-    "mapa.png";
+    "../assets/maps/mapa.png";
 
 imagemPersonagem.src =
-    "personagem.png";
+    "../assets/maps/personagem.png";
