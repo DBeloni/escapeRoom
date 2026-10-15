@@ -227,12 +227,56 @@ const portaY = 575;
 // Entradas visíveis e abertas da Zona Costeira.
 // Cada porta deixa um corredor livre na barreira da construção.
 const portasZonaCosteira = [
-    { id: "casa-costeira-01", left: 348, right: 382, y: 389, spawnY: 407 },
-    { id: "casa-costeira-02", left: 699, right: 741, y: 418, spawnY: 436 },
-    { id: "casa-costeira-03", left: 497, right: 539, y: 585, spawnY: 603 },
-    { id: "casa-costeira-04", left: 631, right: 670, y: 748, spawnY: 766 },
-    { id: "casa-costeira-05", left: 946, right: 984, y: 688, spawnY: 706 }
+    { id: "casa-costeira-01", left: 337, right: 372, y: 394, spawnY: 412 }, // casa superior esquerda
+    { id: "casa-costeira-02", left: 722, right: 760, y: 422, spawnY: 440 }, // casa superior direita
+    { id: "casa-costeira-03", left: 512, right: 548, y: 589, spawnY: 607 }, // hospital central
+    { id: "casa-costeira-04", left: 608, right: 645, y: 767, spawnY: 785 }, // hospital azul
+    { id: "casa-costeira-05", left: 948, right: 988, y: 679, spawnY: 697 }  // casa da direita
 ];
+
+// Cada porta da Zona Costeira tem seu próprio mapa interno. As imagens são
+// pré-carregadas para a troca de cenário acontecer sem tela preta ao entrar.
+const interioresZonaCosteira = {
+    "casa-costeira-01": {
+        nome: "Casa 01",
+        src: "../assets/maps/casa-01-zona-costeira-interior.png"
+    },
+    "casa-costeira-02": {
+        nome: "Casa 02",
+        src: "../assets/maps/casa-02-zona-costeira-interior.png"
+    },
+    "casa-costeira-03": {
+        nome: "Casa 03 — Clínica",
+        src: "../assets/maps/casa-03-zona-costeira-interior.png"
+    },
+    "casa-costeira-04": {
+        nome: "Casa 04 — Enfermaria",
+        src: "../assets/maps/casa-04-zona-costeira-interior.png"
+    },
+    "casa-costeira-05": {
+        nome: "Casa 05 — Oficina",
+        src: "../assets/maps/casa-05-zona-costeira-interior.png"
+    }
+};
+
+let interiorAtual = null;
+let larguraCidade = 0;
+let alturaCidade = 0;
+
+for (const interior of Object.values(interioresZonaCosteira)) {
+    const imagem = new Image();
+
+    imagem.onload = () => {
+        if (interiorAtual === interior) {
+            aplicarDimensoesDoCenario(imagem);
+            posicionarJogadorNaEntradaInterna();
+            atualizarCamera();
+        }
+    };
+
+    imagem.src = interior.src;
+    interior.imagem = imagem;
+}
 
 // Última porta usada, para o Esc devolver o jogador exatamente à entrada.
 let ultimaPortaEntrada = null;
@@ -252,11 +296,12 @@ let mascaraAgua = null;
 let imagemAguaDebug = null;
 
 function pixelEhAguaProvavel(r, g, b) {
-    // A água do mapa é predominantemente escura e azul.
-    // Esse filtro separa a água da grama, madeira, terra e pedras.
+    // A água do mapa vai de azul profundo a verde-azulado com vegetação.
+    // O critério tolera reflexos e folhas na superfície, mas exige azul acima
+    // do vermelho para não confundir terra, madeira e pedra com água.
     return (
         b > r * 1.25 &&
-        b > g * 1.05 &&
+        b >= g &&
         b > 32 &&
         g > 10
     );
@@ -559,18 +604,83 @@ function porcentagemHitboxNaAgua(x, y) {
 // CENÁRIO / PORTA
 // ============================================================================
 
+function aplicarDimensoesDoCenario(imagem) {
+    larguraMapa = imagem.naturalWidth;
+    alturaMapa = imagem.naturalHeight;
+}
+
+function obterLimitesTransitaveisDaCasa() {
+    // As artes internas têm uma margem externa preta para enquadramento. A
+    // área útil começa logo depois das paredes e termina antes da soleira.
+    return {
+        esquerda: Math.round(larguraMapa * 0.04),
+        direita: Math.round(larguraMapa * 0.96),
+        topo: Math.round(alturaMapa * 0.03),
+        base: Math.round(alturaMapa * 0.88)
+    };
+}
+
+function obterSaidaDaCasa() {
+    const larguraDaPorta = Math.max(52, Math.round(larguraMapa * 0.09));
+
+    return {
+        esquerda: Math.round((larguraMapa - larguraDaPorta) / 2),
+        direita: Math.round((larguraMapa + larguraDaPorta) / 2),
+        y: Math.round(alturaMapa * 0.85)
+    };
+}
+
+function posicionarJogadorNaEntradaInterna() {
+    jogador.x = Math.round(larguraMapa / 2);
+    jogador.y = Math.round(alturaMapa * 0.76);
+}
+
+function tentarSairDaCasa(x, y, novoY, vertical) {
+    if (
+        cenarioAtual !== "casa" ||
+        interiorAtual === null ||
+        vertical <= 0
+    ) {
+        return false;
+    }
+
+    const saida = obterSaidaDaCasa();
+    const estaNaPorta =
+        x + jogador.larguraColisao / 2 >= saida.esquerda &&
+        x - jogador.larguraColisao / 2 <= saida.direita;
+
+    return (
+        estaNaPorta &&
+        y <= saida.y &&
+        novoY >= saida.y
+    );
+}
+
 function mudarCenario(destino, porta = null) {
     cenarioAtual = destino;
 
     if (destino === "casa") {
 
         if (mapaSelecionado.usaLayoutOriginal) {
+            interiorAtual = null;
             jogador.x = 650;
             jogador.y = 580;
         } else if (porta) {
-            jogador.x = (porta.left + porta.right) / 2;
-            jogador.y = 580;
+            interiorAtual = interioresZonaCosteira[porta.id] ?? null;
             ultimaPortaEntrada = porta;
+
+            if (
+                interiorAtual !== null &&
+                interiorAtual.imagem.naturalWidth > 0
+            ) {
+                aplicarDimensoesDoCenario(interiorAtual.imagem);
+                posicionarJogadorNaEntradaInterna();
+            } else {
+                // Caso a imagem ainda esteja baixando, o onload acima conclui
+                // a troca sem interromper o jogo.
+                jogador.x = larguraMapa / 2;
+                jogador.y = alturaMapa * 0.76;
+            }
         }
 
         jogador.direcao = "cima";
@@ -578,6 +688,14 @@ function mudarCenario(destino, porta = null) {
         atualizarTextoControles();
 
     } else {
+
+        // A câmera e os limites voltam a usar o mapa externo antes de colocar
+        // o jogador na saída da casa.
+        aplicarDimensoesDoCenario({
+            naturalWidth: larguraCidade,
+            naturalHeight: alturaCidade
+        });
+        interiorAtual = null;
 
         if (
             mapaSelecionado.usaLayoutOriginal ||
@@ -698,92 +816,120 @@ const obstaculos = [
     [588, 1080, 123, 72]
 ];
 
-// Colisões desenhadas especificamente sobre a Zona Costeira (1375 × 1144).
-// Os retângulos protegem prédios, cercas, árvores densas, bloqueios e paredões.
+function criarPoligonoSolido(pontos) {
+    return {
+        tipo: "poligono",
+        pontos: pontos.map(([x, y]) => ({ x, y }))
+    };
+}
+
+function normalizarObstaculo(obstaculo) {
+    if (Array.isArray(obstaculo)) {
+        return {
+            tipo: "retangulo",
+            x: obstaculo[0],
+            y: obstaculo[1],
+            largura: obstaculo[2],
+            altura: obstaculo[3]
+        };
+    }
+
+    return obstaculo;
+}
+
+// Colisões da Zona Costeira (1375 × 1144).
+// Só entram elementos com limite físico contínuo e inequívoco: água,
+// falésias, paredes de construções e cercas fechadas. Objetos decorativos,
+// vegetação, veículos, pedras soltas, escadas e pontes são atravessáveis.
 const obstaculosZonaCosteira = [
-    // Penhascos e limites naturais.
-    [48, 0, 1327, 134],
-    [48, 130, 126, 50],
-    [694, 130, 681, 92],
-    [830, 214, 545, 126],
-    [1180, 334, 195, 810],
-    [1086, 864, 289, 280],
-    [682, 1014, 508, 130],
+    // ===== ROCHAS / PENHASCOS =====
+    // Norte + canto nordeste + paredão esquerdo (topo)
+    criarPoligonoSolido([
+        [48, 0], [1375, 0], [1375, 340], [890, 340], [890, 320],
+        [693, 320], [693, 125], [258, 125], [258, 345], [178, 345],
+        [178, 178], [48, 178]
+    ]),
+    // Paredão esquerdo da praia (escada em x 258–345 fica livre)
+    [235, 345, 23, 338],
+    // Degraus do sudoeste (entre a praia e a cidade)
+    criarPoligonoSolido([
+        [345, 655], [490, 655], [490, 860], [600, 860], [600, 910],
+        [720, 910], [720, 1060], [692, 1060], [692, 938], [575, 938],
+        [575, 885], [465, 885], [465, 683], [345, 683]
+    ]),
+    // Margens de pedra em volta do lago grande (a água fica por conta da máscara)
+    [890, 320, 285, 58],  // faixa de cima
+    [890, 378, 30, 197],  // faixa da esquerda
+    [920, 545, 170, 30],  // margem de baixo
+    // Plataforma rochosa sul/leste + paredão direito + borda da área dos laguinhos
+    criarPoligonoSolido([
+        [720, 915], [890, 915], [890, 768], [915, 768], [915, 890],
+        [1175, 890], [1175, 340], [1375, 340], [1375, 1144],
+        [692, 1144], [692, 1060], [720, 1060]
+    ]),
+    // Muro entre a casa da direita e a área dos laguinhos (escada em x 945–1002 fica livre)
+    [915, 768, 30, 32],
+    [1002, 768, 88, 32],
+    // Muro leste da casa da direita
+    [1062, 575, 28, 200],
 
-    // Penhasco que separa a praia da área interna, preservando as escadas.
-    [176, 175, 68, 463],
+    // ===== CERCA DO JARDIM =====
+    [260, 143, 432, 16],  // topo
+    [260, 143, 14, 252],  // esquerda
+    [678, 143, 14, 194],  // direita
+    [508, 320, 184, 14],  // base direita
+    [508, 320, 10, 52],
+    [260, 380, 60, 15],   // base esquerda
+    // Postes do portão de entrada (vão livre em x 454–489)
+    [433, 372, 21, 22],
+    [489, 372, 21, 22],
 
-    // Degraus/penhascos internos do lado esquerdo e inferior.
-    [242, 760, 48, 86],
-    [382, 760, 72, 110],
-    [454, 844, 40, 86],
-    [454, 928, 225, 86],
-    [830, 758, 88, 112],
+    // ===== CASAS (porta = vão livre na fachada) =====
+    // Casa superior esquerda (laranja)
+    [318, 297, 110, 62],
+    [318, 359, 19, 38],
+    [372, 359, 56, 38],
 
-    // Jardim cercado no alto.
-    [248, 140, 445, 15],
-    [248, 140, 17, 248],
-    [676, 140, 17, 220],
+    // Casa superior direita (roxa)
+    [688, 328, 142, 62],
+    [688, 390, 34, 35],
+    [760, 390, 70, 35],
 
-    // Obstáculos grandes dentro do jardim.
-    [274, 168, 52, 160],
-    [332, 294, 116, 128],
-    [603, 351, 59, 193],
-    [688, 318, 124, 104],
+    // Hospital central (cruz vermelha)
+    [460, 470, 138, 65],
+    [460, 535, 52, 57],
+    [548, 535, 50, 57],
 
-    // Casas com portas abertas: a barreira é dividida para deixar
-    // a abertura da porta realmente atravessável.
+    // Hospital inferior azul
+    [572, 657, 116, 58],
+    [572, 715, 36, 55],
+    [645, 715, 43, 55],
 
-    // Casa superior esquerda.
-    [310, 291, 111, 56],
-    [310, 347, 38, 45],
-    [382, 347, 39, 45],
+    // Casa da direita (roxa)
+    [920, 585, 138, 55],
+    [920, 640, 28, 42],
+    [988, 640, 70, 42],
 
-    // Casa superior direita.
-    [671, 317, 141, 79],
-    [671, 396, 28, 27],
-    [741, 396, 71, 27],
+    // Casa inferior central (roxa): porta fechada/tapada
+    [688, 668, 142, 98],
 
-    // Hospital central.
-    [450, 458, 140, 85],
-    [450, 543, 47, 47],
-    [539, 543, 51, 47],
+    // Prédio do píer: sólido inteiro
+    [205, 828, 195, 150],
 
-    // Hospital inferior azul.
-    [558, 642, 133, 67],
-    [558, 709, 73, 44],
-    [670, 709, 21, 44],
+    // ===== ÁRVORES =====
+    [836, 318, 50, 297],  // fileira de pinheiros vertical
+    [545, 335, 50, 95],   // pinheiro do jardim
+    [412, 485, 45, 62],   // pinheiro perto do hospital
+    [605, 822, 226, 90],  // pinheiros do sul
 
-    // Casa da direita.
-    [896, 570, 168, 70],
-    [896, 640, 50, 48],
-    [984, 640, 80, 48],
-
-    // Casa inferior central: porta fechada/obstruída.
-    [672, 658, 140, 96],
-
-    // Estrutura do píer, que permanece inacessível por ficar sobre água.
-    [192, 816, 180, 47],
-    [192, 934, 180, 28],
-    [192, 816, 35, 120],
-    [337, 816, 35, 120],
-
-    // Muros, cercas, árvores densas, carros e barricadas.
-    [494, 346, 18, 80],
-    [560, 430, 25, 28],
-    [858, 349, 42, 220],
-    [845, 585, 40, 65],
-    [1074, 575, 24, 124],
-    [1040, 637, 42, 32],
-    [194, 632, 30, 36],
-    [276, 404, 45, 28],
-    [309, 454, 42, 27],
-    [547, 614, 28, 24],
-    [887, 611, 29, 40],
-    [900, 690, 42, 70],
-    [920, 758, 47, 130],
-    [1035, 718, 32, 88],
-    [1137, 718, 35, 90]
+    // ===== CARROS E OBJETOS =====
+    [290, 248, 56, 38],   // carro no jardim
+    [288, 420, 58, 40],   // carro abaixo da casa
+    [162, 582, 28, 46],   // carro na praia
+    [165, 690, 50, 45],   // guindaste na areia
+    [376, 528, 26, 38],   // veículo pequeno
+    [440, 556, 16, 28],   // pneus
+    [888, 630, 28, 48]    // ambulância
 ];
 
 function obterObstaculosAtivos() {
@@ -883,6 +1029,94 @@ function retangulosColidem(a, b) {
     );
 }
 
+function pontoDentroDoPoligono(ponto, pontos) {
+    let dentro = false;
+
+    for (let i = 0, j = pontos.length - 1; i < pontos.length; j = i++) {
+        const atual = pontos[i];
+        const anterior = pontos[j];
+        const cruzaLinhaHorizontal =
+            (atual.y > ponto.y) !== (anterior.y > ponto.y);
+
+        if (
+            cruzaLinhaHorizontal &&
+            ponto.x <
+                ((anterior.x - atual.x) * (ponto.y - atual.y)) /
+                    (anterior.y - atual.y) + atual.x
+        ) {
+            dentro = !dentro;
+        }
+    }
+
+    return dentro;
+}
+
+function segmentosSeCruzam(a, b, c, d) {
+    const orientacao = (p1, p2, p3) =>
+        (p2.x - p1.x) * (p3.y - p1.y) -
+        (p2.y - p1.y) * (p3.x - p1.x);
+
+    const abC = orientacao(a, b, c);
+    const abD = orientacao(a, b, d);
+    const cdA = orientacao(c, d, a);
+    const cdB = orientacao(c, d, b);
+
+    return (
+        ((abC > 0 && abD < 0) || (abC < 0 && abD > 0)) &&
+        ((cdA > 0 && cdB < 0) || (cdA < 0 && cdB > 0))
+    );
+}
+
+function retanguloColideComPoligono(retangulo, pontos) {
+    const cantos = [
+        { x: retangulo.x, y: retangulo.y },
+        { x: retangulo.direita, y: retangulo.y },
+        { x: retangulo.direita, y: retangulo.base },
+        { x: retangulo.x, y: retangulo.base }
+    ];
+
+    if (cantos.some(canto => pontoDentroDoPoligono(canto, pontos))) {
+        return true;
+    }
+
+    if (
+        pontos.some(ponto =>
+            ponto.x >= retangulo.x &&
+            ponto.x <= retangulo.direita &&
+            ponto.y >= retangulo.y &&
+            ponto.y <= retangulo.base
+        )
+    ) {
+        return true;
+    }
+
+    for (let i = 0; i < pontos.length; i++) {
+        const inicio = pontos[i];
+        const fim = pontos[(i + 1) % pontos.length];
+
+        for (let lado = 0; lado < cantos.length; lado++) {
+            const inicioLado = cantos[lado];
+            const fimLado = cantos[(lado + 1) % cantos.length];
+
+            if (segmentosSeCruzam(inicio, fim, inicioLado, fimLado)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function obstaculoColideComHitbox(obstaculo, hitbox) {
+    const colisor = normalizarObstaculo(obstaculo);
+
+    if (colisor.tipo === "poligono") {
+        return retanguloColideComPoligono(hitbox, colisor.pontos);
+    }
+
+    return retangulosColidem(hitbox, colisor);
+}
+
 
 // ============================================================================
 // AFOGAMENTO
@@ -944,8 +1178,24 @@ function temColisao(x, y) {
         return true;
     }
 
-    // Interior da casa provisório.
+    // Os interiores têm uma moldura externa preta fora das paredes. Ela não
+    // deve virar uma área onde o personagem possa caminhar.
     if (cenarioAtual === "casa") {
+        if (interiorAtual === null) {
+            return false;
+        }
+
+        const limites = obterLimitesTransitaveisDaCasa();
+
+        if (
+            hitbox.x < limites.esquerda ||
+            hitbox.direita > limites.direita ||
+            hitbox.y < limites.topo ||
+            hitbox.base > limites.base
+        ) {
+            return true;
+        }
+
         return false;
     }
 
@@ -966,18 +1216,8 @@ function temColisao(x, y) {
         const obstaculo =
             obstaculosAtivos[i];
 
-        const retanguloObstaculo = {
-            x: obstaculo[0],
-            y: obstaculo[1],
-            largura: obstaculo[2],
-            altura: obstaculo[3]
-        };
-
         if (
-            retangulosColidem(
-                hitbox,
-                retanguloObstaculo
-            )
+            obstaculoColideComHitbox(obstaculo, hitbox)
         ) {
             return true;
         }
@@ -1110,6 +1350,19 @@ function moverJogador(segundos) {
         jogador.velocidade *
         segundos;
 
+    // Saída pela porta inferior do interior da Zona Costeira.
+    if (
+        tentarSairDaCasa(
+            jogador.x,
+            jogador.y,
+            novoY,
+            vertical
+        )
+    ) {
+        mudarCenario("cidade");
+        return;
+    }
+
 
     // Entrada pela porta do mapa principal.
     if (
@@ -1234,6 +1487,22 @@ function atualizarAnimacao(
 // DESENHO DO JOGADOR
 // ============================================================================
 
+function obterDimensoesVisuaisJogador() {
+    // As artes dos interiores foram compostas em uma escala maior que o mapa
+    // externo. Dobrar somente o desenho do personagem mantém a leitura humana
+    // da cena, sem mudar velocidade, portas ou colisões já acertadas na costa.
+    const escalaInterior =
+        cenarioAtual === "casa" &&
+        interiorAtual !== null
+            ? 2
+            : 1;
+
+    return {
+        largura: jogador.largura * escalaInterior,
+        altura: jogador.altura * escalaInterior
+    };
+}
+
 function desenharJogador() {
 
     let linha = 1;
@@ -1286,13 +1555,17 @@ function desenharJogador() {
         topo -
         2;
 
+    const dimensoesVisuais =
+        obterDimensoesVisuaisJogador();
+
     const x =
         jogador.x -
-        jogador.largura / 2 -
+        dimensoesVisuais.largura / 2 -
         cameraX;
 
     const y =
         jogador.y -
+        dimensoesVisuais.altura +
         jogador.altura / 2 -
         cameraY;
 
@@ -1304,7 +1577,7 @@ function desenharJogador() {
     ) {
 
         contexto.translate(
-            x + jogador.largura,
+            x + dimensoesVisuais.largura,
             y
         );
 
@@ -1331,8 +1604,8 @@ function desenharJogador() {
 
         0,
         0,
-        jogador.largura,
-        jogador.altura
+        dimensoesVisuais.largura,
+        dimensoesVisuais.altura
     );
 
     contexto.restore();
@@ -1417,6 +1690,62 @@ function desenharRetanguloDebug(
     }
 }
 
+function desenharPoligonoDebug(pontos, preenchimento, contorno, texto) {
+    if (pontos.length === 0) return;
+
+    contexto.beginPath();
+    contexto.moveTo(pontos[0].x - cameraX, pontos[0].y - cameraY);
+
+    for (let i = 1; i < pontos.length; i++) {
+        contexto.lineTo(pontos[i].x - cameraX, pontos[i].y - cameraY);
+    }
+
+    contexto.closePath();
+    contexto.fillStyle = preenchimento;
+    contexto.fill();
+    contexto.strokeStyle = contorno;
+    contexto.lineWidth = 2 / zoom;
+    contexto.stroke();
+
+    if (texto) {
+        desenharRetanguloDebug(
+            pontos[0].x,
+            pontos[0].y,
+            0,
+            0,
+            "rgba(0, 0, 0, 0)",
+            "rgba(0, 0, 0, 0)",
+            texto
+        );
+    }
+}
+
+function desenharObstaculoDebug(obstaculo, texto) {
+    const colisor = normalizarObstaculo(obstaculo);
+    const preenchimento = "rgba(255, 45, 45, 0.16)";
+    const contorno = "rgba(255, 70, 70, 0.95)";
+
+    if (colisor.tipo === "poligono") {
+        desenharPoligonoDebug(
+            colisor.pontos,
+            preenchimento,
+            contorno,
+            texto
+        );
+        return;
+    }
+
+    desenharRetanguloDebug(
+        colisor.x,
+        colisor.y,
+        colisor.largura,
+        colisor.altura,
+        preenchimento,
+        contorno,
+        texto
+    );
+}
+
 function desenharDebug() {
 
     if (modoDebug === false) {
@@ -1450,15 +1779,7 @@ function desenharDebug() {
         for (let i = 0; i < obstaculosAtivos.length; i++) {
             const obstaculo = obstaculosAtivos[i];
 
-            desenharRetanguloDebug(
-                obstaculo[0],
-                obstaculo[1],
-                obstaculo[2],
-                obstaculo[3],
-                "rgba(255, 45, 45, 0.22)",
-                "rgba(255, 70, 70, 0.95)",
-                `B${i + 1}`
-            );
+            desenharObstaculoDebug(obstaculo, `B${i + 1}`);
         }
 
 
@@ -1501,16 +1822,44 @@ function desenharDebug() {
             larguraMapa,
             alturaMapa
         );
+    } else if (interiorAtual !== null) {
+        const limites = obterLimitesTransitaveisDaCasa();
+        const saida = obterSaidaDaCasa();
+
+        // O vermelho delimita a área física útil do interior, sem criar
+        // marcas sobre móveis até que as colisões internas sejam adicionadas.
+        contexto.strokeStyle = "rgba(255, 70, 70, 0.95)";
+        contexto.lineWidth = 2 / zoom;
+        contexto.strokeRect(
+            limites.esquerda - cameraX,
+            limites.topo - cameraY,
+            limites.direita - limites.esquerda,
+            limites.base - limites.topo
+        );
+
+        desenharRetanguloDebug(
+            saida.esquerda,
+            saida.y - 8,
+            saida.direita - saida.esquerda,
+            16,
+            "rgba(0, 255, 255, 0.16)",
+            "rgba(0, 255, 255, 0.95)",
+            "SAÍDA"
+        );
     }
 
 
-    // Caixa completa do personagem.
+    // Caixa visual completa do personagem.
+    const dimensoesVisuais =
+        obterDimensoesVisuaisJogador();
+
     const corpoX =
         jogador.x -
-        jogador.largura / 2;
+        dimensoesVisuais.largura / 2;
 
     const corpoY =
         jogador.y -
+        dimensoesVisuais.altura +
         jogador.altura / 2;
 
     desenharRetanguloDebug(
@@ -1518,8 +1867,8 @@ function desenharDebug() {
         corpoX,
         corpoY,
 
-        jogador.largura,
-        jogador.altura,
+        dimensoesVisuais.largura,
+        dimensoesVisuais.altura,
 
         "rgba(255, 190, 0, 0.08)",
         "rgba(255, 190, 0, 0.95)",
@@ -1609,6 +1958,10 @@ function desenharDebug() {
     contexto.textBaseline =
         "top";
 
+    const estaEmInterior =
+        cenarioAtual === "casa" &&
+        interiorAtual !== null;
+
     contexto.fillText(
         "MODO DEBUG — F3",
         painelX + 10,
@@ -1627,28 +1980,48 @@ function desenharDebug() {
         painelY + 46
     );
 
-    contexto.fillText(
-        `Sólidas: ${obstaculos.length} | Água: máscara`,
-        painelX + 10,
-        painelY + 64
-    );
+    if (estaEmInterior) {
+        contexto.fillText(
+            `Mapa: ${interiorAtual.nome}`,
+            painelX + 10,
+            painelY + 64
+        );
 
-    contexto.fillText(
-        `Água na hitbox: ${Math.round(
-            porcentagemHitboxNaAgua(
-                jogador.x,
-                jogador.y
-            )
-        )}%`,
-        painelX + 10,
-        painelY + 82
-    );
+        contexto.fillText(
+            "Limite vermelho | Saída azul",
+            painelX + 10,
+            painelY + 82
+        );
 
-    contexto.fillText(
-        `Afogamento em: ${porcentagemAfogamento}%`,
-        painelX + 10,
-        painelY + 100
-    );
+        contexto.fillText(
+            "Esc ou saída inferior → costa",
+            painelX + 10,
+            painelY + 100
+        );
+    } else {
+        contexto.fillText(
+            `Sólidas: ${obterObstaculosAtivos().length} | Água: máscara`,
+            painelX + 10,
+            painelY + 64
+        );
+
+        contexto.fillText(
+            `Água na hitbox: ${Math.round(
+                porcentagemHitboxNaAgua(
+                    jogador.x,
+                    jogador.y
+                )
+            )}%`,
+            painelX + 10,
+            painelY + 82
+        );
+
+        contexto.fillText(
+            `Afogamento em: ${porcentagemAfogamento}%`,
+            painelX + 10,
+            painelY + 100
+        );
+    }
 }
 
 
@@ -1698,16 +2071,25 @@ function desenharJogo() {
         );
 
     } else {
-
-        contexto.fillStyle =
-            "#292c34";
-
-        contexto.fillRect(
-            0,
-            0,
-            larguraTela / zoom,
-            alturaTela / zoom
-        );
+        if (interiorAtual?.imagem?.naturalWidth > 0) {
+            contexto.drawImage(
+                interiorAtual.imagem,
+                -cameraX,
+                -cameraY,
+                larguraMapa,
+                alturaMapa
+            );
+        } else {
+            // Mantém o interior original como fallback enquanto um mapa novo
+            // ainda não foi selecionado.
+            contexto.fillStyle = "#292c34";
+            contexto.fillRect(
+                0,
+                0,
+                larguraTela / zoom,
+                alturaTela / zoom
+            );
+        }
     }
 
 
@@ -1768,15 +2150,18 @@ function atualizarTextoControles() {
         "casa"
     ) {
 
+        const nomeCasa =
+            interiorAtual?.nome || "Dentro da casa";
+
         controles.innerHTML =
-            `<strong>Dentro da casa</strong><br>
+            `<strong>${nomeCasa}</strong><br>
             WASD / Setas → Mover<br>
             F3 → ${
                 modoDebug
                     ? "Esconder colisões"
                     : "Mostrar colisões"
             }<br>
-            Esc → Sair`;
+            Esc ou saída inferior → Costa`;
 
     } else {
 
@@ -1789,7 +2174,11 @@ function atualizarTextoControles() {
                     : "Mostrar colisões"
             }<br>
             <span style="color:#ff6666">
-                Vermelho = barreira
+                Vermelho = ${
+                    mapaSelecionado.usaLayoutOriginal
+                        ? "barreira"
+                        : "área física sólida"
+                }
             </span> |
             <span style="color:#4ca8ff">
                 Azul = água
@@ -1932,11 +2321,13 @@ window.addEventListener(
 imagemMapa.onload =
     function () {
 
-        larguraMapa =
+        larguraCidade =
             imagemMapa.naturalWidth;
 
-        alturaMapa =
+        alturaCidade =
             imagemMapa.naturalHeight;
+
+        aplicarDimensoesDoCenario(imagemMapa);
 
         try {
 
