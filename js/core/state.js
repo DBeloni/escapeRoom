@@ -26,7 +26,13 @@ export function createGameState() {
             speed: 180,
             direction: "baixo",
             frame: 0,
-            animationTime: 0
+            animationTime: 0,
+            drowning: {
+                active: false,
+                phase: null,
+                elapsed: 0,
+                bubbleFrame: 0
+            }
         },
         loop: {
             previousTime: 0

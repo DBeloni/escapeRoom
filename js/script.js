@@ -3,6 +3,8 @@ const canvas = document.getElementById("gameCanvas");
 const contexto = canvas.getContext("2d");
 const aviso = document.getElementById("loading");
 const controles = document.getElementById("controls");
+const telaGameOver = document.getElementById("gameOver");
+const botaoReiniciar = document.getElementById("restartGame");
 
 // Cada opção é independente: o mapa atual continua intacto e a Zona Costeira
 // pode ser testada pelo seletor no canto superior direito.
@@ -20,7 +22,8 @@ const mapasDisponiveis = {
         src: "../assets/maps/mapa-remaster-zona-costeira.png",
         spawn: { x: 620, y: 620 },
         usaLayoutOriginal: false,
-        bloqueiaAgua: true
+        bloqueiaAgua: true,
+        aguaProgressiva: true
     }
 };
 
@@ -33,6 +36,9 @@ let alturaMapa = 0;
 const zoom = 1.8;
 const imagemMapa = new Image();
 const imagemPersonagem = new Image();
+const imagemAguaCintura = new Image();
+const imagemAguaPescoco = new Image();
+const imagemBolhasAfogamento = new Image();
 
 // Um objeto agrupa informações. Exemplo: jogador.x é a posição horizontal.
 const jogador = {
@@ -61,6 +67,8 @@ let tempoAnterior = 0;
 let mapaCarregado = false;
 let personagemCarregado = false;
 let aguaCarregada = false;
+let spritesAquaticosCarregados = false;
+let spritesAquaticosPendentes = 3;
 let jogoIniciado = false;
 let modoDebug = false;
 
@@ -281,30 +289,97 @@ for (const interior of Object.values(interioresZonaCosteira)) {
 // Última porta usada, para o Esc devolver o jogador exatamente à entrada.
 let ultimaPortaEntrada = null;
 
-// Quanto da hitbox precisa estar na água para o jogador se afogar.
-const porcentagemAfogamento = 35;
+const tamanhoCelulaProfundidade = 8;
+// Algas e reflexos quebram visualmente a superfície das lagoas. Uma célula
+// com 20% de água catalogada ainda pertence à água jogável.
+const ocupacaoMinimaAgua = 0.2;
+const profundidadeCintura = 8;
+const profundidadePescoco = 24;
+const profundidadeFatal = 56;
+const coberturaMinimaParaEntrarNaAgua = 15;
+const tipoAguaOceano = 2;
+const tipoLagoaRasa = 3;
+const tipoLagoaPescoco = 4;
+const tipoLagoaProfunda = 5;
+const marcadorLagoaEmAnalise = 6;
+const profundidadeMaximaLagoaPescoco =
+    profundidadeFatal -
+    tamanhoCelulaProfundidade;
+const multiplicadorCintura = 0.55;
+const multiplicadorPescoco = 0.3;
+const duracaoBolhasAfogamento = 0.9;
+
+// Cada lagoa do cenário tem um papel de jogo explícito. As pequenas podem ser
+// atravessadas até a cintura, o tanque central chega ao pescoço sem matar e o
+// reservatório do leste é o único interno com centro fatal.
+const lagoasInternas = [
+    {
+        limites: [343, 173, 427, 257],
+        tipo: tipoLagoaRasa
+    },
+    {
+        limites: [490, 231, 579, 316],
+        tipo: tipoLagoaRasa
+    },
+    {
+        limites: [608, 492, 737, 598],
+        tipo: tipoLagoaPescoco
+    },
+    {
+        limites: [921, 386, 1167, 652],
+        tipo: tipoLagoaProfunda
+    },
+    {
+        limites: [962, 802, 1030, 859],
+        tipo: tipoLagoaRasa
+    },
+    {
+        limites: [1057, 802, 1150, 887],
+        tipo: tipoLagoaRasa
+    }
+];
+
+const estadoAfogamento = {
+    fase: "normal",
+    profundidade: 0,
+    tempoBolhas: 0,
+    quadroBolhas: 0
+};
 
 
 // ============================================================================
 // ÁGUA DO MAPA
 // ============================================================================
-// A água é detectada diretamente na imagem do mapa. A Zona Costeira também
-// considera lagoas internas, para que elas sejam exibidas no F3 e bloqueiem
-// a passagem do jogador.
+// A água é detectada diretamente na imagem do mapa. Na Zona Costeira, oceano
+// e lagoas internas usam a mesma profundidade progressiva: margens rasas,
+// centro mais fundo e afogamento apenas onde houver espaço para isso.
 
 let mascaraAgua = null;
 let imagemAguaDebug = null;
+let mapaProfundidadeAgua = null;
 
 function pixelEhAguaProvavel(r, g, b) {
     // A água do mapa vai de azul profundo a verde-azulado com vegetação.
     // O critério tolera reflexos e folhas na superfície, mas exige azul acima
     // do vermelho para não confundir terra, madeira e pedra com água.
-    return (
+    const aguaAzul = (
         b > r * 1.25 &&
         b >= g &&
         b > 32 &&
         g > 10
     );
+
+    // Algumas lagoas têm algas e sombras que deixam o verde levemente acima
+    // do azul. Mantemos o azul bem acima do vermelho para não confundir pedra
+    // ou vegetação seca com água, mas aceitamos essa variação escura.
+    const aguaSobAlgas = (
+        b > r * 1.25 &&
+        b >= g - 10 &&
+        b > 30 &&
+        g > 12
+    );
+
+    return aguaAzul || aguaSobAlgas;
 }
 
 function criarMascaraAgua() {
@@ -332,7 +407,7 @@ function criarMascaraAgua() {
     // 0 = não parece água
     // 1 = candidata ainda não classificada
     // 2 = oceano conectado à borda
-    // 3 = lagoa interna grande (usada na Zona Costeira)
+    // 3 = lagoa rasa, 4 = lagoa até o pescoço, 5 = lagoa profunda
     const candidatos = new Uint8Array(total);
 
     for (let y = 0; y < altura; y++) {
@@ -436,9 +511,11 @@ function criarMascaraAgua() {
     if (mapaSelecionado.bloqueiaAgua) {
         removerCandidatosEmConstrucoes(candidatos, largura);
         classificarLagoasInternas(candidatos, largura, altura);
+        preencherLacunasDeLagoa(candidatos, largura, altura);
     }
 
     mascaraAgua = candidatos;
+    criarMapaProfundidadeAgua();
 
     // Criamos a camada azul usada pelo modo debug.
     const canvasDebug = document.createElement("canvas");
@@ -449,7 +526,7 @@ function criarMascaraAgua() {
     const camada = contextoDebug.createImageData(largura, altura);
 
     for (let i = 0; i < total; i++) {
-        if (mascaraAgua[i] === 2 || mascaraAgua[i] === 3) {
+        if (tipoEhAguaJogavel(mascaraAgua[i])) {
             const indicePixel = i * 4;
 
             camada.data[indicePixel] = 25;
@@ -464,6 +541,110 @@ function criarMascaraAgua() {
 
     imagemAguaDebug = canvasDebug;
     aguaCarregada = true;
+}
+
+function criarMapaProfundidadeAgua() {
+    if (mapaSelecionado.aguaProgressiva !== true) {
+        mapaProfundidadeAgua = null;
+        return;
+    }
+
+    const colunas = Math.ceil(larguraMapa / tamanhoCelulaProfundidade);
+    const linhas = Math.ceil(alturaMapa / tamanhoCelulaProfundidade);
+    const total = colunas * linhas;
+    const aguaPorCelula = new Uint8Array(total);
+
+    for (let linha = 0; linha < linhas; linha++) {
+        const inicioY = linha * tamanhoCelulaProfundidade;
+        const fimY = Math.min(
+            inicioY + tamanhoCelulaProfundidade,
+            alturaMapa
+        );
+
+        for (let coluna = 0; coluna < colunas; coluna++) {
+            const inicioX = coluna * tamanhoCelulaProfundidade;
+            const fimX = Math.min(
+                inicioX + tamanhoCelulaProfundidade,
+                larguraMapa
+            );
+            let pixelsDeAgua = 0;
+            const totalDePixels = (fimX - inicioX) * (fimY - inicioY);
+
+            for (let y = inicioY; y < fimY; y++) {
+                const inicio = y * larguraMapa;
+
+                for (let x = inicioX; x < fimX; x++) {
+                    const tipo = mascaraAgua[inicio + x];
+
+                    if (tipoEhAguaJogavel(tipo)) {
+                        pixelsDeAgua++;
+                    }
+                }
+            }
+
+            if (pixelsDeAgua / totalDePixels >= ocupacaoMinimaAgua) {
+                aguaPorCelula[linha * colunas + coluna] = 1;
+            }
+        }
+    }
+
+    const semProfundidade = 65535;
+    const profundidades = new Uint16Array(total);
+    profundidades.fill(semProfundidade);
+
+    const fila = new Int32Array(total);
+    let inicioFila = 0;
+    let fimFila = 0;
+
+    for (let linha = 0; linha < linhas; linha++) {
+        for (let coluna = 0; coluna < colunas; coluna++) {
+            const posicao = linha * colunas + coluna;
+            if (aguaPorCelula[posicao] !== 1) continue;
+
+            const tocaTerra =
+                (coluna > 0 && aguaPorCelula[posicao - 1] !== 1) ||
+                (coluna < colunas - 1 && aguaPorCelula[posicao + 1] !== 1) ||
+                (linha > 0 && aguaPorCelula[posicao - colunas] !== 1) ||
+                (linha < linhas - 1 && aguaPorCelula[posicao + colunas] !== 1);
+
+            if (tocaTerra) {
+                profundidades[posicao] = 1;
+                fila[fimFila++] = posicao;
+            }
+        }
+    }
+
+    while (inicioFila < fimFila) {
+        const posicao = fila[inicioFila++];
+        const coluna = posicao % colunas;
+        const linha = Math.floor(posicao / colunas);
+        const proximaProfundidade = profundidades[posicao] + 1;
+
+        const vizinhos = [
+            coluna > 0 ? posicao - 1 : -1,
+            coluna < colunas - 1 ? posicao + 1 : -1,
+            linha > 0 ? posicao - colunas : -1,
+            linha < linhas - 1 ? posicao + colunas : -1
+        ];
+
+        for (const vizinho of vizinhos) {
+            if (
+                vizinho >= 0 &&
+                aguaPorCelula[vizinho] === 1 &&
+                profundidades[vizinho] === semProfundidade
+            ) {
+                profundidades[vizinho] = proximaProfundidade;
+                fila[fimFila++] = vizinho;
+            }
+        }
+    }
+
+    mapaProfundidadeAgua = {
+        colunas,
+        linhas,
+        profundidades,
+        semProfundidade
+    };
 }
 
 function removerCandidatosEmConstrucoes(candidatos, largura) {
@@ -491,13 +672,22 @@ function classificarLagoasInternas(candidatos, largura, altura) {
 
         let inicioFila = 0;
         let fimFila = 1;
+        let menorX = largura;
+        let maiorX = 0;
+        let menorY = altura;
+        let maiorY = 0;
         fila[0] = inicio;
-        candidatos[inicio] = 4;
+        candidatos[inicio] = marcadorLagoaEmAnalise;
 
         while (inicioFila < fimFila) {
             const posicao = fila[inicioFila++];
             const x = posicao % largura;
             const y = Math.floor(posicao / largura);
+
+            menorX = Math.min(menorX, x);
+            maiorX = Math.max(maiorX, x);
+            menorY = Math.min(menorY, y);
+            maiorY = Math.max(maiorY, y);
 
             const vizinhos = [
                 x > 0 ? posicao - 1 : -1,
@@ -508,17 +698,144 @@ function classificarLagoasInternas(candidatos, largura, altura) {
 
             for (const vizinho of vizinhos) {
                 if (vizinho >= 0 && candidatos[vizinho] === 1) {
-                    candidatos[vizinho] = 4;
+                    candidatos[vizinho] = marcadorLagoaEmAnalise;
                     fila[fimFila++] = vizinho;
                 }
             }
         }
 
-        const tipoFinal = fimFila >= areaMinimaDeAgua ? 3 : 0;
+        const tipoFinal =
+            fimFila >= areaMinimaDeAgua
+                ? obterTipoLagoaInterna(
+                    menorX,
+                    menorY,
+                    maiorX,
+                    maiorY
+                )
+                : 0;
+
         for (let indice = 0; indice < fimFila; indice++) {
             candidatos[fila[indice]] = tipoFinal;
         }
     }
+}
+
+function obterTipoLagoaInterna(menorX, menorY, maiorX, maiorY) {
+    const centroX = (menorX + maiorX) / 2;
+    const centroY = (menorY + maiorY) / 2;
+
+    const lagoa = lagoasInternas.find(({ limites }) => {
+        const [esquerda, topo, direita, base] = limites;
+
+        return (
+            centroX >= esquerda &&
+            centroX <= direita &&
+            centroY >= topo &&
+            centroY <= base
+        );
+    });
+
+    // Uma região de água nova ou não mapeada nunca vira uma morte surpresa.
+    return lagoa?.tipo ?? tipoLagoaRasa;
+}
+
+function preencherLacunasDeLagoa(candidatos, largura, altura) {
+    const areaMaximaDaLacuna = 2400;
+
+    for (const { limites, tipo } of lagoasInternas) {
+        const [esquerdaOriginal, topoOriginal, direitaOriginal, baseOriginal] = limites;
+        const esquerda = Math.max(0, esquerdaOriginal);
+        const topo = Math.max(0, topoOriginal);
+        const direita = Math.min(largura - 1, direitaOriginal);
+        const base = Math.min(altura - 1, baseOriginal);
+        const larguraRegiao = direita - esquerda + 1;
+        const alturaRegiao = base - topo + 1;
+        const totalDaRegiao = larguraRegiao * alturaRegiao;
+        const visitados = new Uint8Array(totalDaRegiao);
+        const fila = new Int32Array(totalDaRegiao);
+
+        for (let y = topo; y <= base; y++) {
+            for (let x = esquerda; x <= direita; x++) {
+                const indiceLocal =
+                    (y - topo) *
+                    larguraRegiao +
+                    (x - esquerda);
+                const inicio = y * largura + x;
+
+                if (
+                    visitados[indiceLocal] === 1 ||
+                    tipoEhAguaJogavel(candidatos[inicio])
+                ) {
+                    continue;
+                }
+
+                let inicioFila = 0;
+                let fimFila = 1;
+                let tocaBorda = false;
+                fila[0] = inicio;
+                visitados[indiceLocal] = 1;
+
+                while (inicioFila < fimFila) {
+                    const posicao = fila[inicioFila++];
+                    const posicaoX = posicao % largura;
+                    const posicaoY = Math.floor(posicao / largura);
+
+                    if (
+                        posicaoX === esquerda ||
+                        posicaoX === direita ||
+                        posicaoY === topo ||
+                        posicaoY === base
+                    ) {
+                        tocaBorda = true;
+                    }
+
+                    const vizinhos = [
+                        posicaoX > esquerda ? posicao - 1 : -1,
+                        posicaoX < direita ? posicao + 1 : -1,
+                        posicaoY > topo ? posicao - largura : -1,
+                        posicaoY < base ? posicao + largura : -1
+                    ];
+
+                    for (const vizinho of vizinhos) {
+                        if (vizinho < 0) continue;
+
+                        const vizinhoX = vizinho % largura;
+                        const vizinhoY = Math.floor(vizinho / largura);
+                        const indiceVizinho =
+                            (vizinhoY - topo) *
+                            larguraRegiao +
+                            (vizinhoX - esquerda);
+
+                        if (
+                            visitados[indiceVizinho] === 0 &&
+                            tipoEhAguaJogavel(candidatos[vizinho]) === false
+                        ) {
+                            visitados[indiceVizinho] = 1;
+                            fila[fimFila++] = vizinho;
+                        }
+                    }
+                }
+
+                if (
+                    tocaBorda === false &&
+                    fimFila <= areaMaximaDaLacuna
+                ) {
+                    for (let indice = 0; indice < fimFila; indice++) {
+                        candidatos[fila[indice]] = tipo;
+                    }
+                }
+            }
+        }
+    }
+}
+
+function tipoEhAguaJogavel(tipo) {
+    return (
+        tipo === tipoAguaOceano ||
+        tipo === tipoLagoaRasa ||
+        tipo === tipoLagoaPescoco ||
+        tipo === tipoLagoaProfunda
+    );
 }
 
 function pixelEhAgua(x, y) {
@@ -539,7 +856,87 @@ function pixelEhAgua(x, y) {
         Math.floor(y) * larguraMapa + Math.floor(x)
     ];
 
-    return tipo === 2 || tipo === 3;
+    return tipoEhAguaJogavel(tipo);
+}
+
+function profundidadeAguaEm(x, y) {
+    if (
+        mapaProfundidadeAgua === null ||
+        x < 0 ||
+        y < 0 ||
+        x >= larguraMapa ||
+        y >= alturaMapa
+    ) {
+        return 0;
+    }
+
+    const pixel = Math.floor(y) * larguraMapa + Math.floor(x);
+    const tipo = mascaraAgua[pixel];
+
+    if (tipoEhAguaJogavel(tipo) === false) return 0;
+
+    const coluna = Math.floor(x / tamanhoCelulaProfundidade);
+    const linha = Math.floor(y / tamanhoCelulaProfundidade);
+    const posicao = linha * mapaProfundidadeAgua.colunas + coluna;
+    const profundidade = mapaProfundidadeAgua.profundidades[posicao];
+
+    if (profundidade === mapaProfundidadeAgua.semProfundidade) {
+        // A textura de algas pode deixar uma célula da malha pouco ocupada,
+        // mesmo quando o pé do jogador está em um pixel de lagoa válido.
+        // Nesse caso, ao menos a animação de cintura deve acontecer.
+        if (tipo !== tipoAguaOceano) {
+            return profundidadeCintura;
+        }
+
+        return 0;
+    }
+
+    const profundidadeEmPixels =
+        profundidade *
+        tamanhoCelulaProfundidade;
+
+    if (tipo === tipoLagoaRasa) {
+        return Math.min(
+            profundidadeEmPixels,
+            profundidadeCintura
+        );
+    }
+
+    if (tipo === tipoLagoaPescoco) {
+        return Math.min(
+            profundidadeEmPixels,
+            profundidadeMaximaLagoaPescoco
+        );
+    }
+
+    return profundidadeEmPixels;
+}
+
+function profundidadeAguaNoJogador(x, y) {
+    if (mapaSelecionado.aguaProgressiva !== true) return 0;
+    if (
+        porcentagemHitboxNaAgua(x, y) <
+        coberturaMinimaParaEntrarNaAgua
+    ) {
+        return 0;
+    }
+
+    const hitbox = obterHitboxJogador(x, y);
+    const amostras = [
+        [hitbox.x + 2, hitbox.y + 2],
+        [hitbox.x + hitbox.largura / 2, hitbox.y + 2],
+        [hitbox.direita - 2, hitbox.y + 2],
+        [hitbox.x + hitbox.largura / 2, hitbox.base - 2],
+        [hitbox.x + hitbox.largura / 2, hitbox.y + hitbox.altura / 2]
+    ];
+    const profundidades = amostras
+        .map(([amostraX, amostraY]) => profundidadeAguaEm(amostraX, amostraY))
+        .filter(profundidade => profundidade > 0)
+        .sort((a, b) => a - b);
+
+    if (profundidades.length === 0) return 0;
+
+    return profundidades[Math.floor(profundidades.length / 2)];
 }
 
 function porcentagemHitboxNaAgua(x, y) {
@@ -1123,39 +1520,133 @@ function obstaculoColideComHitbox(obstaculo, hitbox) {
 // ============================================================================
 
 function verificarAfogamento() {
-
     if (
         cenarioAtual !== "cidade" ||
         aguaCarregada === false
     ) {
+        if (
+            estadoAfogamento.fase !== "bolhas" &&
+            estadoAfogamento.fase !== "game-over"
+        ) {
+            estadoAfogamento.fase = "normal";
+            estadoAfogamento.profundidade = 0;
+        }
         return false;
     }
 
-    const porcentagemNaAgua =
-        porcentagemHitboxNaAgua(
-            jogador.x,
-            jogador.y
-        );
-
     if (
-        porcentagemNaAgua >=
-        porcentagemAfogamento
+        estadoAfogamento.fase === "bolhas" ||
+        estadoAfogamento.fase === "game-over"
     ) {
+        return estadoAfogamento.fase === "bolhas";
+    }
 
-        jogador.x = spawn.x;
-        jogador.y = spawn.y;
+    if (mapaSelecionado.aguaProgressiva !== true) {
+        if (porcentagemHitboxNaAgua(jogador.x, jogador.y) >= 35) {
+            iniciarAfogamento();
+            return true;
+        }
 
-        jogador.direcao = "baixo";
+        estadoAfogamento.profundidade = 0;
+        return false;
+    }
 
-        jogador.quadro = 0;
-        jogador.tempoAnimacao = 0;
+    const profundidade = profundidadeAguaNoJogador(
+        jogador.x,
+        jogador.y
+    );
 
-        atualizarCamera();
+    estadoAfogamento.profundidade = profundidade;
 
+    if (profundidade >= profundidadeFatal) {
+        iniciarAfogamento();
         return true;
     }
 
+    if (profundidade >= profundidadePescoco) {
+        estadoAfogamento.fase = "pescoco";
+    } else if (profundidade >= profundidadeCintura) {
+        estadoAfogamento.fase = "cintura";
+    } else {
+        estadoAfogamento.fase = "normal";
+    }
+
     return false;
+}
+
+function iniciarAfogamento() {
+    if (estadoAfogamento.fase === "bolhas") return;
+
+    estadoAfogamento.fase = "bolhas";
+    estadoAfogamento.tempoBolhas = 0;
+    estadoAfogamento.quadroBolhas = 0;
+    jogador.quadro = 0;
+    jogador.tempoAnimacao = 0;
+    teclas = {};
+    limparEntradaMobile();
+}
+
+function atualizarAfogamento(segundos) {
+    if (estadoAfogamento.fase !== "bolhas") return;
+
+    estadoAfogamento.tempoBolhas += segundos;
+    estadoAfogamento.quadroBolhas = Math.min(
+        8,
+        Math.floor(
+            (estadoAfogamento.tempoBolhas / duracaoBolhasAfogamento) * 9
+        )
+    );
+
+    if (estadoAfogamento.tempoBolhas >= duracaoBolhasAfogamento) {
+        mostrarGameOver();
+    }
+}
+
+function mostrarGameOver() {
+    estadoAfogamento.fase = "game-over";
+    teclas = {};
+    limparEntradaMobile();
+
+    if (telaGameOver) {
+        telaGameOver.hidden = false;
+    }
+
+    botaoReiniciar?.focus();
+}
+
+function reiniciarJogo() {
+    if (estadoAfogamento.fase !== "game-over") return;
+
+    estadoAfogamento.fase = "normal";
+    estadoAfogamento.profundidade = 0;
+    estadoAfogamento.tempoBolhas = 0;
+    estadoAfogamento.quadroBolhas = 0;
+    jogador.x = spawn.x;
+    jogador.y = spawn.y;
+    jogador.direcao = "baixo";
+    jogador.quadro = 0;
+    jogador.tempoAnimacao = 0;
+    teclas = {};
+    limparEntradaMobile();
+    tempoAnterior = 0;
+
+    if (telaGameOver) {
+        telaGameOver.hidden = true;
+    }
+
+    atualizarCamera();
+}
+
+function multiplicadorVelocidadeNaAgua() {
+    if (estadoAfogamento.fase === "cintura") {
+        return multiplicadorCintura;
+    }
+
+    if (estadoAfogamento.fase === "pescoco") {
+        return multiplicadorPescoco;
+    }
+
+    return 1;
 }
 
 
@@ -1201,6 +1692,7 @@ function temColisao(x, y) {
 
     if (
         mapaSelecionado.bloqueiaAgua &&
+        mapaSelecionado.aguaProgressiva !== true &&
         porcentagemHitboxNaAgua(x, y) >= 10
     ) {
         return true;
@@ -1283,6 +1775,21 @@ function atualizarCamera() {
 
 function moverJogador(segundos) {
 
+    if (estadoAfogamento.fase === "bolhas") {
+        atualizarAfogamento(segundos);
+        atualizarCamera();
+        return;
+    }
+
+    if (estadoAfogamento.fase === "game-over") {
+        return;
+    }
+
+    if (verificarAfogamento()) {
+        atualizarCamera();
+        return;
+    }
+
     let horizontal = 0;
     let vertical = 0;
 
@@ -1337,17 +1844,20 @@ function moverJogador(segundos) {
     }
 
     let andou = false;
+    const velocidadeAtual =
+        jogador.velocidade *
+        multiplicadorVelocidadeNaAgua();
 
     const novoX =
         jogador.x +
         horizontal *
-        jogador.velocidade *
+        velocidadeAtual *
         segundos;
 
     const novoY =
         jogador.y +
         vertical *
-        jogador.velocidade *
+        velocidadeAtual *
         segundos;
 
     // Saída pela porta inferior do interior da Zona Costeira.
@@ -1433,9 +1943,10 @@ function moverJogador(segundos) {
     }
 
 
-    // Água não bloqueia.
-    // Apenas causa afogamento.
-    verificarAfogamento();
+    if (verificarAfogamento()) {
+        atualizarCamera();
+        return;
+    }
 
     atualizarAnimacao(
         andou,
@@ -1505,6 +2016,21 @@ function obterDimensoesVisuaisJogador() {
 
 function desenharJogador() {
 
+    if (
+        estadoAfogamento.fase === "bolhas" ||
+        estadoAfogamento.fase === "game-over"
+    ) {
+        desenharBolhasAfogamento();
+        return;
+    }
+
+    const imagemAtual =
+        estadoAfogamento.fase === "cintura"
+            ? imagemAguaCintura
+            : estadoAfogamento.fase === "pescoco"
+                ? imagemAguaPescoco
+                : imagemPersonagem;
+
     let linha = 1;
 
     if (
@@ -1521,21 +2047,21 @@ function desenharJogador() {
 
     const larguraQuadro =
         Math.floor(
-            imagemPersonagem.naturalWidth /
+            imagemAtual.naturalWidth /
             3
         );
 
     const topo =
         Math.floor(
             linha *
-            imagemPersonagem.naturalHeight /
+            imagemAtual.naturalHeight /
             3
         );
 
     const base =
         Math.floor(
             (linha + 1) *
-            imagemPersonagem.naturalHeight /
+            imagemAtual.naturalHeight /
             3
         );
 
@@ -1544,16 +2070,25 @@ function desenharJogador() {
         larguraQuadro +
         1;
 
+    // A linha lateral da arte de pescoço tinha alguns pixels residuais de
+    // água no começo do quadro. Cortamos essa borda extra somente nela para
+    // que não apareça uma faixa sobre o cabelo após a redução da sprite.
+    const margemSuperior =
+        imagemAtual === imagemAguaPescoco &&
+        linha === 1
+            ? 8
+            : 1;
+
     const recorteY =
-        topo + 1;
+        topo + margemSuperior;
 
     const larguraRecorte =
         larguraQuadro - 2;
 
     const alturaRecorte =
         base -
-        topo -
-        2;
+        recorteY -
+        1;
 
     const dimensoesVisuais =
         obterDimensoesVisuaisJogador();
@@ -1595,7 +2130,7 @@ function desenharJogador() {
     }
 
     contexto.drawImage(
-        imagemPersonagem,
+        imagemAtual,
 
         recorteX,
         recorteY,
@@ -1609,6 +2144,43 @@ function desenharJogador() {
     );
 
     contexto.restore();
+}
+
+function desenharBolhasAfogamento() {
+    const quadro = estadoAfogamento.quadroBolhas;
+    const coluna = quadro % 3;
+    const linha = Math.floor(quadro / 3);
+    const larguraQuadro = Math.floor(
+        imagemBolhasAfogamento.naturalWidth / 3
+    );
+    const topo = Math.floor(
+        linha * imagemBolhasAfogamento.naturalHeight / 3
+    );
+    const base = Math.floor(
+        (linha + 1) * imagemBolhasAfogamento.naturalHeight / 3
+    );
+    const dimensoesVisuais = obterDimensoesVisuaisJogador();
+    const x =
+        jogador.x -
+        dimensoesVisuais.largura / 2 -
+        cameraX;
+    const y =
+        jogador.y -
+        dimensoesVisuais.altura +
+        jogador.altura / 2 -
+        cameraY;
+
+    contexto.drawImage(
+        imagemBolhasAfogamento,
+        coluna * larguraQuadro + 1,
+        topo + 1,
+        larguraQuadro - 2,
+        base - topo - 2,
+        x,
+        y,
+        dimensoesVisuais.largura,
+        dimensoesVisuais.altura
+    );
 }
 
 
@@ -2017,7 +2589,9 @@ function desenharDebug() {
         );
 
         contexto.fillText(
-            `Afogamento em: ${porcentagemAfogamento}%`,
+            mapaSelecionado.aguaProgressiva
+                ? `Profundidade: ${estadoAfogamento.profundidade}px | ${estadoAfogamento.fase}`
+                : "Afogamento ao entrar na água",
             painelX + 10,
             painelY + 100
         );
@@ -2212,6 +2786,7 @@ function iniciarJogo() {
         mapaCarregado &&
         personagemCarregado &&
         aguaCarregada &&
+        spritesAquaticosCarregados &&
         jogoIniciado === false
     ) {
 
@@ -2241,6 +2816,20 @@ window.addEventListener(
 
         const tecla =
             evento.key.toLowerCase();
+
+        if (estadoAfogamento.fase === "game-over") {
+            if (tecla === "r" || tecla === "enter") {
+                reiniciarJogo();
+                evento.preventDefault();
+            }
+
+            return;
+        }
+
+        if (estadoAfogamento.fase === "bolhas") {
+            evento.preventDefault();
+            return;
+        }
 
         if (
             tecla === "f3"
@@ -2318,6 +2907,23 @@ window.addEventListener(
 // CARREGAMENTO
 // ============================================================================
 
+function carregarSpriteAquatico(imagem, caminho) {
+    imagem.onload = function () {
+        spritesAquaticosPendentes--;
+
+        if (spritesAquaticosPendentes === 0) {
+            spritesAquaticosCarregados = true;
+            iniciarJogo();
+        }
+    };
+
+    imagem.onerror = function () {
+        aviso.textContent = "Erro ao carregar a animação da água.";
+    };
+
+    imagem.src = caminho;
+}
+
 imagemMapa.onload =
     function () {
 
@@ -2392,3 +2998,18 @@ imagemMapa.src = mapaSelecionado.src;
 
 imagemPersonagem.src =
     "../assets/maps/personagem.png";
+
+carregarSpriteAquatico(
+    imagemAguaCintura,
+    "../assets/maps/personagem-agua-cintura-spritesheet.png"
+);
+carregarSpriteAquatico(
+    imagemAguaPescoco,
+    "../assets/maps/personagem-agua-pescoco-spritesheet.png"
+);
+carregarSpriteAquatico(
+    imagemBolhasAfogamento,
+    "../assets/maps/particula-afogamento-spritesheet-3x3.png"
+);
+
+botaoReiniciar?.addEventListener("click", reiniciarJogo);

@@ -133,7 +133,7 @@ function renderGame(state, view, assets, sceneManager) {
         );
     }
 
-    renderPlayer(state, context, assets.player);
+    renderPlayer(state, context, assets);
     renderDebug(state, view, scene);
 
     context.restore();

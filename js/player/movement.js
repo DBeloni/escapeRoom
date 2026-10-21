@@ -2,9 +2,21 @@ import { GAME_CONFIG } from "../config/gameConfig.js";
 import { getPlayerHitbox, hasSolidCollision } from "../world/collision.js";
 import { checkDrowning } from "../world/water.js";
 import { updatePlayerAnimation } from "./animation.js";
+import {
+    startDrowningAnimation,
+    updateDrowningAnimation
+} from "./drowning.js";
 import { setPlayerPosition } from "./player.js";
 
 export function updatePlayer(state, sceneManager, deltaSeconds) {
+    if (state.player.drowning.active) {
+        updateDrowningAnimation(state, deltaSeconds, () => {
+            const spawn = GAME_CONFIG.player.spawn;
+            setPlayerPosition(state, spawn.x, spawn.y, "baixo");
+        });
+        return;
+    }
+
     let horizontal = 0;
     let vertical = 0;
     const keys = state.input.keys;
@@ -50,11 +62,7 @@ export function updatePlayer(state, sceneManager, deltaSeconds) {
         hitbox,
         GAME_CONFIG.drownThresholdPercent,
         () => {
-            const spawn = sceneManager.current().id === "cidade"
-                ? GAME_CONFIG.player.spawn
-                : GAME_CONFIG.player.spawn;
-
-            setPlayerPosition(state, spawn.x, spawn.y, "baixo");
+            startDrowningAnimation(state);
         }
     );
 

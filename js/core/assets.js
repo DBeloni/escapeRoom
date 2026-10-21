@@ -3,7 +3,11 @@ import { GAME_CONFIG } from "../config/gameConfig.js";
 export async function loadAssets() {
     const map = await loadImage(GAME_CONFIG.assets.map);
     const player = await loadImage(GAME_CONFIG.assets.player);
-    return { map, player };
+    const waterWaist = await loadImage(GAME_CONFIG.assets.waterWaist);
+    const waterNeck = await loadImage(GAME_CONFIG.assets.waterNeck);
+    const drowningBubbles = await loadImage(GAME_CONFIG.assets.drowningBubbles);
+
+    return { map, player, waterWaist, waterNeck, drowningBubbles };
 }
 
 function loadImage(src) {

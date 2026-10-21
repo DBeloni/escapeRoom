@@ -3,7 +3,11 @@ export const GAME_CONFIG = {
     drownThresholdPercent: 35,
     assets: {
         map: "../assets/maps/mapa.png",
-        player: "../assets/maps/personagem.png"
+        player: "../assets/maps/personagem.png",
+        waterWaist: "../assets/maps/personagem-agua-cintura-spritesheet.png",
+        waterNeck: "../assets/maps/personagem-agua-pescoco-spritesheet.png",
+        drowningBubbles:
+            "../assets/maps/particula-afogamento-spritesheet-3x3.png"
     },
     player: {
         width: 32,
@@ -12,5 +16,10 @@ export const GAME_CONFIG = {
         collisionHeight: 14,
         speed: 180,
         spawn: { x: 650, y: 580 }
+    },
+    drowningAnimation: {
+        waistDuration: 0.45,
+        neckDuration: 0.45,
+        bubblesDuration: 0.6
     }
 };
