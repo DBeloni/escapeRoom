@@ -33,7 +33,11 @@ const mapaSelecionado = mapasDisponiveis[mapaSolicitado] ?? mapasDisponiveis.atu
 // O tamanho real do mapa é atualizado quando mapa.png termina de carregar.
 let larguraMapa = 0;
 let alturaMapa = 0;
-const zoom = 1.8;
+// A costa preserva o enquadramento original. Somente os cinco interiores
+// recebem metade desse zoom para mostrar uma área maior de cada casa.
+const zoomMapaPrincipal = 1.8;
+const zoomInteriores = 0.9;
+let zoom = zoomMapaPrincipal;
 const imagemMapa = new Image();
 const imagemPersonagem = new Image();
 const imagemAguaCintura = new Image();
@@ -247,29 +251,196 @@ const portasZonaCosteira = [
 const interioresZonaCosteira = {
     "casa-costeira-01": {
         nome: "Casa 01",
-        src: "../assets/maps/casa-01-zona-costeira-interior.png"
+        src: "../assets/maps/casa-01-zona-costeira-interior.png",
+        layout: {
+            escalaPersonagem: 3,
+            escalaHitbox: 3,
+            limites: [80, 95, 1320, 930],
+            entrada: { x: 701, y: 840 },
+            saida: { esquerda: 620, direita: 782, y: 900 },
+            paredes: [
+                [42, 20, 1320, 105],
+                [42, 20, 83, 910],
+                [1278, 20, 84, 910],
+                // A parede inferior termina nos batentes, deixando somente
+                // o vão real da porta (x 620–782) aberto.
+                [42, 875, 578, 155],
+                [782, 875, 580, 155],
+                // Prolongamento da divisória do quarto, à direita do móvel.
+                [434, 420, 66, 85]
+            ],
+            barreiras: [
+                [170, 125, 190, 290],
+                [350, 140, 82, 108],
+                [474, 112, 140, 105],
+                [552, 178, 95, 155],
+                [642, 95, 58, 408],
+                [730, 105, 165, 174],
+                [894, 112, 238, 180],
+                [1160, 80, 158, 225],
+                [104, 428, 330, 182],
+                [1124, 418, 178, 210],
+                [1106, 628, 190, 195],
+                [124, 710, 130, 170],
+                [248, 754, 160, 126],
+                [400, 800, 115, 80]
+            ]
+        }
     },
     "casa-costeira-02": {
         nome: "Casa 02",
-        src: "../assets/maps/casa-02-zona-costeira-interior.png"
+        src: "../assets/maps/casa-02-zona-costeira-interior.png",
+        layout: {
+            escalaPersonagem: 3,
+            escalaHitbox: 3,
+            limites: [68, 105, 1380, 825],
+            entrada: { x: 724, y: 745 },
+            saida: { esquerda: 617, direita: 827, y: 795 },
+            paredes: [
+                [20, 70, 1405, 65],
+                [20, 70, 90, 880],
+                [1340, 70, 85, 880],
+                // O vão entre os postes da porta é x 617–827.
+                [20, 810, 597, 145],
+                [827, 810, 598, 145]
+            ],
+            barreiras: [
+                [104, 142, 164, 324],
+                [270, 150, 78, 120],
+                [405, 120, 490, 185],
+                [890, 105, 38, 210],
+                [925, 110, 135, 200],
+                [1080, 125, 155, 180],
+                [1225, 125, 135, 180],
+                [100, 642, 250, 168],
+                [322, 724, 78, 92],
+                [1120, 665, 205, 150]
+            ]
+        }
     },
     "casa-costeira-03": {
         nome: "Casa 03 — Clínica",
-        src: "../assets/maps/casa-03-zona-costeira-interior.png"
+        src: "../assets/maps/casa-03-zona-costeira-interior.png",
+        layout: {
+            escalaPersonagem: 3,
+            escalaHitbox: 3,
+            limites: [75, 62, 1178, 1090],
+            entrada: { x: 627, y: 995 },
+            saida: { esquerda: 534, direita: 723, y: 1050 },
+            paredes: [
+                [35, 20, 1180, 60],
+                [35, 20, 65, 1155],
+                [1154, 20, 65, 1155],
+                // Batentes da saída: o vão transitável fica em x 534–723.
+                [35, 1015, 499, 160],
+                [723, 1015, 496, 160],
+                // Colunas entre os armários superiores da clínica.
+                [500, 80, 54, 200],
+                [767, 80, 75, 205]
+            ],
+            barreiras: [
+                [108, 125, 155, 270],
+                [268, 143, 82, 198],
+                [355, 86, 48, 195],
+                [423, 88, 76, 163],
+                [554, 86, 213, 173],
+                [842, 97, 220, 166],
+                [1065, 124, 93, 157],
+                [854, 222, 94, 169],
+                [943, 320, 185, 77],
+                [850, 388, 282, 58],
+                [91, 445, 106, 302],
+                [84, 763, 143, 246],
+                [1060, 477, 107, 256],
+                [1058, 714, 109, 294]
+            ]
+        }
     },
     "casa-costeira-04": {
         nome: "Casa 04 — Enfermaria",
-        src: "../assets/maps/casa-04-zona-costeira-interior.png"
+        src: "../assets/maps/casa-04-zona-costeira-interior.png",
+        layout: {
+            escalaPersonagem: 3,
+            escalaHitbox: 3,
+            limites: [70, 65, 1185, 1015],
+            entrada: { x: 627, y: 930 },
+            saida: { esquerda: 540, direita: 704, y: 980 },
+            paredes: [
+                // O painel azul superior termina perto de y 155.
+                [50, 25, 1154, 130],
+                [50, 25, 70, 1090],
+                [1134, 25, 70, 1090],
+                // Abertura e batentes reais da porta: x 540–704.
+                [50, 990, 490, 125],
+                [704, 990, 500, 125]
+            ],
+            barreiras: [
+                [108, 126, 461, 230],
+                [675, 75, 203, 261],
+                [873, 155, 243, 250],
+                {
+                    tipo: "poligono",
+                    pontos: [
+                        { x: 104, y: 657 }, { x: 264, y: 657 },
+                        { x: 264, y: 731 }, { x: 374, y: 731 },
+                        { x: 374, y: 1001 }, { x: 104, y: 1001 }
+                    ]
+                },
+                {
+                    tipo: "poligono",
+                    pontos: [
+                        { x: 885, y: 738 }, { x: 1045, y: 738 },
+                        { x: 1045, y: 675 }, { x: 1151, y: 675 },
+                        { x: 1151, y: 1001 }, { x: 885, y: 1001 }
+                    ]
+                }
+            ]
+        }
     },
     "casa-costeira-05": {
         nome: "Casa 05 — Oficina",
-        src: "../assets/maps/casa-05-zona-costeira-interior.png"
+        src: "../assets/maps/casa-05-zona-costeira-interior.png",
+        layout: {
+            escalaPersonagem: 3,
+            escalaHitbox: 3,
+            limites: [72, 55, 1702, 712],
+            entrada: { x: 887, y: 635 },
+            saida: { esquerda: 805, direita: 975, y: 685 },
+            paredes: [
+                [5, 5, 1764, 65],
+                [5, 5, 75, 775],
+                // A faixa direita inclui a moldura e a janela, não só a
+                // borda escura extrema do PNG.
+                [1638, 5, 131, 775],
+                // Abertura e batentes reais da porta: x 805–975.
+                [5, 700, 800, 140],
+                [976, 700, 793, 140],
+                // Parede interna esquerda acima das caixas inferiores.
+                [80, 65, 94, 399]
+            ],
+            barreiras: [
+                [174, 143, 268, 112],
+                [246, 238, 86, 102],
+                [462, 171, 80, 140],
+                [546, 66, 670, 244],
+                [1268, 66, 370, 314],
+                [74, 464, 424, 248],
+                [1318, 464, 386, 248]
+            ]
+        }
     }
 };
 
 let interiorAtual = null;
 let larguraCidade = 0;
 let alturaCidade = 0;
+
+function atualizarZoomDoCenario() {
+    zoom =
+        cenarioAtual === "casa" && interiorAtual !== null
+            ? zoomInteriores
+            : zoomMapaPrincipal;
+}
 
 for (const interior of Object.values(interioresZonaCosteira)) {
     const imagem = new Image();
@@ -336,6 +507,19 @@ const lagoasInternas = [
     {
         limites: [1057, 802, 1150, 887],
         tipo: tipoLagoaRasa
+    }
+];
+
+// Algumas superfícies de água são cobertas quase inteiramente por algas. O
+// detector de cor continua útil no restante do mapa, mas estes limites são a
+// geometria confirmada da lâmina d'água no braço oeste do reservatório. Ela
+// começa depois dos muros B4/B5 e termina antes da plataforma seca de pedra.
+// Assim, entrar pela borda oeste sempre aciona a água sem marcar a plataforma,
+// os muros ou as construções próximas como área alagada.
+const superficiesAguaGarantidas = [
+    {
+        limites: [920, 378, 1007, 544],
+        tipo: tipoLagoaProfunda
     }
 ];
 
@@ -512,6 +696,7 @@ function criarMascaraAgua() {
         removerCandidatosEmConstrucoes(candidatos, largura);
         classificarLagoasInternas(candidatos, largura, altura);
         preencherLacunasDeLagoa(candidatos, largura, altura);
+        aplicarSuperficiesAguaGarantidas(candidatos, largura, altura);
     }
 
     mascaraAgua = candidatos;
@@ -829,6 +1014,22 @@ function preencherLacunasDeLagoa(candidatos, largura, altura) {
     }
 }
 
+function aplicarSuperficiesAguaGarantidas(candidatos, largura, altura) {
+    for (const { limites, tipo } of superficiesAguaGarantidas) {
+        const [esquerdaOriginal, topoOriginal, direitaOriginal, baseOriginal] = limites;
+        const esquerda = Math.max(0, esquerdaOriginal);
+        const topo = Math.max(0, topoOriginal);
+        const direita = Math.min(largura - 1, direitaOriginal);
+        const base = Math.min(altura - 1, baseOriginal);
+
+        for (let y = topo; y <= base; y++) {
+            const inicio = y * largura + esquerda;
+            const fim = y * largura + direita + 1;
+            candidatos.fill(tipo, inicio, fim);
+        }
+    }
+}
+
 function tipoEhAguaJogavel(tipo) {
     return (
         tipo === tipoAguaOceano ||
@@ -1006,7 +1207,44 @@ function aplicarDimensoesDoCenario(imagem) {
     alturaMapa = imagem.naturalHeight;
 }
 
+function obterLayoutInteriorAtual() {
+    return interiorAtual?.layout ?? null;
+}
+
+function obterEscalaVisualDoJogador() {
+    if (cenarioAtual !== "casa" || interiorAtual === null) {
+        return 1;
+    }
+
+    return obterLayoutInteriorAtual()?.escalaPersonagem ?? 1;
+}
+
+function obterEscalaHitboxDoJogador() {
+    if (cenarioAtual !== "casa" || interiorAtual === null) {
+        return 1;
+    }
+
+    return obterLayoutInteriorAtual()?.escalaHitbox ?? 1;
+}
+
+function obterDimensoesHitboxJogador() {
+    const escala = obterEscalaHitboxDoJogador();
+
+    return {
+        largura: jogador.larguraColisao * escala,
+        altura: jogador.alturaColisao * escala
+    };
+}
+
 function obterLimitesTransitaveisDaCasa() {
+    const layout = obterLayoutInteriorAtual();
+
+    if (layout?.limites) {
+        const [esquerda, topo, direita, base] = layout.limites;
+
+        return { esquerda, direita, topo, base };
+    }
+
     // As artes internas têm uma margem externa preta para enquadramento. A
     // área útil começa logo depois das paredes e termina antes da soleira.
     return {
@@ -1017,7 +1255,26 @@ function obterLimitesTransitaveisDaCasa() {
     };
 }
 
+function obterBarreirasDaCasa() {
+    return obterLayoutInteriorAtual()?.barreiras ?? [];
+}
+
+function obterParedesDaCasa() {
+    return obterLayoutInteriorAtual()?.paredes ?? [];
+}
+
+function obterColisoresDaCasa() {
+    return [
+        ...obterParedesDaCasa(),
+        ...obterBarreirasDaCasa()
+    ];
+}
+
 function obterSaidaDaCasa() {
+    const saida = obterLayoutInteriorAtual()?.saida;
+
+    if (saida) return saida;
+
     const larguraDaPorta = Math.max(52, Math.round(larguraMapa * 0.09));
 
     return {
@@ -1028,8 +1285,10 @@ function obterSaidaDaCasa() {
 }
 
 function posicionarJogadorNaEntradaInterna() {
-    jogador.x = Math.round(larguraMapa / 2);
-    jogador.y = Math.round(alturaMapa * 0.76);
+    const entrada = obterLayoutInteriorAtual()?.entrada;
+
+    jogador.x = entrada?.x ?? Math.round(larguraMapa / 2);
+    jogador.y = entrada?.y ?? Math.round(alturaMapa * 0.76);
 }
 
 function tentarSairDaCasa(x, y, novoY, vertical) {
@@ -1042,9 +1301,12 @@ function tentarSairDaCasa(x, y, novoY, vertical) {
     }
 
     const saida = obterSaidaDaCasa();
+    const hitbox = obterHitboxJogador(x, y);
+    // A saída só é acionada quando a hitbox inteira cabe no vão visível.
+    // Isso impede que o gatilho atravesse um dos batentes recém-marcados.
     const estaNaPorta =
-        x + jogador.larguraColisao / 2 >= saida.esquerda &&
-        x - jogador.larguraColisao / 2 <= saida.direita;
+        hitbox.x >= saida.esquerda &&
+        hitbox.direita <= saida.direita;
 
     return (
         estaNaPorta &&
@@ -1112,6 +1374,8 @@ function mudarCenario(destino, porta = null) {
 
         atualizarTextoControles();
     }
+
+    atualizarZoomDoCenario();
 
     teclas = {};
 
@@ -1344,15 +1608,22 @@ function obterPortaZonaCosteira(x, y, novoY) {
         return null;
     }
 
+    // A arte e a barreira física nem sempre alinham no mesmo pixel. Uma faixa
+    // de entrada evita que o jogador tenha de cruzar uma única coordenada
+    // exata para acessar uma das cinco casas.
+    const margemHorizontal = 8;
+    const toleranciaVertical = 20;
+    const hitbox = obterHitboxJogador(x, y);
+
     for (const porta of portasZonaCosteira) {
         const dentroDaPorta =
-            x + jogador.larguraColisao / 2 >= porta.left &&
-            x - jogador.larguraColisao / 2 <= porta.right;
+            hitbox.direita >= porta.left - margemHorizontal &&
+            hitbox.x <= porta.right + margemHorizontal;
 
         if (
             dentroDaPorta &&
-            y >= porta.y &&
-            novoY <= porta.y
+            y >= porta.y - toleranciaVertical &&
+            novoY <= porta.y + toleranciaVertical
         ) {
             return porta;
         }
@@ -1393,27 +1664,28 @@ function ajustarTela() {
 // ============================================================================
 
 function obterHitboxJogador(x, y) {
+    const dimensoes = obterDimensoesHitboxJogador();
     const esquerda =
-        x - jogador.larguraColisao / 2;
+        x - dimensoes.largura / 2;
 
     const topo =
         y +
         jogador.altura / 2 -
-        jogador.alturaColisao;
+        dimensoes.altura;
 
     return {
         x: esquerda,
         y: topo,
-        largura: jogador.larguraColisao,
-        altura: jogador.alturaColisao,
+        largura: dimensoes.largura,
+        altura: dimensoes.altura,
 
         direita:
             esquerda +
-            jogador.larguraColisao,
+            dimensoes.largura,
 
         base:
             topo +
-            jogador.alturaColisao
+            dimensoes.altura
     };
 }
 
@@ -1649,6 +1921,14 @@ function multiplicadorVelocidadeNaAgua() {
     return 1;
 }
 
+function multiplicadorVelocidadeDoCenario() {
+    // Os interiores são maiores e não possuem água; 1,5× torna a exploração
+    // mais ágil sem alterar o ritmo de movimento na costa.
+    return cenarioAtual === "casa" && interiorAtual !== null
+        ? 1.5
+        : 1;
+}
+
 
 // ============================================================================
 // COLISÃO
@@ -1685,6 +1965,14 @@ function temColisao(x, y) {
             hitbox.base > limites.base
         ) {
             return true;
+        }
+
+        const barreiras = obterColisoresDaCasa();
+
+        for (const barreira of barreiras) {
+            if (obstaculoColideComHitbox(barreira, hitbox)) {
+                return true;
+            }
         }
 
         return false;
@@ -1846,7 +2134,8 @@ function moverJogador(segundos) {
     let andou = false;
     const velocidadeAtual =
         jogador.velocidade *
-        multiplicadorVelocidadeNaAgua();
+        multiplicadorVelocidadeNaAgua() *
+        multiplicadorVelocidadeDoCenario();
 
     const novoX =
         jogador.x +
@@ -1999,14 +2288,10 @@ function atualizarAnimacao(
 // ============================================================================
 
 function obterDimensoesVisuaisJogador() {
-    // As artes dos interiores foram compostas em uma escala maior que o mapa
-    // externo. Dobrar somente o desenho do personagem mantém a leitura humana
-    // da cena, sem mudar velocidade, portas ou colisões já acertadas na costa.
-    const escalaInterior =
-        cenarioAtual === "casa" &&
-        interiorAtual !== null
-            ? 2
-            : 1;
+    // Cada interior informa sua escala. A mesma referência é aplicada à
+    // hitbox, evitando que um personagem grande visualmente atravesse portas
+    // ou paredes por usar a colisão pequena do mapa externo.
+    const escalaInterior = obterEscalaVisualDoJogador();
 
     return {
         largura: jogador.largura * escalaInterior,
@@ -2395,19 +2680,25 @@ function desenharDebug() {
             alturaMapa
         );
     } else if (interiorAtual !== null) {
-        const limites = obterLimitesTransitaveisDaCasa();
         const saida = obterSaidaDaCasa();
+        const paredes = obterParedesDaCasa();
+        const barreiras = obterBarreirasDaCasa();
 
-        // O vermelho delimita a área física útil do interior, sem criar
-        // marcas sobre móveis até que as colisões internas sejam adicionadas.
-        contexto.strokeStyle = "rgba(255, 70, 70, 0.95)";
-        contexto.lineWidth = 2 / zoom;
-        contexto.strokeRect(
-            limites.esquerda - cameraX,
-            limites.topo - cameraY,
-            limites.direita - limites.esquerda,
-            limites.base - limites.topo
-        );
+        // Cada parede é desenhada separadamente para coincidir com a arte,
+        // inclusive no vão da porta. Os móveis seguem com seus próprios IDs.
+        for (let i = 0; i < paredes.length; i++) {
+            desenharObstaculoDebug(
+                paredes[i],
+                `P${i + 1}`
+            );
+        }
+
+        for (let i = 0; i < barreiras.length; i++) {
+            desenharObstaculoDebug(
+                barreiras[i],
+                `I${i + 1}`
+            );
+        }
 
         desenharRetanguloDebug(
             saida.esquerda,
@@ -2546,8 +2837,10 @@ function desenharDebug() {
         painelY + 28
     );
 
+    const dimensoesHitbox = obterDimensoesHitboxJogador();
+
     contexto.fillText(
-        `Hitbox: ${jogador.larguraColisao} x ${jogador.alturaColisao}`,
+        `Hitbox: ${dimensoesHitbox.largura} x ${dimensoesHitbox.altura}`,
         painelX + 10,
         painelY + 46
     );
