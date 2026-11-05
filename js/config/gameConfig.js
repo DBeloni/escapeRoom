@@ -2,7 +2,7 @@ export const GAME_CONFIG = {
     zoom: 1.8,
     drownThresholdPercent: 35,
     assets: {
-        map: "../assets/maps/mapa.png",
+        map: "../assets/maps/mapa-remaster-zona-costeira.png",
         player: "../assets/maps/personagem.png",
         waterWaist: "../assets/maps/personagem-agua-cintura-spritesheet.png",
         waterNeck: "../assets/maps/personagem-agua-pescoco-spritesheet.png",
@@ -15,7 +15,7 @@ export const GAME_CONFIG = {
         collisionWidth: 20,
         collisionHeight: 14,
         speed: 180,
-        spawn: { x: 650, y: 580 }
+        spawn: { x: 620, y: 620 }
     },
     drowningAnimation: {
         waistDuration: 0.45,

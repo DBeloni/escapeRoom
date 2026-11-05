@@ -6,31 +6,17 @@ const controles = document.getElementById("controls");
 const telaGameOver = document.getElementById("gameOver");
 const botaoReiniciar = document.getElementById("restartGame");
 
-// Cada opção é independente: o mapa atual continua intacto e a Zona Costeira
-// pode ser testada pelo seletor no canto superior direito.
-const mapasDisponiveis = {
-    atual: {
-        id: "atual",
-        nome: "Quarantine Protocol",
-        src: "../assets/maps/mapa.png",
-        spawn: { x: 650, y: 580 },
-        usaLayoutOriginal: true
-    },
-    remaster: {
-        id: "remaster",
-        nome: "Remaster — Zona Costeira",
-        src: "../assets/maps/mapa-remaster-zona-costeira.png",
-        spawn: { x: 620, y: 620 },
-        usaLayoutOriginal: false,
-        bloqueiaAgua: true,
-        aguaProgressiva: true
-    }
+const mapaSelecionado = {
+    id: "zona-costeira",
+    nome: "Zona Costeira",
+    src: "../assets/maps/mapa-remaster-zona-costeira.png",
+    spawn: { x: 620, y: 620 },
+    usaLayoutOriginal: false,
+    bloqueiaAgua: true,
+    aguaProgressiva: true
 };
 
-const mapaSolicitado = new URLSearchParams(window.location.search).get("map");
-const mapaSelecionado = mapasDisponiveis[mapaSolicitado] ?? mapasDisponiveis.atual;
-
-// O tamanho real do mapa é atualizado quando mapa.png termina de carregar.
+// O tamanho real do mapa é atualizado quando a imagem termina de carregar.
 let larguraMapa = 0;
 let alturaMapa = 0;
 // A costa preserva o enquadramento original. Somente os cinco interiores
@@ -3278,14 +3264,6 @@ imagemPersonagem.onerror =
 
 ajustarTela();
 configurarControlesMobile();
-
-const linkSelecionado = document.querySelector(
-    `#mapSelector a[data-map="${mapaSelecionado.id}"]`
-);
-
-if (linkSelecionado) {
-    linkSelecionado.setAttribute("aria-current", "page");
-}
 
 imagemMapa.src = mapaSelecionado.src;
 

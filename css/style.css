@@ -47,50 +47,6 @@ body {
     pointer-events: none;
 }
 
-/* Seletor para comparar a cidade atual com a Zona Costeira remasterizada. */
-#mapSelector {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    max-width: calc(100vw - 24px);
-    padding: 7px;
-    color: #e9e4d2;
-    background: rgba(9, 15, 12, .88);
-    border: 1px solid rgba(187, 79, 49, .72);
-    border-radius: 5px;
-    font-size: 11px;
-    line-height: 1;
-    z-index: 2;
-}
-
-#mapSelector > span {
-    margin-right: 3px;
-    color: #b9b7a7;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-}
-
-#mapSelector a {
-    padding: 7px 8px;
-    color: #d8d8ca;
-    border: 1px solid rgba(216, 216, 202, .26);
-    border-radius: 3px;
-    text-decoration: none;
-}
-
-#mapSelector a:hover,
-#mapSelector a:focus-visible,
-#mapSelector a[aria-current="page"] {
-    color: #fff;
-    background: #8d3828;
-    border-color: #d98a52;
-    outline: none;
-}
-
 /* Posiciona o aviso de carregamento no centro da tela. */
 #loading {
     top: 50%;
@@ -175,25 +131,7 @@ body {
     #controls {
         padding: 6px 8px;
         font-size: 10px;
-    }
-
-    #mapSelector {
-        top: 8px;
-        right: 8px;
-        left: 8px;
-        justify-content: flex-end;
-        padding: 6px;
-        font-size: 10px;
-    }
-
-    #mapSelector > span {
-        display: none;
-    }
-
-    #mapSelector a {
-        padding: 6px;
-    }
-}
+    }}
 
 
 /* ==========================================================================
@@ -304,31 +242,14 @@ body.touch-device #mobileControls {
 
 body.touch-device #controls {
     display: none;
-}
-
-body.touch-device #mapSelector {
-    top: max(8px, env(safe-area-inset-top));
-    left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-}
-
-@media (max-width: 700px), (pointer: coarse) {
+}@media (max-width: 700px), (pointer: coarse) {
     #mobileControls {
         display: block;
     }
 
     #controls {
         display: none;
-    }
-
-    #mapSelector {
-        left: auto;
-        right: max(8px, env(safe-area-inset-right));
-        max-width: calc(100vw - 16px);
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
-}
+    }}
 
 @media (max-width: 420px) {
     .mobile-joystick {
