@@ -1,166 +1,41 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Site oficial do Escape Room escolar em HTML5, CSS3 e JavaScript Vanilla.">
-    <title>Escape Room — Quarantine Protocol</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/site.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#171b18">
+  <meta name="description" content="Entre na zona de quarentena. Explore o universo, investigue pistas e descubra como escapar.">
+  <title>Início · Quarantine Protocol</title>
+  <link rel="icon" type="image/png" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-    <a class="skip-link" href="#conteudo">Pular para o conteúdo principal</a>
-    <header class="site-header">
-        <div class="header-inner">
-            <a class="brand" href="index.html" aria-label="Escape Room — página inicial">
-                <span class="brand-mark" aria-hidden="true">ER</span>
-                <span>ESCAPE ROOM <small>QUARANTINE PROTOCOL</small></span>
-            </a>
-            <nav class="site-nav" aria-label="Navegação principal">
-                <ul>
-                    <li><a href="index.html" aria-current="page">Início</a></li>
-                    <li><a href="pages/historia.html">História</a></li>
-                    <li><a href="pages/cenarios.html">Cenários</a></li>
-                    <li><a href="pages/itens.html">Itens</a></li>
-                    <li><a href="pages/enigmas.html">Enigmas</a></li>
-                    <li><a href="pages/finais.html">Finais</a></li>
-                    <li><a href="pages/como-jogar.html">Como jogar</a></li>
-                    <li><a href="pages/desenvolvedores.html">Equipe</a></li>
-                    <li><a href="pages/tecnologia.html">Tecnologia</a></li>
-                    <li><a href="pages/galeria.html">Galeria</a></li>
-                    <li><a href="pages/contato.html">Contato</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
-    <main id="conteudo">
-        <section class="hero" aria-labelledby="hero-title">
-            <div class="container hero-content">
-                <p class="eyebrow">Protocolo de emergência ativo</p>
-                <h1 id="hero-title">Você entrou.<br>Agora precisa sair.</h1>
-                <p class="lead">Um Escape Room escolar em HTML5, CSS3 e JavaScript Vanilla. Explore, investigue, conecte pistas e encontre a rota de fuga antes que o ambiente decida por você.</p>
-                <div class="actions">
-                    <a class="button" href="html/mapaPrincipal.html">Jogar agora</a>
-                    <a class="button secondary" href="pages/historia.html">Conhecer a história</a>
-                </div>
-            </div>
-        </section>
-
-        <section class="section" aria-labelledby="sobre-titulo">
-            <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="kicker">Briefing</span>
-                        <h2 id="sobre-titulo">Um jogo feito para testar decisões</h2>
-                    </div>
-                    <p class="muted">2–5 min · exploração · enigmas · múltiplos finais</p>
-                </div>
-
-                <div class="grid">
-                    <article class="card">
-                        <div class="icon-box" aria-hidden="true">01</div>
-                        <h3>Explore</h3>
-                        <p>O mapa atual do protótipo trabalha com navegação top-down e transição entre a cidade e a casa.</p>
-                        <a href="pages/cenarios.html">Ver cenários →</a>
-                    </article>
-                    <article class="card">
-                        <div class="icon-box" aria-hidden="true">02</div>
-                        <h3>Investigue</h3>
-                        <p>Itens, mecanismos e pistas devem ser observados com atenção. Uma descoberta pode mudar outro ponto do mapa.</p>
-                        <a href="pages/itens.html">Ver itens →</a>
-                    </article>
-                    <article class="card">
-                        <div class="icon-box" aria-hidden="true">03</div>
-                        <h3>Escape</h3>
-                        <p>O objetivo não é simplesmente chegar ao fim: tempo, decisões e informações encontradas podem alterar o desfecho.</p>
-                        <a href="pages/enigmas.html">Ver enigmas →</a>
-                    </article>
-                </div>
-            </div>
-        </section>
-
-        <section class="section" aria-labelledby="dados-titulo">
-            <div class="container">
-                <div class="section-head">
-                    <div>
-                        <span class="kicker">Ficha técnica</span>
-                        <h2 id="dados-titulo">O que já existe no projeto</h2>
-                    </div>
-                </div>
-                <div class="table-shell">
-                    <table>
-                        <caption>Resumo da estrutura atual do protótipo, com base no repositório enviado.</caption>
-                        <thead>
-                            <tr>
-                                <th scope="col">Área</th>
-                                <th scope="col">Implementação</th>
-                                <th scope="col">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>Engine</td><td>Canvas + loop de jogo</td><td>Base criada</td></tr>
-                            <tr><td>Mapa</td><td>Mapa top-down em pixel art</td><td>Funcionando</td></tr>
-                            <tr><td>Cenários</td><td>Cidade + Casa</td><td>Registrados no código</td></tr>
-                            <tr><td>Jogador</td><td>Movimento + animação</td><td>Base criada</td></tr>
-                            <tr><td>Sistemas</td><td>Inventário, puzzles, pontos, timer e interação</td><td>Estrutura criada</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-        <section class="section" aria-labelledby="audio-titulo">
-            <div class="container">
-                <div class="callout">
-                    <article class="card">
-                        <span class="kicker">Ambientação</span>
-                        <h2 id="audio-titulo">O silêncio também faz parte do jogo.</h2>
-                        <p>O site inclui uma faixa simples de teste em HTML5 para demonstrar mídia local e permitir uma futura ambientação sonora mais completa.</p>
-                        <audio controls preload="metadata">
-                            <source src="assets/audio/ambientacao.wav" type="audio/wav">
-                            Seu navegador não suporta o elemento de áudio.
-                        </audio>
-                    </article>
-                    <aside class="notice" aria-label="Aviso sobre o protótipo">
-                        <strong>Nota de projeto</strong>
-                        <p>Os nomes de cenários, itens e enigmas podem mudar enquanto a parte de gameplay evolui. Esta página foi construída para servir de base ao site oficial sem travar o desenvolvimento do jogo.</p>
-                    </aside>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <footer class="footer">
-        <div class="container footer-grid">
-            <section aria-labelledby="footer-projeto">
-                <h2 id="footer-projeto">Escape Room</h2>
-                <p>Projeto escolar em desenvolvimento. O site apresenta o universo, a equipe e a parte técnica do jogo.</p>
-                <p class="mono">STATUS: <strong>EM DESENVOLVIMENTO</strong></p>
-            </section>
-            <section aria-labelledby="footer-navegacao">
-                <h2 id="footer-navegacao">Acesso rápido</h2>
-                <ul>
-                    <li><a href="html/mapaPrincipal.html">Abrir o jogo</a></li>
-                    <li><a href="docs/ideias.md">Documento de ideias</a></li>
-                    <li><a href="pages/desenvolvedores.html">Desenvolvedores</a></li>
-                </ul>
-            </section>
-            <section aria-labelledby="footer-links">
-                <h2 id="footer-links">Links externos</h2>
-                <ul>
-                    <li><a href="https://github.com/DBeloni/escapeRoom" target="_blank" rel="noopener noreferrer">GitHub do projeto</a></li>
-                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/HTML" target="_blank" rel="noopener noreferrer">MDN — HTML</a></li>
-                    <li><a href="https://developer.mozilla.org/pt-BR/docs/Web/JavaScript" target="_blank" rel="noopener noreferrer">MDN — JavaScript</a></li>
-                </ul>
-            </section>
-        </div>
-        <div class="container footer-bottom">
-            <small class="muted">© <span data-year>2026</span> — Projeto desenvolvido para fins escolares.</small>
-        </div>
-    </footer>
-    <script src="js/site.js" defer></script>
-</body>
-</html>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <div class="topline"><div class="container topline-inner"><span><i class="signal-dot"></i> SISTEMA DE ARQUIVO // ACESSO PÚBLICO</span><span class="topline-right">REGISTRO 1984&nbsp; / &nbsp;Q-PROTOCOL</span></div></div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="Quarantine Protocol — início"><img class="brand-logo" src="assets/logo.png" alt=""><span class="brand-copy"><strong>QUARANTINE</strong><small>PROTOCOL // ESCAPE ROOM</small></span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-navigation"><span></span><span></span><span></span><b class="sr-only">Abrir menu</b></button>
+      <nav class="site-nav" id="site-navigation" aria-label="Navegação principal"><ul><li><a href="index.html" aria-current="page">Início</a></li><li><a href="pages/historia.html">Universo</a></li><li><a href="pages/cenarios.html">Cenários</a></li><li><a href="pages/itens.html">Itens</a></li><li><a href="pages/enigmas.html">Enigmas</a></li><li><a href="pages/finais.html">Finais</a></li><li><a href="pages/como-jogar.html">Manual</a></li><li><a href="pages/desenvolvedores.html">Equipe</a></li><li><a href="pages/tecnologia.html">Tecnologia</a></li><li><a href="pages/galeria.html">Galeria</a></li><li><a href="pages/contato.html">Contato</a></li></ul></nav>
+      <a class="header-play" href="html/mapaPrincipal.html"><span>ACESSAR</span><b>JOGO ↗</b></a>
+    </div>
+  </header>
+  <main id="conteudo">
+<section class="home-hero"><div class="hero-image" role="img" aria-label="Mapa em pixel art de uma zona de quarentena cercada por água e estruturas abandonadas"></div><div class="hero-shade"></div><div class="container hero-layout"><div class="hero-copy"><p class="eyebrow"><i class="signal-dot"></i> TRANSMISSÃO DE EMERGÊNCIA // 07:42</p><p class="hero-overline">ARQUIVO CENTRAL <span>—</span> ZONA 04</p><h1>VOCÊ ENTROU.<br><em>AGORA SAIA.</em></h1><p class="hero-lead">Uma cidade isolada. Sistemas interrompidos. Pistas deixadas para trás. Explore o que restou e descubra como atravessar a zona.</p><div class="hero-actions"><a class="btn btn-primary" href="html/mapaPrincipal.html">INICIAR EXPERIÊNCIA <span>↗</span></a><a class="btn btn-ghost" href="pages/historia.html">LER O ARQUIVO <span>→</span></a></div><div class="hero-meta"><span><b>01</b> EXPLORAÇÃO</span><span><b>02</b> INVESTIGAÇÃO</span><span><b>03</b> DECISÃO</span></div></div><aside class="hero-note"><span class="micro-label">NOTA DE CAMPO Nº 004</span><p>“Se a energia voltar, não abra o portão leste.”</p><small>— trecho recuperado de um registro local</small><div class="note-line"></div><span class="micro-label">STATUS DA ZONA</span><strong class="status-live"><i class="signal-dot"></i> INSTÁVEL</strong></aside></div><div class="hero-index">LAT 00° 00' 00" N <span>·</span> LONG 00° 00' 00" W</div></section>
+<section class="ticker" aria-label="Avisos do sistema"><div class="ticker-track"><span>ACESSO RESTRITO</span><b>✳</b><span>ÁREA EM QUARENTENA</span><b>✳</b><span>NÃO CONFIE NO SILÊNCIO</span><b>✳</b><span>ACESSO RESTRITO</span><b>✳</b><span>ÁREA EM QUARENTENA</span><b>✳</b></div></section>
+<section class="section-block home-intro"><div class="container split-intro"><div><p class="eyebrow">01 / CONTEXTO</p><h2>O que aconteceu<br>com este lugar?</h2></div><div class="intro-text"><p class="large-copy">Ninguém sabe ao certo quando a cidade foi evacuada. O que se sabe é que os portões foram fechados, os sistemas falharam e alguma coisa ficou para trás.</p><p>O projeto combina exploração em pixel art com enigmas e decisões. Cada objeto pode carregar uma informação; cada rota pode mudar o que vem depois.</p><a class="text-link" href="pages/historia.html">Conhecer a história <span>↗</span></a></div></div></section>
+<section class="section-block field-report"><div class="container"><div class="section-heading"><div><p class="eyebrow">02 / RELATÓRIO DE CAMPO</p><h2>Três frentes de investigação</h2></div><span class="section-index">REGISTRO 01—03</span></div><div class="report-grid"><a class="report-card report-wide" href="pages/cenarios.html"><div class="report-image"><img src="assets/maps/mapa.png" alt="Mapa em pixel art da cidade isolada"></div><div class="report-body"><span class="micro-label">MAPEAMENTO // 001</span><h3>Reconheça a zona</h3><p>Conheça os ambientes, os limites e as rotas que ainda podem ser atravessadas.</p><span class="report-arrow">↗</span></div></a><a class="report-card" href="pages/itens.html"><div class="report-body"><span class="micro-label">INVENTÁRIO // 002</span><h3>Examine os vestígios</h3><p>Ferramentas, credenciais e documentos podem revelar mais do que aparentam.</p><span class="report-arrow">↗</span></div><div class="report-index">02</div></a><a class="report-card report-accent" href="pages/enigmas.html"><div class="report-body"><span class="micro-label">SISTEMAS // 003</span><h3>Reconstrua a sequência</h3><p>Conecte pistas, teste hipóteses e descubra o que mantém a saída bloqueada.</p><span class="report-arrow">↗</span></div><div class="report-index">03</div></a></div></div></section>
+<section class="section-block dark-band"><div class="container band-layout"><div><p class="eyebrow">03 / PROTOCOLO DE SAÍDA</p><h2>O tempo passa.<br>As pistas ficam.</h2></div><div><p>O protótipo foi pensado para partidas curtas, com exploração, observação e resolução de problemas. Não existe uma única maneira de interpretar tudo o que você encontra.</p><a class="btn btn-primary" href="pages/como-jogar.html">CONSULTAR MANUAL <span>→</span></a></div></div></section>
+<section class="section-block home-facts"><div class="container facts-layout"><div><p class="eyebrow">04 / FICHA DO PROJETO</p><h2>Por trás da<br>quarentena.</h2><p class="muted-copy">Um projeto desenvolvido com tecnologias web, organização modular e direção visual em pixel art.</p></div><div class="facts-list"><div><span>01</span><strong>HTML5</strong><small>Estrutura semântica</small></div><div><span>02</span><strong>CSS3</strong><small>Layout e identidade visual</small></div><div><span>03</span><strong>JavaScript</strong><small>Interação e lógica</small></div><div><span>04</span><strong>Pixel art</strong><small>Universo visual original</small></div></div></div></section>
+</main>
+  <footer class="site-footer"><div class="container footer-main">
+    <div class="footer-about"><a class="brand footer-brand" href="index.html"><img class="brand-logo" src="assets/logo.png" alt=""><span class="brand-copy"><strong>QUARANTINE</strong><small>PROTOCOL // ESCAPE ROOM</small></span></a><p>Um projeto escolar de exploração, lógica e sobrevivência. Nem toda informação encontrada é uma resposta.</p><span class="footer-status"><i class="signal-dot"></i> PROJETO EM DESENVOLVIMENTO</span></div>
+    <div><h2>Arquivo</h2><ul><li><a href="pages/historia.html">O universo</a></li><li><a href="pages/cenarios.html">Cenários</a></li><li><a href="pages/itens.html">Inventário</a></li><li><a href="pages/enigmas.html">Enigmas</a></li></ul></div>
+    <div><h2>Projeto</h2><ul><li><a href="pages/desenvolvedores.html">Equipe</a></li><li><a href="pages/tecnologia.html">Tecnologia</a></li><li><a href="pages/galeria.html">Galeria</a></li><li><a href="pages/contato.html">Contato</a></li></ul></div>
+    <div class="footer-access"><span class="micro-label">PRÓXIMO PASSO</span><h2>Você está pronto?</h2><p>A zona não vai se abrir sozinha.</p><a class="text-link" href="html/mapaPrincipal.html">Entrar no jogo <span>↗</span></a></div>
+  </div><div class="container footer-bottom"><span>© <span data-year>2026</span> QUARANTINE PROTOCOL</span><span>HTML · CSS · JAVASCRIPT</span><a href="#conteudo">VOLTAR AO TOPO ↑</a></div></footer>
+  <script src="js/site.js" defer></script>
+</body></html>
