@@ -12,7 +12,6 @@ import { updatePlayer } from "../player/movement.js";
 import { renderPlayer } from "../player/renderer.js";
 import { renderDebug } from "../world/debug.js";
 import { updateControlsUI, hideLoading } from "../ui/controlsUI.js";
-import { createInventorySystem } from "../systems/inventory/inventory.js";
 import { createPuzzleSystem } from "../systems/puzzles/puzzleSystem.js";
 import { createPointSystem } from "../systems/points/pointSystem.js";
 import { createTimerSystem } from "../systems/timer/timerSystem.js";
@@ -60,7 +59,6 @@ export async function startGame() {
 
     // Sistemas já preparados para as próximas implementações.
     const systems = {
-        inventory: createInventorySystem(),
         puzzles: createPuzzleSystem(),
         points: createPointSystem(),
         timer: createTimerSystem(),
