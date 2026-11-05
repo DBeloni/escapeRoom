@@ -6,6 +6,87 @@ const controles = document.getElementById("controls");
 const telaGameOver = document.getElementById("gameOver");
 const botaoReiniciar = document.getElementById("restartGame");
 
+const caminhosSpritesItens = {
+    ITM_001: "../assets/itens/chaveDeFenda.png",
+    ITM_002: "../assets/itens/chaveInglesa.png",
+    ITM_003: "../assets/itens/fita.png",
+    ITM_004: "../assets/itens/fusivel.png",
+    ITM_005: "../assets/itens/galao.png"
+};
+const spritesItens = Object.fromEntries(
+    Object.entries(caminhosSpritesItens).map(([itemId, path]) => {
+        const sprite = new Image();
+        sprite.src = path;
+        return [itemId, sprite];
+    })
+);
+
+const itensNoMundo = [
+    { id: "ITM_001", x: 520, y: 625 },
+    { id: "ITM_002", x: 610, y: 630 },
+    { id: "ITM_003", x: 800, y: 645 },
+    { id: "ITM_004", x: 710, y: 620 },
+    { id: "ITM_005", x: 855, y: 710 }
+];
+const capacidadeInventario = 5;
+const inventario = [];
+const nomesItens = {
+    ITM_001: "Chave de Fenda",
+    ITM_002: "Chave Inglesa",
+    ITM_003: "Fita Isolante",
+    ITM_004: "Fusível de Cartucho",
+    ITM_005: "Galão de Gasolina"
+};
+
+function coletarItemProximo() {
+    const message = document.getElementById("inventoryMessage");
+    const index = itensNoMundo.findIndex(item =>
+        Math.hypot(item.x - jogador.x, item.y - jogador.y) <= 46
+    );
+    if (index === -1) {
+        if (message) message.textContent = "Nenhum item próximo.";
+        return false;
+    }
+
+    const item = itensNoMundo[index];
+    if (inventario.length >= capacidadeInventario || inventario.includes(item.id)) {
+        if (message) {
+            message.textContent = inventario.includes(item.id)
+                ? "Esse item já está no inventário."
+                : "O inventário está cheio.";
+        }
+        return false;
+    }
+
+    itensNoMundo.splice(index, 1);
+    inventario.push(item.id);
+    atualizarInventarioHUD(`${nomesItens[item.id]} coletado.`);
+    return true;
+}
+
+function atualizarInventarioHUD(message = "") {
+    const list = document.getElementById("inventoryItems");
+    const count = document.getElementById("inventoryCount");
+    const feedback = document.getElementById("inventoryMessage");
+    if (!list || !count) return;
+
+    count.textContent = `${inventario.length}/${capacidadeInventario}`;
+    list.replaceChildren();
+    if (inventario.length === 0) {
+        const empty = document.createElement("li");
+        empty.className = "inventory-empty";
+        empty.textContent = "Inventário vazio";
+        list.append(empty);
+    } else {
+        for (const itemId of inventario) {
+            const entry = document.createElement("li");
+            entry.textContent = nomesItens[itemId];
+            list.append(entry);
+        }
+    }
+    if (feedback && message) feedback.textContent = message;
+}
+
 const mapaSelecionado = {
     id: "zona-costeira",
     nome: "Zona Costeira",
@@ -137,6 +218,7 @@ function configurarControlesMobile() {
     const ring = joystick?.querySelector(".mobile-joystick-ring");
     const debugButton = document.getElementById("mobileDebug");
     const backButton = document.getElementById("mobileBack");
+    const pickupButton = document.getElementById("mobilePickup");
 
     if (!joystick || !ring || !debugButton || !backButton) {
         return;
@@ -188,6 +270,8 @@ function configurarControlesMobile() {
     debugButton.addEventListener("click", () => {
         alternarModoDebug();
     });
+
+    pickupButton?.addEventListener("click", coletarItemProximo);
 
     backButton.addEventListener("click", () => {
         if (cenarioAtual === "casa") {
@@ -2923,6 +3007,8 @@ function desenharJogo() {
             alturaMapa
         );
 
+        desenharItensColetaveis();
+
     } else {
         if (interiorAtual?.imagem?.naturalWidth > 0) {
             contexto.drawImage(
@@ -2952,7 +3038,18 @@ function desenharJogo() {
     contexto.restore();
 }
 
+function desenharItensColetaveis() {
+    for (const item of itensNoMundo) {
+        const sprite = spritesItens[item.id];
+        if (!sprite?.complete || sprite.naturalWidth === 0) continue;
 
+        const x = item.x - cameraX;
+        const y = item.y - cameraY;
+        contexto.save();
+        contexto.drawImage(sprite, x - 15, y - 10, 30, 20);
+        contexto.restore();
+    }
+}
 // ============================================================================
 // LOOP
 // ============================================================================
@@ -3009,6 +3106,7 @@ function atualizarTextoControles() {
         controles.innerHTML =
             `<strong>${nomeCasa}</strong><br>
             WASD / Setas → Mover<br>
+            E → Coletar item próximo<br>
             F3 → ${
                 modoDebug
                     ? "Esconder colisões"
@@ -3021,6 +3119,7 @@ function atualizarTextoControles() {
         controles.innerHTML =
             `<strong>${mapaSelecionado.nome}</strong><br>
             WASD / Setas → Mover<br>
+            E → Coletar item próximo<br>
             F3 → ${
                 modoDebug
                     ? "Esconder colisões"
@@ -3131,6 +3230,12 @@ window.addEventListener(
                 "cidade"
             );
 
+            return;
+        }
+
+        if (tecla === "e") {
+            if (!evento.repeat) coletarItemProximo();
+            evento.preventDefault();
             return;
         }
 

@@ -16,4 +16,4 @@ As definições e usos estão em `js/systems/inventory/itemCatalog.js`. A págin
 
 `createInventorySystem()` expõe operações independentes de cenário e interface: `add`, `get`, `has`, `remove`, `use` e `clear`. A função `use(itemId, applyToTarget)` chama a interação fornecida e só remove itens marcados como `single-use` quando essa interação retorna `true`.
 
-Posições de coleta, objetos de cenário, interface e controles ficam fora desta especificação. Nenhum ponto de coleta ou alvo de uso está definido no jogo neste momento.
+Os cinco itens estão colocados na Zona Costeira e podem ser coletados com `E` ou pelo botão touch `PEGAR`. As imagens vêm de `assets/itens/`. Interações dos itens com alvos de cenário ainda não estão ligadas ao mapa.

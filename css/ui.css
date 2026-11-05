@@ -7,6 +7,43 @@
     z-index: 10;
 }
 
+#inventory {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 10;
+    width: min(210px, calc(100vw - 24px));
+    padding: 9px 11px;
+    border: 1px solid rgba(245, 238, 228, 0.24);
+    color: #f5eee4;
+    background: rgba(10, 15, 17, 0.82);
+    font-size: 12px;
+}
+
+.inventory-heading {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(245, 238, 228, 0.2);
+}
+
+#inventoryItems {
+    display: grid;
+    gap: 3px;
+    min-height: 22px;
+    padding: 6px 0;
+    list-style: none;
+}
+
+#inventory small,
+.inventory-empty {
+    color: #c3c7c3;
+}
+
+#inventory small {
+    font-size: 10px;
+}
+
 #controls {
     left: 12px;
     bottom: 12px;
@@ -27,5 +64,11 @@
     #controls {
         padding: 6px 8px;
         font-size: 10px;
+    }
+
+    #inventory {
+        top: max(10px, env(safe-area-inset-top));
+        right: max(10px, env(safe-area-inset-right));
+        width: 175px;
     }
 }

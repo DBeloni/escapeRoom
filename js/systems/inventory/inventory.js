@@ -55,3 +55,20 @@ export function createInventorySystem(maxItems = INVENTORY_CAPACITY) {
         }
     };
 }
+
+export function createWorldItemSystem(inventory, world, pickupRadius = 46) {
+    return {
+        nearbyItem(player) {
+            return world.items.find(item =>
+                Math.hypot(item.x - player.x, item.y - player.y) <= pickupRadius
+            ) ?? null;
+        },
+
+        pickup(player) {
+            const item = this.nearbyItem(player);
+            if (!item || !inventory.add(item.id)) return null;
+            world.items.splice(world.items.indexOf(item), 1);
+            return item;
+        }
+    };
+}

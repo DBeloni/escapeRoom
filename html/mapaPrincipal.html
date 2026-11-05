@@ -11,6 +11,12 @@
     <main id="gameContainer">
         <canvas id="gameCanvas"></canvas>
 
+        <aside id="inventory" aria-label="Inventário">
+            <div class="inventory-heading"><strong>Itens</strong><span id="inventoryCount">0/5</span></div>
+            <ul id="inventoryItems" aria-live="polite"><li class="inventory-empty">Inventário vazio</li></ul>
+            <small id="inventoryMessage" aria-live="polite">E para coletar itens próximos</small>
+        </aside>
+
         <div id="controls">
             <strong>Controles</strong><br>
             WASD / Setas → Mover<br>
@@ -25,6 +31,7 @@
             </div>
 
             <div class="mobile-actions">
+                <button id="mobilePickup" class="mobile-action" type="button" aria-label="Coletar item próximo">PEGAR</button>
                 <button id="mobileDebug" class="mobile-action" type="button" aria-label="Alternar modo debug">DEBUG</button>
                 <button id="mobileBack" class="mobile-action" type="button" aria-label="Voltar ou sair da casa">VOLTAR</button>
             </div>
