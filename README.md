@@ -1,108 +1,66 @@
-# 🎮 Jogo de Escape Room
+# Quarantine Protocol
 
-> Projeto escolar desenvolvido em dupla utilizando HTML, CSS e JavaScript.
+> Escape room de exploração e investigação em pixel art, ambientado em uma comunidade costeira isolada em 1984.
 
-## 📖 Sobre o projeto
+## Sobre o projeto
 
-Este projeto consiste em um **jogo de Escape Room desenvolvido para fins educacionais**, no qual o jogador deverá solucionar desafios, enigmas e pistas para avançar pelas diferentes etapas do jogo.
+Em Santa Bruma, uma evacuação é interrompida por uma tempestade, uma queda de energia e a subida da maré. A região é registrada como vazia, mas os vestígios encontrados nas casas, na clínica, na enfermaria e na oficina contam outra história.
 
-O objetivo é criar uma experiência interativa que combine **lógica, programação e criatividade** em um único projeto.
+O jogador desperta na Zona Costeira às 07h42, depois de uma transmissão retornar à frequência comunitária 04. A saída é urgente. Entender quem ficou para trás é uma escolha.
 
-## 🛠️ Tecnologias
+O projeto combina exploração em pixel art, enigmas, inventário e narrativa ambiental. A história é descoberta por documentos, objetos, mecanismos e detalhes dos cenários — não por longas explicações.
 
-* **HTML5** — estrutura das páginas
-* **CSS3** — estilos, layout e aparência
-* **JavaScript** — lógica, interações e funcionamento do jogo
-* **Git + GitHub** — versionamento e colaboração
-* **Vercel** — Hospedagem
+## Tecnologias
 
-## 📁 Estrutura do projeto
+- **HTML5** — estrutura semântica das páginas
+- **CSS3** — layout, responsividade e identidade visual
+- **JavaScript** — lógica e interação do jogo
+- **Git + GitHub** — versionamento e colaboração
+- **Vercel** — hospedagem
+
+## Estrutura
 
 ```text
-escape-room/
-│
+escapeRoom/
 ├── index.html
-│
 ├── css/
-│   └── ...
-│
 ├── js/
-│   └── ...
-│
 ├── pages/
-│   └── ...
-│
-├── docs/
-│   └── ...
-│
+├── html/
 ├── assets/
-│   ├── images/
-│   └── ...
-│
+├── docs/
+├── prototypes/
+├── legacy/
 └── README.md
 ```
 
-A estrutura pode ser modificada conforme o projeto for desenvolvido.
+## Documentação
 
-## 🎯 Objetivos
+Antes de criar novas pistas, diálogos ou áreas, leia [`docs/README.md`](docs/README.md). A bíblia narrativa em [`docs/story-bible.md`](docs/story-bible.md) define a direção atual do universo.
 
-* Desenvolver um jogo interativo utilizando tecnologias web.
-* Aplicar conceitos de HTML, CSS e JavaScript.
-* Trabalhar lógica de programação por meio dos enigmas e desafios.
-* Praticar desenvolvimento colaborativo utilizando Git e GitHub.
-* Organizar um projeto utilizando uma estrutura de arquivos adequada.
+## Equipe
 
-## 🧩 Funcionamento
-
-O jogador deverá explorar as diferentes etapas do Escape Room e solucionar os desafios apresentados.
-
-Cada desafio poderá exigir diferentes formas de raciocínio, como:
-
-* 🔎 Encontrar pistas
-* 🔐 Descobrir códigos
-* 🧠 Resolver enigmas
-* 🧩 Relacionar informações
-* ⏱️ Cumprir determinadas condições
-* 🚪 Desbloquear novas etapas
-
-## 👥 Equipe
-
-| Integrante           | Área principal         |
-| -------------------- | ---------------------- |
-| **Davi Beloni**       | JavaScript / Lógica    |
+| Integrante | Área principal |
+|---|---|
+| **Davi Beloni** | JavaScript / Lógica |
 | **João Lucas** | HTML / CSS / Interface |
 
-## 🌿 Versionamento
+## Como executar
 
-O projeto utiliza **Git e GitHub** para controle de versões e colaboração entre os integrantes.
+1. Clone o repositório:
 
-A branch `main` contém a versão principal do projeto.
-
-Alterações importantes devem ser registradas através de commits com mensagens que descrevam o que foi alterado.
-
-## 🚀 Como executar
-
-1. Clone este repositório:
-
-```bash
-git clone https://github.com/DBeloni/escapeRoom.git
-```
+   ```bash
+   git clone https://github.com/DBeloni/escapeRoom.git
+   ```
 
 2. Entre na pasta do projeto:
 
-```bash
-cd escapeRoom
-```
+   ```bash
+   cd escapeRoom
+   ```
 
-3. Abra o arquivo `index.html` em um navegador.
+3. Abra `index.html` em um navegador. Caso sejam usadas funcionalidades que dependam de módulos ES ou carregamento local de assets, execute por um servidor local.
 
-> Caso o projeto passe a utilizar algum servidor local ou ferramenta adicional, estas instruções serão atualizadas.
+## Status
 
-## 📌 Status
-
-🚧 **Em desenvolvimento**
-
-O projeto está sendo desenvolvido e novas funcionalidades, desafios e melhorias serão adicionados ao longo do trabalho.
----
-
-⭐ Projeto desenvolvido para fins escolar
+**Em desenvolvimento.** O mapa da Zona Costeira, os interiores e o inventário estão em construção. A narrativa foi organizada para orientar as próximas etapas de documentos encontráveis, puzzles, interações e desfechos.

@@ -1,19 +1,40 @@
-# Brainstorming: Ideias Escape Room
+# Brainstorm narrativo — Quarantine Protocol
 
----
+Este é o espaço para ideias que expandem o cânone de Santa Bruma sem quebrar o que já foi estabelecido. Para os fatos aprovados, consulte [`story-bible.md`](story-bible.md).
 
-## 1. Pegada Backrooms com Combate - Beloni
-**Conceito:** Um labirinto de espaços liminares focando em exploração confusa e combate direto para abrir novos caminhos.
-* **Atmosfera:** Surreal, opressiva e desconfortável. Sensação de estar perdido em um lugar que não deveria existir.
-* **Mecânicas Principais:** Combate, uso de portais para fast-travel/atalhos, e coleta de chaves em áreas de risco.
-* **Ameaça:** Inimigos físicos espalhados pelo mapa e a própria desorientação do labirinto.
-* **Estilo de Mapa:** Labirinto interconectado (*Ver imagem do fluxograma*).
+## Ideias de pistas e pequenas histórias
 
----
+### A casa que ficou pronta para sair
 
-## RECOMENDADO: 2. Estação Subaquática do Pacífico - Beloni
-**Conceito:** Sobrevivência técnica hardcore e claustrofobia extrema a 2.500 metros de profundidade na Fossa das Marianas. Sem monstros físicos; o inimigo impiedoso é a pressão hidrostática de 250 atm e a física do ambiente.
-* **Atmosfera:** Tensão constante e isolamento total (180 dias de autonomia sem resgate). O contraste entre as áreas limpas de pesquisa e os corredores industriais e escuros do Anel Técnico. Água vazando, luzes de emergência piscando e os estrondos aterrorizantes do casco duplo de Titânio-Vanádio rangendo sob o peso do oceano.
-* **Mecânicas Principais:** Engenharia de contingência realista. O jogador deve gerenciar o mapa de calor das Zonas de Pressão Interna (ZPI), isolar alas alagadas ativando as Comportas de Pressão Mestre (CPM), e cortar o fluxo de tubos corrompidos usando Válvulas de Guilhotina Automática (VGA). O gameplay envolve redirecionar a Linha Mestre de Energia (LME) e a rede de ventilação (RVF) sob limite de tempo.
-* **Ameaça:** Descompressão catastrófica, afogamento por falha nas Portas Estanques Setoriais (PES), asfixia se a Produção de O2 (Módulo 16) for comprometida, e implosão estrutural da base.
-* **Estilo de Mapa:** Layout radial orgânico, interconectado e redundante. Focado no Grande Átrio Central ramificando para os 4 Salões Centrais (N, S, E, W) e os 25 módulos. A progressão exige navegação tática usando o Anel de Circulação para reparar alas danificadas, sempre precisando memorizar a rota mais rápida para uma das 5 Câmaras de Refúgio fortificadas.
+Uma mesa com duas canecas, uma mala aberta e uma lista de coisas riscadas pela metade. Mais tarde, o nome de uma das pessoas aparece na clínica, mas não no registro de embarque. A cena não precisa de texto explicando o que houve.
+
+### A lista de Marta
+
+A clínica tem um relatório oficial com um total de pacientes transferidos. O caderno de Marta registra nomes e horários que não fecham com esse número. A diferença não prova uma conspiração: prova que a retirada foi pior e mais confusa do que o relatório admite.
+
+### O último aviso de Nilo
+
+Na oficina, uma anotação sobre o nível da maré aparece ao lado de uma instrução para não abrir o portão leste. A mensagem parece técnica até o jogador encontrar, em outro lugar, o nome de alguém que tentou atravessar aquela passagem.
+
+### A transmissão interrompida
+
+A fita da frequência 04 começa com um aviso claro, segue com nomes de moradores e termina com um recado doméstico. A gravação deve parecer feita por alguém que estava cansado, não por alguém que sabia que estava narrando o jogo.
+
+### O espaço vazio
+
+Uma cama está preparada, mas não há ficha correspondente. Em outro cômodo, uma lista tem uma linha arrancada. O jogador pode suspeitar que as duas coisas estejam ligadas, sem receber confirmação imediata.
+
+## Ideias de puzzles com função narrativa
+
+- Relacionar horários de maré e horários de transmissão.
+- Recuperar uma sequência de chamadas da rádio comunitária.
+- Distinguir o circuito da rádio do circuito do portão.
+- Cruzar fichas de triagem com uma lista de embarque.
+- Liberar uma válvula ou bomba para tornar uma rota temporariamente atravessável.
+- Usar peças da oficina para restaurar um equipamento de comunicação.
+
+Cada puzzle precisa responder a três perguntas: por que esse mecanismo existe, quem o usava antes da crise e o que o jogador aprende ao resolvê-lo?
+
+## Ideias que não são cânone
+
+Backrooms com combate e estação subaquática foram conceitos antigos discutidos durante a fase de escolha do projeto. Eles não fazem parte da direção atual de Quarantine Protocol. Podem ser reaproveitados em outro projeto, mas não devem aparecer como áreas, organizações ou explicações do universo de Santa Bruma.
