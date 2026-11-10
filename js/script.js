@@ -1946,6 +1946,7 @@ function atualizarAfogamento(segundos) {
 
 function mostrarGameOver() {
     estadoAfogamento.fase = "game-over";
+    window.hordeTimer?.stop();
     teclas = {};
     limparEntradaMobile();
 
@@ -1971,6 +1972,7 @@ function reiniciarJogo() {
     teclas = {};
     limparEntradaMobile();
     tempoAnterior = 0;
+    window.hordeTimer?.start();
 
     if (telaGameOver) {
         telaGameOver.hidden = true;
@@ -3080,6 +3082,10 @@ function repetirJogo(
     tempoAnterior =
         tempoAtual;
 
+    if (estadoAfogamento.fase !== "game-over") {
+        window.hordeTimer?.update(segundos);
+    }
+
     moverJogador(segundos);
     desenharJogo();
 
@@ -3169,6 +3175,7 @@ function iniciarJogo() {
     ) {
 
         jogoIniciado = true;
+        window.hordeTimer?.start();
 
         aviso.style.display =
             "none";

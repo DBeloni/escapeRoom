@@ -282,3 +282,152 @@ body.touch-device #controls {
         font-size: 11px;
     }
 }
+
+/* ==========================================================================\n   TEMPORIZADOR DAS HORDAS\n   ========================================================================== */
+.horde-timer[hidden] {
+    display: none;
+}
+
+.horde-timer {
+    position: absolute;
+    top: max(12px, env(safe-area-inset-top));
+    left: max(12px, env(safe-area-inset-left));
+    z-index: 12;
+    width: min(270px, calc(100vw - 24px));
+    padding: 11px 13px 10px;
+    border: 1px solid rgba(211, 190, 151, 0.42);
+    border-left: 3px solid #b97845;
+    color: #eee8dc;
+    background: rgba(12, 17, 16, 0.9);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+    pointer-events: none;
+    font-family: "IBM Plex Mono", "Courier New", monospace;
+    backdrop-filter: blur(3px);
+}
+
+.horde-timer__topline,
+.horde-timer__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.horde-timer__topline {
+    padding-bottom: 7px;
+    border-bottom: 1px solid rgba(238, 232, 220, 0.15);
+}
+
+.horde-timer__eyebrow,
+.horde-timer__phase-count,
+.horde-timer__status {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+}
+
+.horde-timer__eyebrow {
+    color: #c58c5a;
+}
+
+.horde-timer__phase-count {
+    color: #9da69c;
+    white-space: nowrap;
+}
+
+.horde-timer__main {
+    align-items: flex-end;
+    padding: 9px 0 10px;
+}
+
+.horde-timer__description {
+    min-width: 0;
+}
+
+.horde-timer__description p {
+    margin: 0 0 5px;
+    color: #f0eadf;
+    font: 600 13px/1.2 Arial, Helvetica, sans-serif;
+}
+
+.horde-timer__status {
+    display: block;
+    color: #a6aaa0;
+    font-size: 8px;
+}
+
+.horde-timer__countdown {
+    color: #e5bd83;
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.015em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.horde-timer__segments {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.horde-timer__segments li {
+    height: 4px;
+    background: rgba(224, 225, 213, 0.16);
+    transition: background-color 160ms ease;
+}
+
+.horde-timer__segments li[data-state="current"] {
+    background: #c58c5a;
+}
+
+.horde-timer__segments li[data-state="complete"] {
+    background: #8e9b77;
+}
+
+.horde-timer[data-status="complete"] {
+    border-left-color: #9b7950;
+}
+
+.horde-timer[data-status="complete"] .horde-timer__countdown {
+    color: #c6b38f;
+}
+
+@media (max-width: 700px) {
+    .horde-timer {
+        width: min(250px, calc(100vw - 24px));
+        padding: 9px 11px 8px;
+    }
+
+    .horde-timer__countdown {
+        font-size: 24px;
+    }
+
+    #inventory {
+        top: max(104px, calc(env(safe-area-inset-top) + 92px));
+    }
+}
+
+@media (max-width: 360px) {
+    .horde-timer {
+        width: min(220px, calc(100vw - 24px));
+    }
+
+    .horde-timer__description p {
+        font-size: 12px;
+    }
+
+    .horde-timer__countdown {
+        font-size: 22px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .horde-timer__segments li {
+        transition: none;
+    }
+}

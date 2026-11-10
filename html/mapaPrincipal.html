@@ -5,11 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Escape Room — Zona Costeira</title>
     <link rel="icon" type="image/png" href="../assets/logo.png">
+    <link rel="stylesheet" href="../css/ui.css">
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
     <main id="gameContainer">
         <canvas id="gameCanvas"></canvas>
+
+        <aside id="hordeTimer" class="horde-timer" hidden aria-label="Temporizador das hordas">
+            <div class="horde-timer__topline">
+                <span class="horde-timer__eyebrow">ALERTA DE AMEAÇA</span>
+                <span id="hordePhaseCount" class="horde-timer__phase-count">FASE 01 / 04</span>
+            </div>
+            <div class="horde-timer__main">
+                <div class="horde-timer__description">
+                    <p id="hordePhaseLabel">Tempo até a 1ª horda</p>
+                    <span id="hordeTimerStatus" class="horde-timer__status">AMEAÇA EM APROXIMAÇÃO</span>
+                </div>
+                <time id="hordeCountdown" class="horde-timer__countdown" datetime="PT2M">02:00</time>
+            </div>
+            <ol class="horde-timer__segments" aria-hidden="true">
+                <li data-horde-segment data-state="current"></li>
+                <li data-horde-segment data-state="upcoming"></li>
+                <li data-horde-segment data-state="upcoming"></li>
+                <li data-horde-segment data-state="upcoming"></li>
+            </ol>
+        </aside>
 
         <aside id="inventory" aria-label="Inventário">
             <div class="inventory-heading"><strong>Itens</strong><span id="inventoryCount">0/5</span></div>
@@ -50,6 +71,7 @@
         </section>
     </main>
 
+    <script src="../js/systems/timer/hordeTimer.js"></script>
     <script src="../js/script.js"></script>
 </body>
 </html>
