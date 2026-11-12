@@ -241,7 +241,7 @@
                 return renderLocked(
                     "Separar a madeira", "TRONCO CAÍDO · ZONA COSTEIRA",
                     missing,
-                    "O tronco rachou na tempestade, mas as tábuas ainda estão presas pelas fibras. Use a chave de fenda como alavanca para soltá-las."
+                    "Use a chave de fenda como alavanca para soltar as tábuas do tronco sem quebrá-las."
                 );
             }
             return renderWood();
@@ -279,7 +279,7 @@
             if (missingParts.length) {
                 renderShell("Ainda faltam peças", "CAIS VELHO", `
                     <div class="puzzle-locked">
-                        <p>Antes de montar, reúna o material que ficou espalhado pela Zona 04.</p>
+                    <p>Antes de montar, reúna os materiais necessários para construir o barco.</p>
                         <ul class="puzzle-requirements">${missingParts.map(task => `<li>${escapeHTML(task.reward)}</li>`).join("")}</ul>
                         <button class="puzzle-button puzzle-button--quiet" type="button" data-action="close">Voltar</button>
                     </div>`);
@@ -302,7 +302,7 @@
         const hits = puzzleState.wood.hits;
         const progress = Math.min(100, Math.round((hits / 6) * 100));
         renderShell("Preparar a madeira", "TRONCO CAÍDO · ZONA COSTEIRA", `
-            <p class="puzzle-story-note">A tempestade partiu o tronco em três trechos. Use a ponta da chave de fenda nas rachaduras para soltar a madeira sem quebrá-la.</p>
+            <p class="puzzle-story-note">Use a ponta da chave de fenda como alavanca para soltar as tábuas sem quebrar a madeira.</p>
             <div class="woodcut-stage woodcut-stage--plain">
                 <button class="woodcut-log" type="button" data-action="chop" aria-label="Cortar o tronco">
                     <span class="woodcut-log__bark"></span>
@@ -444,7 +444,7 @@
             { id: "side", label: "Lateral" }
         ];
         renderShell("Soltar a lona da maca", "CASA 04 · ENFERMARIA", `
-            <p class="puzzle-story-note">A estrutura da maca está torta, mas a lona e as amarras ainda parecem firmes. Uma anotação de Marta diz: “Cabeceira primeiro. Depois os pés. A lateral fica por último, senão rasga.”</p>
+            <p class="puzzle-story-note">Solte as presilhas na ordem indicada no bilhete para retirar a lona e as amarras sem danificá-las.</p>
             <div class="cover-task">
                 <div class="cover-task__stretcher" aria-label="Maca com três presilhas">
                     ${latches.map((latch, index) => {
@@ -480,7 +480,7 @@
                 <button class="puzzle-button" type="button" data-action="radio-tune">Testar sintonia</button>
             </div>
             <p class="puzzle-hint">Ajuste o dial para 104,0 MHz.</p>
-        `, "A transmissão traz uma pista sobre a enfermaria.");
+        `, "A rádio oferece uma pista opcional.");
     }
 
     function renderAssembly() {
@@ -544,10 +544,10 @@
         overlay.classList.add("puzzle-overlay--victory");
         overlay.innerHTML = `
             <div class="puzzle-dialog puzzle-dialog--victory" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
-                <p class="puzzle-eyebrow">ZONA 04 · 24 SET 1984</p>
+                <p class="puzzle-eyebrow">VILA COSTEIRA · 1984</p>
                 <h2 id="victoryTitle">Você conseguiu sair.</h2>
                 <p>O motor pega depois de algumas tentativas. O barco se afasta do cais enquanto a maré começa a subir.</p>
-                <p class="victory-note">Santa Bruma fica para trás. A frequência 04 continua no rádio, baixa, mas ainda ativa.</p>
+                <p class="victory-note">A vila fica para trás. O pescador conseguiu construir um barco e escapar da região.</p>
                 <button class="puzzle-button" type="button" data-action="restart">Jogar novamente</button>
             </div>`;
         overlay.querySelector("[data-action='restart']")?.focus();
@@ -589,7 +589,7 @@
     function handleCoverLatch(id) {
         const expected = COVER_SEQUENCE[puzzleState.cover.step];
         if (id !== expected) {
-            setFeedback("Essa presilha ainda está segurando a lona. Siga a anotação de Marta.", "warning");
+            setFeedback("Essa presilha ainda está segurando a lona. Siga a ordem indicada no bilhete.", "warning");
             return;
         }
         puzzleState.cover.step += 1;
@@ -674,7 +674,7 @@
             puzzleState.radio.solved = true;
             renderShell("Mensagem recebida", "RÁDIO COMUNITÁRIA · 104,0 MHZ", `
                 <div class="puzzle-reward">
-                    <p>“Se alguém ainda estiver ouvindo: a lona da maca da enfermaria está inteira. Marta deixou um aviso preso nela. Não usem o portão baixo; a água já está passando da marca.”</p>
+                    <p>“A lona da maca da enfermaria está inteira. Solte as presilhas na ordem indicada para aproveitar a lona e as amarras.”</p>
                     <button class="puzzle-button" type="button" data-action="close">Fechar rádio</button>
                 </div>`, "A mensagem foi registrada.");
             return;

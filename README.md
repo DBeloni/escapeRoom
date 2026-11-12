@@ -4,9 +4,7 @@
 
 ## Sobre o projeto
 
-Em Santa Bruma, uma evacuação é interrompida por uma tempestade, uma queda de energia e a subida da maré. A região é registrada como vazia, mas os vestígios encontrados nas casas, na clínica, na rádio e na oficina contam outra história.
-
-O jogador desperta na Zona Costeira às 07h42, depois de uma transmissão retornar à frequência comunitária 04. A saída é urgente. Entender quem ficou para trás é uma escolha.
+Em 1984, uma doença desconhecida se espalha por uma pequena vila pesqueira isolada. As autoridades isolam a região e evacuam os moradores em barcos de pesca. Por um erro nos registros, um pescador fica para trás. Dois ou três dias depois, sozinho e sem saída por terra ou barcos, ele precisa reunir materiais e construir uma embarcação para escapar.
 
 O projeto combina exploração em pixel art, enigmas, inventário e narrativa ambiental. A história é descoberta por documentos, objetos, mecanismos e detalhes dos cenários.
 
@@ -39,7 +37,7 @@ escapeRoom/
 
 ## Documentação
 
-Antes de criar novas pistas, diálogos ou áreas, leia [`docs/README.md`](docs/README.md). A bíblia narrativa em [`docs/story-bible.md`](docs/story-bible.md) define a direção atual do universo.
+Antes de criar novas pistas, diálogos ou áreas, leia [`docs/README.md`](docs/README.md) e [`docs/CANONE_E_PENDENCIAS.md`](docs/CANONE_E_PENDENCIAS.md).
 
 A organização real dos arquivos em execução está descrita em [`docs/architecture.md`](docs/architecture.md).
 

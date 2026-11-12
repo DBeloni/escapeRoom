@@ -5,6 +5,8 @@ const aviso = document.getElementById("loading");
 const controles = document.getElementById("controls");
 const telaGameOver = document.getElementById("gameOver");
 const botaoReiniciar = document.getElementById("restartGame");
+const telaIntroducao = document.getElementById("introScreen");
+const botaoIniciar = document.getElementById("startGame");
 
 const caminhosSpritesItens = {
     ITM_001: "../assets/itens/chaveDeFenda.png",
@@ -3241,6 +3243,15 @@ function iniciarJogo() {
     ) {
 
         jogoIniciado = true;
+        if (telaIntroducao) {
+            aviso.style.display = "none";
+            telaIntroducao.hidden = false;
+            botaoIniciar.disabled = false;
+            botaoIniciar.textContent = "Começar jogo";
+            botaoIniciar.focus();
+            return;
+        }
+
         window.hordeTimer?.start();
 
         aviso.style.display =
@@ -3254,6 +3265,16 @@ function iniciarJogo() {
             repetirJogo
         );
     }
+}
+
+function confirmarInicioJogo() {
+    if (!jogoIniciado || telaIntroducao?.hidden !== false) return;
+    telaIntroducao.hidden = true;
+    window.hordeTimer?.start();
+    atualizarCamera();
+    atualizarTextoControles();
+    desenharJogo();
+    requestAnimationFrame(repetirJogo);
 }
 
 
@@ -3279,6 +3300,14 @@ window.addEventListener(
 
         if (estadoAfogamento.fase === "bolhas") {
             evento.preventDefault();
+            return;
+        }
+
+        if (telaIntroducao && !telaIntroducao.hidden) {
+            if ((tecla === "enter" || tecla === " ") && !botaoIniciar.disabled) {
+                confirmarInicioJogo();
+                evento.preventDefault();
+            }
             return;
         }
 
@@ -3491,3 +3520,4 @@ carregarSpriteAquatico(
 );
 
 botaoReiniciar?.addEventListener("click", reiniciarJogo);
+botaoIniciar?.addEventListener("click", confirmarInicioJogo);
