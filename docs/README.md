@@ -1,24 +1,16 @@
-# Documentação do projeto
+# Quarantine Protocol — Documentação
 
-Este diretório reúne as decisões de arquitetura, as regras de implementação e o material de criação de **Quarantine Protocol**.
+Documentação narrativa básica do jogo. O objetivo é manter as informações principais organizadas sem criar detalhes desnecessários.
 
-## Universo e narrativa
+## Arquivos
 
-Leia estes documentos nesta ordem antes de escrever novas páginas, diálogos, documentos encontrados ou missões:
+- [História](HISTORIA.md): resumo do contexto e dos acontecimentos.
+- [Introdução](INTRODUCAO.md): texto curto apresentado antes do início do jogo.
+- [Integração com o jogo](INTEGRACAO_COM_O_JOGO.md): relação entre a história e o objetivo jogável.
+- [Cânone e pendências](CANONE_E_PENDENCIAS.md): o que está definido e o que pode continuar em aberto.
 
-1. [`story-bible.md`](story-bible.md) — premissa, tom, regras do universo e o que é considerado cânone.
-2. [`story-timeline.md`](story-timeline.md) — acontecimentos que levaram ao isolamento da Zona Costeira.
-3. [`characters.md`](characters.md) — pessoas ligadas à clínica, ao cais e à transmissão de rádio.
-4. [`environmental-storytelling.md`](environmental-storytelling.md) — como cada construção e objeto pode contar parte da história.
-5. [`narrative-roadmap.md`](narrative-roadmap.md) — o que já está representado, o que está planejado e como transformar a narrativa em jogo.
-6. [`open-questions.md`](open-questions.md) — decisões que podem crescer sem quebrar a continuidade.
+## Diretriz
 
-## Regras gerais
+A história deve ser simples, humana e contada principalmente pelo ambiente. Não é necessário explicar tudo ao jogador. Os documentos servem como referência para manter a coerência durante o desenvolvimento.
 
-- A história deve parecer vivida por pessoas comuns. Evite discursos grandiosos, explicações longas e personagens que sabem tudo.
-- O ambiente conta a maior parte da história. Bilhetes, objetos fora do lugar, marcas de uso e registros incompletos valem mais do que exposição direta.
-- Diferencie sempre o que já existe no jogo daquilo que está apenas planejado.
-- Não altere o cânone por acidente. Se uma nova ideia mudar datas, relações, causas ou acontecimentos importantes, registre a mudança nos documentos de narrativa.
-- O arquivo `ideias.excalidraw` guarda um quadro de brainstorming antigo; ele é histórico e não define o cânone atual.
-
-A documentação técnica está em `architecture.md`, `file-rules.md`, `inventory.md`, `horde-timer.md` e `boat-escape-puzzles.md`.
+Não adicionar personagens, áreas, sistemas ou acontecimentos importantes sem necessidade e sem verificar se combinam com o jogo existente.
