@@ -1,22 +1,15 @@
 # Regras rápidas de organização
 
-### `core`
-Coordena o jogo, mas não deve conhecer detalhes de puzzles específicos.
+- `index.html` e `pages/`: conteúdo institucional do site.
+- `html/mapaPrincipal.html`: entrada da partida.
+- `css/site.css`: estilos compartilhados do site.
+- `css/style.css`, `css/ui.css` e `css/puzzles.css`: estilos do jogo.
+- `js/site.js`: interações institucionais.
+- `js/script.js`: lógica principal da partida.
+- `js/systems/puzzles/`: desafios carregados pela página do jogo.
+- `js/systems/timer/`: temporizador carregado pela página do jogo.
+- `assets/`: imagens, sprites, itens e demais mídias realmente usadas.
+- `docs/`: documentação narrativa, técnica e material de criação.
+- `tools/`: verificações e utilitários de desenvolvimento.
 
-### `entities`
-Comportamento e renderização de entidades.
-
-### `world`
-Física espacial comum a várias cenas.
-
-### `scenes`
-Conteúdo específico do lugar: barreiras, objetos, NPCs, entradas e puzzles.
-
-### `systems`
-Mecânicas reutilizáveis e independentes do mapa.
-
-### `prototypes`
-Testes e ideias experimentais que ainda não foram promovidos para o produto principal.
-
-### `legacy`
-Nunca importar daqui no jogo principal.
+Não crie arquivos vazios como reserva de estrutura. Antes de adicionar uma nova pasta, confirme que existe uma responsabilidade concreta e um uso planejado no código ativo. Antes de remover um recurso, procure todas as referências no projeto.

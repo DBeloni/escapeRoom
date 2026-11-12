@@ -1,47 +1,36 @@
-# Arquitetura do Escape Room
+# Arquitetura em execução
 
-## Regra principal
+## Visão geral
 
-O jogo principal usa ES Modules nativos do navegador. `js/main.js` é o único ponto de entrada.
+O projeto é composto por um site institucional e uma partida de jogo. Ambos usam HTML, CSS e JavaScript puro; não há framework nem etapa de build.
 
-## Camadas
+## Site institucional
 
-- `config/`: parâmetros globais que alteram comportamento sem mexer na lógica.
-- `core/`: ciclo de vida do jogo, estado, input, assets, canvas, loop e cenas.
-- `entities/`: entidades jogáveis e suas regras locais.
-- `world/`: mapa físico, câmera, colisão e água.
-- `scenes/`: conteúdo específico de cada lugar.
-- `systems/`: mecânicas independentes que podem ser usadas por várias cenas.
-- `ui/`: HUD e ferramentas visuais.
-- `prototypes/`: laboratórios independentes; não fazem parte do core.
-- `legacy/`: versões antigas preservadas para consulta e comparação; não são carregadas.
-- `assets/`: mídia do projeto.
-- `docs/`: documentação e brainstorm.
+- `index.html` é a página inicial.
+- `pages/*.html` contém história, cenários, itens, enigmas, finais, manual, equipe, tecnologia, galeria e contato.
+- `css/site.css` concentra a identidade visual e os componentes compartilhados.
+- `js/site.js` ativa navegação responsiva, filtros, lightbox, ano do rodapé e feedback do formulário demonstrativo.
 
-## O que não fazer
+## Jogo
 
-Não colocar toda uma mecânica nova em `main.js`, `core/game.js` ou em uma cena só.
+A entrada da partida é `html/mapaPrincipal.html`. Ela carrega, nesta ordem:
 
-Uma porta deve ser conteúdo da cena. A regra genérica de inventário pertence a `systems/inventory`.
+1. `js/systems/timer/hordeTimer.js` — temporizador da partida.
+2. `js/systems/puzzles/boatEscapePuzzles.js` — desafios da fuga e montagem do barco.
+3. `js/script.js` — lógica principal da exploração, mapa, jogador, colisões, itens, inventário e integração das mecânicas.
 
-## Como adicionar uma nova casa
+O jogo ainda usa scripts clássicos do navegador, não ES Modules. Por isso, a ordem das tags `<script>` e os nomes globais utilizados entre os arquivos são importantes.
 
-1. Criar `js/scenes/casaNova/`.
-2. Criar a definição da cena.
-3. Registrar no `sceneRegistry.js`.
-4. Definir objetos e puzzles próprios no diretório da cena.
-5. Reusar sistemas existentes para inventário, diálogo, pontos e interação.
+### Estilos do jogo
 
-## Como adicionar uma mecânica nova
+- `css/style.css`: apresentação principal do canvas, HUD e telas do jogo.
+- `css/ui.css`: elementos de interface e controles.
+- `css/puzzles.css`: painéis e interações dos desafios.
 
-Criar um diretório em `js/systems/` e expor uma API pequena. O core só coordena o ciclo de atualização.
+## Assets
 
-## Protótipos
+`assets/` contém apenas os recursos referenciados pelo site ou pelo jogo: logotipo, imagens dos itens, mapa da zona, interiores e sprites/spritesheets do personagem e dos efeitos na água.
 
-Os três experimentos existentes foram preservados e modularizados separadamente:
+## Regra para mudanças
 
-- `prototypes/inventory/`
-- `prototypes/multiplayer/`
-- `prototypes/zombie/`
-
-Eles são laboratórios, não dependências do jogo principal.
+Antes de remover ou renomear um arquivo, procure referências em HTML, CSS e JavaScript. Se uma nova mecânica for criada, mantenha a alteração compatível com a forma atual de carregamento do jogo ou planeje a migração completa da entrada — não misture módulos isolados com scripts clássicos sem uma integração explícita.

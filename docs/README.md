@@ -21,4 +21,4 @@ Leia estes documentos nesta ordem antes de escrever novas páginas, diálogos, d
 - Não altere o cânone por acidente. Se uma nova ideia mudar datas, relações, causas ou acontecimentos importantes, registre a mudança nos documentos de narrativa.
 - O arquivo `ideias.excalidraw` guarda um quadro de brainstorming antigo; ele é histórico e não define o cânone atual.
 
-A documentação técnica continua em `architecture.md`, `inventory.md`, `migration.md` e `file-rules.md`.
+A documentação técnica está em `architecture.md`, `file-rules.md`, `inventory.md`, `horde-timer.md` e `boat-escape-puzzles.md`.

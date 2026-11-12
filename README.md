@@ -4,39 +4,44 @@
 
 ## Sobre o projeto
 
-Em Santa Bruma, uma evacuação é interrompida por uma tempestade, uma queda de energia e a subida da maré. A região é registrada como vazia, mas os vestígios encontrados nas casas, na clínica, na enfermaria e na oficina contam outra história.
+Em Santa Bruma, uma evacuação é interrompida por uma tempestade, uma queda de energia e a subida da maré. A região é registrada como vazia, mas os vestígios encontrados nas casas, na clínica, na rádio e na oficina contam outra história.
 
 O jogador desperta na Zona Costeira às 07h42, depois de uma transmissão retornar à frequência comunitária 04. A saída é urgente. Entender quem ficou para trás é uma escolha.
 
-O projeto combina exploração em pixel art, enigmas, inventário e narrativa ambiental. A história é descoberta por documentos, objetos, mecanismos e detalhes dos cenários — não por longas explicações.
+O projeto combina exploração em pixel art, enigmas, inventário e narrativa ambiental. A história é descoberta por documentos, objetos, mecanismos e detalhes dos cenários.
 
 ## Tecnologias
 
-- **HTML5** — estrutura semântica das páginas
-- **CSS3** — layout, responsividade e identidade visual
-- **JavaScript** — lógica e interação do jogo
-- **Git + GitHub** — versionamento e colaboração
-- **Vercel** — hospedagem
+- **HTML5** — estrutura semântica das páginas e do jogo.
+- **CSS3** — layout, responsividade e identidade visual.
+- **JavaScript** — interface do site e lógica da partida.
+- **Git + GitHub** — versionamento e colaboração.
+- **Vercel** — hospedagem.
 
-## Estrutura
+## Estrutura principal
 
 ```text
 escapeRoom/
-├── index.html
-├── css/
-├── js/
-├── pages/
-├── html/
-├── assets/
-├── docs/
-├── prototypes/
-├── legacy/
+├── index.html                  # Entrada do site
+├── pages/                      # Páginas institucionais
+├── html/mapaPrincipal.html     # Entrada do jogo
+├── css/                        # Estilos ativos do site e do jogo
+├── js/                         # Scripts ativos
+│   ├── site.js                 # Interações do site
+│   ├── script.js               # Lógica principal da partida
+│   └── systems/                # Puzzles e temporizador usados pelo jogo
+├── assets/                     # Mapas, sprites, itens e identidade visual
+├── docs/                       # Documentação narrativa e técnica
+├── tools/check-js.mjs          # Verificação de sintaxe JavaScript
+├── package.json
 └── README.md
 ```
 
 ## Documentação
 
 Antes de criar novas pistas, diálogos ou áreas, leia [`docs/README.md`](docs/README.md). A bíblia narrativa em [`docs/story-bible.md`](docs/story-bible.md) define a direção atual do universo.
+
+A organização real dos arquivos em execução está descrita em [`docs/architecture.md`](docs/architecture.md).
 
 ## Equipe
 
@@ -47,20 +52,12 @@ Antes de criar novas pistas, diálogos ou áreas, leia [`docs/README.md`](docs/R
 
 ## Como executar
 
-1. Clone o repositório:
+1. Abra `index.html` para acessar o site.
+2. Use o botão **Acessar jogo** para abrir `html/mapaPrincipal.html`.
+3. Para validar a sintaxe dos scripts, execute `npm run check:js`.
 
-   ```bash
-   git clone https://github.com/DBeloni/escapeRoom.git
-   ```
-
-2. Entre na pasta do projeto:
-
-   ```bash
-   cd escapeRoom
-   ```
-
-3. Abra `index.html` em um navegador. Caso sejam usadas funcionalidades que dependam de módulos ES ou carregamento local de assets, execute por um servidor local.
+Não há etapa de build nem dependências externas instaladas pelo npm. O site usa Google Fonts pela internet.
 
 ## Status
 
-**Em desenvolvimento.** O mapa da Zona Costeira, os interiores e o inventário estão em construção. A narrativa foi organizada para orientar as próximas etapas de documentos encontráveis, puzzles, interações e desfechos.
+**Em desenvolvimento.** O mapa da Zona Costeira, os interiores, o inventário e os desafios de fuga continuam recebendo ajustes.

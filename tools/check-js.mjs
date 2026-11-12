@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
-const roots = ["js", "prototypes"];
+const root = "js";
 const files = [];
 
 function walk(dir) {
@@ -16,10 +16,10 @@ function walk(dir) {
     }
 }
 
-for (const root of roots) walk(root);
+walk(root);
 
 for (const file of files) {
     execFileSync(process.execPath, ["--check", file], { stdio: "inherit" });
 }
 
-console.log(`JS syntax OK: ${files.length} files.`);
+console.log(`JS syntax OK: ${files.length} arquivos ativos.`);
