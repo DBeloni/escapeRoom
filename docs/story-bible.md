@@ -83,7 +83,7 @@ O jogador pode sair sem descobrir tudo. Mas, quanto mais investiga, mais percebe
 | Protocolo Q | Nome da operação de isolamento e retirada. |
 | Zona 04 | Designação administrativa da área costeira. |
 | Zona Costeira | Nome usado no jogo para o mapa inicial. |
-| Frequência 04 | Canal comunitário improvisado usado quando a comunicação oficial falhou. |
+| Frequência 04 | Canal comunitário improvisado, sintonizado em 104,0 MHz, usado quando a comunicação oficial falhou. |
 | Febre da maré | Apelido popular para a doença; não é um diagnóstico confirmado. |
 | Cais velho | Estrutura de embarque e possível rota de saída. |
 | Portão leste | Acesso à passagem baixa, perigoso quando a maré está alta. |

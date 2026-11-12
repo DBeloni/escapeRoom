@@ -21,15 +21,18 @@ const spritesItens = Object.fromEntries(
     })
 );
 
+// Ferramentas e suprimentos ficam em locais ligados ao uso de cada objeto.
+// A gasolina foi levada para a oficina: não faz sentido deixá-la na enfermaria.
 const itensNoMundo = [
-    { id: "ITM_001", x: 520, y: 625 },
-    { id: "ITM_002", x: 610, y: 630 },
-    { id: "ITM_003", x: 800, y: 645 },
-    { id: "ITM_004", x: 710, y: 620 },
-    { id: "ITM_005", x: 855, y: 710 }
+    { id: "ITM_001", casa: "casa-costeira-01", x: 365, y: 190 },
+    { id: "ITM_002", casa: "casa-costeira-05", x: 875, y: 350 },
+    { id: "ITM_003", casa: "casa-costeira-02", x: 980, y: 345 },
+    { id: "ITM_004", casa: "casa-costeira-03", x: 500, y: 330 },
+    { id: "ITM_005", casa: "casa-costeira-05", x: 1430, y: 420 }
 ];
 const capacidadeInventario = 5;
 const inventario = [];
+const raioInteracaoItem = 120;
 const nomesItens = {
     ITM_001: "Chave de Fenda",
     ITM_002: "Chave Inglesa",
@@ -41,7 +44,8 @@ const nomesItens = {
 function coletarItemProximo() {
     const message = document.getElementById("inventoryMessage");
     const index = itensNoMundo.findIndex(item =>
-        Math.hypot(item.x - jogador.x, item.y - jogador.y) <= 46
+        item.casa === interiorAtual?.id && cenarioAtual === "casa" &&
+        Math.hypot(item.x - jogador.x, item.y - jogador.y) <= raioInteracaoItem
     );
     if (index === -1) {
         if (message) message.textContent = "Nenhum item próximo.";
@@ -72,20 +76,53 @@ function atualizarInventarioHUD(message = "") {
 
     count.textContent = `${inventario.length}/${capacidadeInventario}`;
     list.replaceChildren();
-    if (inventario.length === 0) {
-        const empty = document.createElement("li");
-        empty.className = "inventory-empty";
-        empty.textContent = "Inventário vazio";
-        list.append(empty);
-    } else {
-        for (const itemId of inventario) {
-            const entry = document.createElement("li");
-            entry.textContent = nomesItens[itemId];
-            list.append(entry);
+
+    for (let slotIndex = 0; slotIndex < capacidadeInventario; slotIndex += 1) {
+        const itemId = inventario[slotIndex];
+        const slot = document.createElement("li");
+        slot.className = "inventory-slot";
+
+        if (itemId) {
+            const icon = document.createElement("img");
+            icon.className = "inventory-slot__icon";
+            icon.src = caminhosSpritesItens[itemId];
+            icon.alt = nomesItens[itemId];
+            icon.title = nomesItens[itemId];
+            icon.draggable = false;
+            slot.classList.add("inventory-slot--filled");
+            slot.append(icon);
+        } else {
+            slot.classList.add("inventory-slot--empty");
+            slot.setAttribute("aria-hidden", "true");
         }
+
+        list.append(slot);
     }
+
     if (feedback && message) feedback.textContent = message;
 }
+
+function consumirItemDoInventario(itemId) {
+    const index = inventario.indexOf(itemId);
+    if (index === -1) return false;
+
+    inventario.splice(index, 1);
+    atualizarInventarioHUD(`${nomesItens[itemId]} utilizado.`);
+    return true;
+}
+
+function executarAcaoProxima() {
+    const itemProximo = itensNoMundo.some(item =>
+        item.casa === interiorAtual?.id && cenarioAtual === "casa" &&
+        Math.hypot(item.x - jogador.x, item.y - jogador.y) <= raioInteracaoItem
+    );
+    if (itemProximo) return coletarItemProximo();
+    if (window.boatPuzzles?.interact(jogador)) return true;
+    return coletarItemProximo();
+}
+
+// Desenha os cinco espaços vazios assim que a interface do jogo é carregada.
+atualizarInventarioHUD();
 
 const mapaSelecionado = {
     id: "zona-costeira",
@@ -160,11 +197,9 @@ const entradaMobile = {
 const teclasMovimento = ["w", "a", "s", "d"];
 
 function dispositivoPareceTouch() {
-    return (
-        "ontouchstart" in window ||
-        navigator.maxTouchPoints > 0 ||
-        navigator.msMaxTouchPoints > 0
-    );
+    return window.matchMedia(
+        "(max-width: 900px) and (pointer: coarse) and (hover: none)"
+    ).matches;
 }
 
 function limparEntradaMobile() {
@@ -271,7 +306,7 @@ function configurarControlesMobile() {
         alternarModoDebug();
     });
 
-    pickupButton?.addEventListener("click", coletarItemProximo);
+    pickupButton?.addEventListener("click", executarAcaoProxima);
 
     backButton.addEventListener("click", () => {
         if (cenarioAtual === "casa") {
@@ -320,6 +355,7 @@ const portasZonaCosteira = [
 // pré-carregadas para a troca de cenário acontecer sem tela preta ao entrar.
 const interioresZonaCosteira = {
     "casa-costeira-01": {
+        id: "casa-costeira-01",
         nome: "Casa 01",
         src: "../assets/maps/casa-01-zona-costeira-interior.png",
         layout: {
@@ -358,6 +394,7 @@ const interioresZonaCosteira = {
         }
     },
     "casa-costeira-02": {
+        id: "casa-costeira-02",
         nome: "Casa 02",
         src: "../assets/maps/casa-02-zona-costeira-interior.png",
         layout: {
@@ -389,6 +426,7 @@ const interioresZonaCosteira = {
         }
     },
     "casa-costeira-03": {
+        id: "casa-costeira-03",
         nome: "Casa 03 — Clínica",
         src: "../assets/maps/casa-03-zona-costeira-interior.png",
         layout: {
@@ -427,6 +465,7 @@ const interioresZonaCosteira = {
         }
     },
     "casa-costeira-04": {
+        id: "casa-costeira-04",
         nome: "Casa 04 — Enfermaria",
         src: "../assets/maps/casa-04-zona-costeira-interior.png",
         layout: {
@@ -468,6 +507,7 @@ const interioresZonaCosteira = {
         }
     },
     "casa-costeira-05": {
+        id: "casa-costeira-05",
         nome: "Casa 05 — Oficina",
         src: "../assets/maps/casa-05-zona-costeira-interior.png",
         layout: {
@@ -1945,6 +1985,7 @@ function atualizarAfogamento(segundos) {
 }
 
 function mostrarGameOver() {
+    window.boatPuzzles?.close();
     estadoAfogamento.fase = "game-over";
     window.hordeTimer?.stop();
     teclas = {};
@@ -2134,6 +2175,10 @@ function atualizarCamera() {
 // ============================================================================
 
 function moverJogador(segundos) {
+
+    if (window.boatPuzzles?.isModalOpen()) {
+        return;
+    }
 
     if (estadoAfogamento.fase === "bolhas") {
         atualizarAfogamento(segundos);
@@ -3010,6 +3055,7 @@ function desenharJogo() {
         );
 
         desenharItensColetaveis();
+        window.boatPuzzles?.drawMarkers(contexto, cameraX, cameraY, zoom);
 
     } else {
         if (interiorAtual?.imagem?.naturalWidth > 0) {
@@ -3031,6 +3077,8 @@ function desenharJogo() {
                 alturaTela / zoom
             );
         }
+        desenharItensColetaveis();
+        window.boatPuzzles?.drawMarkers(contexto, cameraX, cameraY, 1);
     }
 
 
@@ -3042,13 +3090,30 @@ function desenharJogo() {
 
 function desenharItensColetaveis() {
     for (const item of itensNoMundo) {
+        if (cenarioAtual !== "casa" || item.casa !== interiorAtual?.id) continue;
         const sprite = spritesItens[item.id];
         if (!sprite?.complete || sprite.naturalWidth === 0) continue;
 
         const x = item.x - cameraX;
         const y = item.y - cameraY;
+        const tamanhoMaximo = 64;
+        const escalaSprite = tamanhoMaximo / Math.max(sprite.naturalWidth, sprite.naturalHeight);
+        const larguraSprite = sprite.naturalWidth * escalaSprite;
+        const alturaSprite = sprite.naturalHeight * escalaSprite;
+
         contexto.save();
-        contexto.drawImage(sprite, x - 15, y - 10, 30, 20);
+        contexto.imageSmoothingEnabled = false;
+        contexto.fillStyle = "rgba(0, 0, 0, 0.28)";
+        contexto.beginPath();
+        contexto.ellipse(x, y + 10, 18, 6, 0, 0, Math.PI * 2);
+        contexto.fill();
+        contexto.drawImage(
+            sprite,
+            x - larguraSprite / 2,
+            y - alturaSprite / 2,
+            larguraSprite,
+            alturaSprite
+        );
         contexto.restore();
     }
 }
@@ -3087,6 +3152,7 @@ function repetirJogo(
     }
 
     moverJogador(segundos);
+    window.boatPuzzles?.updateProximity(jogador);
     desenharJogo();
 
     requestAnimationFrame(
@@ -3112,7 +3178,7 @@ function atualizarTextoControles() {
         controles.innerHTML =
             `<strong>${nomeCasa}</strong><br>
             WASD / Setas → Mover<br>
-            E → Coletar item próximo<br>
+            E → Interagir / coletar item próximo<br>
             F3 → ${
                 modoDebug
                     ? "Esconder colisões"
@@ -3125,7 +3191,7 @@ function atualizarTextoControles() {
         controles.innerHTML =
             `<strong>${mapaSelecionado.nome}</strong><br>
             WASD / Setas → Mover<br>
-            E → Coletar item próximo<br>
+            E → Interagir / coletar item próximo<br>
             F3 → ${
                 modoDebug
                     ? "Esconder colisões"
@@ -3227,6 +3293,12 @@ window.addEventListener(
             return;
         }
 
+        if (tecla === "escape" && window.boatPuzzles?.isModalOpen()) {
+            window.boatPuzzles.close();
+            evento.preventDefault();
+            return;
+        }
+
         if (
             tecla === "escape" &&
             cenarioAtual ===
@@ -3241,7 +3313,7 @@ window.addEventListener(
         }
 
         if (tecla === "e") {
-            if (!evento.repeat) coletarItemProximo();
+            if (!evento.repeat) executarAcaoProxima();
             evento.preventDefault();
             return;
         }
@@ -3376,6 +3448,29 @@ imagemPersonagem.onerror =
 
 ajustarTela();
 configurarControlesMobile();
+
+window.boatPuzzles?.init({
+    getInventory: () => inventario,
+    getScene: () => cenarioAtual,
+    getHouseId: () => interiorAtual?.id ?? null,
+    hasNearbyItem: player => itensNoMundo.some(item =>
+        cenarioAtual === "casa" && item.casa === interiorAtual?.id &&
+        Math.hypot(item.x - player.x, item.y - player.y) <= raioInteracaoItem
+    ),
+    getNearbyItemName: player => {
+        const item = itensNoMundo.find(candidate =>
+            cenarioAtual === "casa" && candidate.casa === interiorAtual?.id &&
+            Math.hypot(candidate.x - player.x, candidate.y - player.y) <= raioInteracaoItem
+        );
+        return item ? nomesItens[item.id] : null;
+    },
+    consumeItem: consumirItemDoInventario,
+    onVictory() {
+        window.hordeTimer?.stop();
+        teclas = {};
+        limparEntradaMobile();
+    }
+});
 
 imagemMapa.src = mapaSelecionado.src;
 

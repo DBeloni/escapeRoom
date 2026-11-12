@@ -20,7 +20,7 @@ Equipes de saúde e segurança fecham os acessos à Zona 04. O comunicado fala e
 
 **20 de setembro — a comunicação começa a falhar**
 
-A rádio oficial passa a transmitir avisos gravados. A frequência comunitária 04 ganha importância porque alcança pontos onde os alto-falantes não funcionam. Lúcia começa a anotar quem confirmou presença e quem ainda não respondeu.
+A rádio oficial passa a transmitir avisos gravados. A frequência comunitária 04, sintonizada em 104,0 MHz, ganha importância porque alcança pontos onde os alto-falantes não funcionam. Lúcia começa a anotar quem confirmou presença e quem ainda não respondeu.
 
 **22 de setembro — evacuação parcial**
 

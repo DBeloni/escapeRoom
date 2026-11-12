@@ -2,51 +2,48 @@ export const ITEM_CATALOG = Object.freeze([
     Object.freeze({
         id: "ITM_001",
         name: "Chave de Fenda",
-        description: "Uma chave de fenda robusta com cabo de acrílico amarelo transparente. Apresenta marcas de uso na ponta de fenda simples.",
+        description: "Ferramenta simples, deixada sobre a bancada de apoio da casa 01. A ponta ainda está em boas condições.",
         uses: Object.freeze([
-            "Remover parafusos de painéis elétricos",
-            "Abrir grades de ventilação aparafusadas",
-            "Forçar trincos de armários frágeis"
+            "Soltar as tábuas presas no tronco rachado",
+            "Retirar os parafusos da proteção do motor",
+            "Ajudar a apertar as peças do barco"
         ]),
         consumption: "reusable"
     }),
     Object.freeze({
         id: "ITM_002",
         name: "Chave Inglesa",
-        description: "Uma chave ajustável de metal pesado com marcas de graxa. O mecanismo de rosca manual funciona perfeitamente.",
+        description: "Chave ajustável encontrada na bancada da oficina de Nilo, com marcas de graxa no cabo.",
         uses: Object.freeze([
-            "Girar válvulas emperradas de tubulações de gás, água ou vapor",
-            "Desatarraxar porcas grandes de trincos mecânicos e portões"
+            "Soltar as porcas que prendem o motor",
+            "Apertar as fixações durante a montagem"
         ]),
         consumption: "reusable"
     }),
     Object.freeze({
         id: "ITM_003",
         name: "Fita Isolante",
-        description: "Um rolo de fita adesiva preta emborrachada, essencial para reparos rápidos na fiação dos anos 80.",
+        description: "Rolo de fita preta guardado no armário de manutenção da rádio. Ainda tem material suficiente para um reparo.",
         uses: Object.freeze([
-            "Remendar fiação desencapada para restabelecer energia",
-            "Isolar circuitos curtos-circuitados em painéis de fusíveis"
+            "Isolar o trecho danificado do cabo do guincho"
         ]),
         consumption: "single-use"
     }),
     Object.freeze({
         id: "ITM_004",
         name: "Fusível de Cartucho",
-        description: "Um fusível cilíndrico de cerâmica com pontas de metal, usado em caixas de luz e quadros elétricos antigos.",
+        description: "Fusível de cerâmica encontrado no armário de manutenção da clínica.",
         uses: Object.freeze([
-            "Substituir peças queimadas em painéis elétricos para reativar elevadores, portões automáticos, iluminação ou maquinários industriais"
+            "Substituir o fusível queimado no painel do guincho"
         ]),
         consumption: "single-use"
     }),
     Object.freeze({
         id: "ITM_005",
         name: "Galão de Gasolina",
-        description: "Um galão plástico vermelho de 5 litros com um bico flexível. O líquido chacoalha pesadamente lá dentro.",
+        description: "Galão de reserva guardado na oficina, ao lado dos materiais de manutenção do cais.",
         uses: Object.freeze([
-            "Abastecer motores de geradores de energia secos",
-            "Abastecer motores de veículos para movê-los",
-            "Queimar obstáculos biológicos ou inflamáveis no mapa"
+            "Abastecer o motor de popa antes da partida"
         ]),
         consumption: "single-use"
     })

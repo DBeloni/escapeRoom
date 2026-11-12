@@ -242,14 +242,18 @@ body.touch-device #mobileControls {
 
 body.touch-device #controls {
     display: none;
-}@media (max-width: 700px), (pointer: coarse) {
+}
+
+/* Em computadores híbridos, teclado e mouse têm prioridade sobre touch. */
+@media (hover: hover) and (pointer: fine) {
     #mobileControls {
-        display: block;
+        display: none !important;
     }
 
     #controls {
-        display: none;
-    }}
+        display: block !important;
+    }
+}
 
 @media (max-width: 420px) {
     .mobile-joystick {
@@ -368,7 +372,7 @@ body.touch-device #controls {
 
 .horde-timer__segments {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 4px;
     margin: 0;
     padding: 0;

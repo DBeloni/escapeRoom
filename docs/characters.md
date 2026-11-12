@@ -6,7 +6,7 @@ Os personagens abaixo existem primeiro por meio de seus rastros. Não precisam a
 
 **O que fazia:** ajudava na rádio comunitária e conhecia os horários em que o sinal alcançava o cais e as casas mais afastadas.
 
-**O que fez durante a crise:** quando os avisos oficiais viraram gravações repetidas, passou a usar a frequência 04 para transmitir informações locais. Anotava nomes de quem tinha embarcado, de quem precisava de transporte e de quem ainda não tinha dado notícia.
+**O que fez durante a crise:** quando os avisos oficiais viraram gravações repetidas, passou a usar a frequência 04 (104,0 MHz) para transmitir informações locais. Anotava nomes de quem tinha embarcado, de quem precisava de transporte e de quem ainda não tinha dado notícia.
 
 **Como aparece na história:** cadernos de horários, folhas com nomes, gravações curtas e lembretes presos perto do rádio. As mensagens começam objetivas e ficam mais pessoais à medida que a evacuação falha.
 

@@ -3,31 +3,31 @@
 ## Regras
 
 - Capacidade máxima de cinco itens.
-- Cada ID pode aparecer uma única vez no inventário.
-- `ITM_001` (Chave de Fenda) e `ITM_002` (Chave Inglesa) são reutilizáveis.
-- `ITM_003` (Fita Isolante), `ITM_004` (Fusível de Cartucho) e `ITM_005` (Galão de Gasolina) são consumidos após uma interação bem-sucedida.
-- Uma tentativa inválida ou malsucedida nunca consome o item.
+- Cada item pode ser coletado uma única vez.
+- `ITM_001` (chave de fenda) e `ITM_002` (chave inglesa) são reutilizáveis.
+- `ITM_003` (fita isolante), `ITM_004` (fusível) e `ITM_005` (galão de gasolina) são consumidos após uma interação válida.
+- Uma tentativa inválida nunca consome um item.
 
-## Catálogo e contexto narrativo
+## Onde encontrar
 
-Os cinco itens pertencem ao cotidiano da Zona 04: manutenção das casas e da clínica, reparos da rádio comunitária e funcionamento do cais. Eles devem parecer ferramentas que alguém realmente teria guardado ou deixado para trás, não objetos criados exclusivamente para abrir portas.
+| Local | Objeto | Motivo |
+|---|---|---|
+| Casa 01 — residência | Chave de fenda | Ferramenta doméstica deixada sobre a bancada de apoio. |
+| Casa 02 — rádio | Fita isolante | Material guardado no armário de manutenção da rádio. |
+| Casa 03 — clínica | Fusível de cartucho | Peça guardada no armário de manutenção. |
+| Casa 05 — oficina | Chave inglesa | Ferramenta de Nilo, usada para motores e conexões. |
+| Casa 05 — oficina | Galão de gasolina | Combustível de reserva para o motor do barco. |
 
-As definições mecânicas estão em `js/systems/inventory/itemCatalog.js`. A página `pages/itens.html` apresenta o mesmo catálogo com descrições narrativas.
+A Casa 04 não tem item de inventário: nela o jogador recupera a lona e o cordame da maca, resolvendo o desafio das presilhas.
 
-| ID | Item | Função no universo | Tipo |
-|---|---|---|---|
-| `ITM_001` | Chave de Fenda | Acesso a tampas de inspeção e painéis simples. | Reutilizável |
-| `ITM_002` | Chave Inglesa | Manutenção de conexões, válvulas e equipamentos do cais. | Reutilizável |
-| `ITM_003` | Fita Isolante | Reparo provisório de cabos e conexões. | Consumível |
-| `ITM_004` | Fusível de Cartucho | Reposição de proteção elétrica em equipamento compatível. | Consumível |
-| `ITM_005` | Galão de Gasolina | Combustível para o gerador auxiliar ou motor de apoio. | Consumível |
+## Uso na fuga
 
-## Modelo de dados
+| ID | Uso implementado | Consumo |
+|---|---|---|
+| `ITM_001` | Soltar as tábuas do tronco rachado, retirar a proteção do motor e apertar as fixações do barco. | Reutilizável |
+| `ITM_002` | Soltar as porcas do motor e apertar as fixações do barco. | Reutilizável |
+| `ITM_003` | Isolar o cabo do guincho. | Uso único |
+| `ITM_004` | Substituir o fusível do guincho. | Uso único |
+| `ITM_005` | Abastecer o motor antes da partida. | Uso único |
 
-`createInventorySystem()` expõe operações independentes de cenário e interface: `add`, `get`, `has`, `remove`, `use` e `clear`. A função `use(itemId, applyToTarget)` chama a interação fornecida e só remove itens marcados como `single-use` quando essa interação retorna `true`.
-
-Os cinco itens estão colocados na Zona Costeira e podem ser coletados com `E` ou pelo botão touch `PEGAR`. As imagens vêm de `assets/itens/`. Interações dos itens com alvos de cenário ainda não estão ligadas ao mapa.
-
-## Regra narrativa
-
-A página de itens deve diferenciar **uso previsto** de **uso já implementado**. Não prometa que uma ferramenta abre uma porta, ativa o rádio ou repara o gerador enquanto essa interação não existir no jogo.
+As imagens dos objetos continuam em `assets/itens/`. O inventário mostra somente os ícones e mantém a capacidade de cinco espaços.

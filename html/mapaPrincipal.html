@@ -7,35 +7,36 @@
     <link rel="icon" type="image/png" href="../assets/logo.png">
     <link rel="stylesheet" href="../css/ui.css">
     <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/puzzles.css">
 </head>
 <body>
     <main id="gameContainer">
         <canvas id="gameCanvas"></canvas>
 
-        <aside id="hordeTimer" class="horde-timer" hidden aria-label="Temporizador das hordas">
+        <aside id="hordeTimer" class="horde-timer" hidden aria-label="Tempo restante até a radiação matar o personagem">
             <div class="horde-timer__topline">
-                <span class="horde-timer__eyebrow">ALERTA DE AMEAÇA</span>
-                <span id="hordePhaseCount" class="horde-timer__phase-count">FASE 01 / 04</span>
+                <span class="horde-timer__eyebrow">ALERTA DE RADIAÇÃO</span>
             </div>
             <div class="horde-timer__main">
                 <div class="horde-timer__description">
-                    <p id="hordePhaseLabel">Tempo até a 1ª horda</p>
-                    <span id="hordeTimerStatus" class="horde-timer__status">AMEAÇA EM APROXIMAÇÃO</span>
+                    <p id="hordePhaseLabel">Tempo até a radiação matar</p>
+                    <span id="hordeTimerStatus" class="horde-timer__status">EXPOSIÇÃO CRÍTICA</span>
                 </div>
-                <time id="hordeCountdown" class="horde-timer__countdown" datetime="PT2M">02:00</time>
+                <time id="hordeCountdown" class="horde-timer__countdown" datetime="PT5M">05:00</time>
             </div>
             <ol class="horde-timer__segments" aria-hidden="true">
                 <li data-horde-segment data-state="current"></li>
-                <li data-horde-segment data-state="upcoming"></li>
-                <li data-horde-segment data-state="upcoming"></li>
-                <li data-horde-segment data-state="upcoming"></li>
             </ol>
         </aside>
 
+
         <aside id="inventory" aria-label="Inventário">
-            <div class="inventory-heading"><strong>Itens</strong><span id="inventoryCount">0/5</span></div>
-            <ul id="inventoryItems" aria-live="polite"><li class="inventory-empty">Inventário vazio</li></ul>
-            <small id="inventoryMessage" aria-live="polite">E para coletar itens próximos</small>
+            <div class="inventory-heading">
+                <span class="inventory-heading__label">INVENTÁRIO</span>
+                <span id="inventoryCount" class="inventory-count">0/5</span>
+            </div>
+            <ul id="inventoryItems" aria-label="Itens carregados" aria-live="polite"></ul>
+            <span id="inventoryMessage" class="inventory-sr-only" aria-live="polite"></span>
         </aside>
 
         <div id="controls">
@@ -52,12 +53,19 @@
             </div>
 
             <div class="mobile-actions">
-                <button id="mobilePickup" class="mobile-action" type="button" aria-label="Coletar item próximo">PEGAR</button>
+                <button id="mobilePickup" class="mobile-action" type="button" aria-label="Interagir ou coletar item próximo">AÇÃO</button>
                 <button id="mobileDebug" class="mobile-action" type="button" aria-label="Alternar modo debug">DEBUG</button>
                 <button id="mobileBack" class="mobile-action" type="button" aria-label="Voltar ou sair da casa">VOLTAR</button>
             </div>
         </section>
 
+        <div id="interactionPrompt" class="interaction-prompt" hidden aria-live="polite">
+            <span class="interaction-prompt__key">E</span>
+            <span id="interactionPromptText">Interagir</span>
+            <small>OU TOQUE EM AÇÃO</small>
+        </div>
+
+        <section id="puzzleOverlay" class="puzzle-overlay" hidden></section>
         <div id="loading">Carregando...</div>
 
         <section id="gameOver" hidden aria-labelledby="gameOverTitle">
@@ -72,6 +80,7 @@
     </main>
 
     <script src="../js/systems/timer/hordeTimer.js"></script>
+    <script src="../js/systems/puzzles/boatEscapePuzzles.js"></script>
     <script src="../js/script.js"></script>
 </body>
 </html>
