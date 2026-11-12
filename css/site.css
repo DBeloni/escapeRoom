@@ -280,8 +280,8 @@ textarea:focus-visible {
 }
 
 .header-play:hover {
-    background: var(--rust);
-    color: #fff
+    background: var(--rust-light);
+    transform: translateY(-1px);
 }
 
 .nav-toggle {
@@ -1083,10 +1083,20 @@ textarea:focus-visible {
 
 .item-entry {
     display: grid;
-    grid-template-columns: 55px 1fr;
-    gap: 19px;
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 16px;
     padding: 23px 0;
     border-bottom: 1px solid var(--line)
+}
+
+.item-art {
+    width: 84px;
+    height: 84px;
+    display: block;
+    object-fit: contain;
+    padding: 4px;
+    border: 1px solid var(--line);
+    background: rgba(0, 0, 0, .12)
 }
 
 .item-glyph {
@@ -1179,7 +1189,7 @@ textarea:focus-visible {
 
 .step-list li>span {
     font: 700 22px var(--display);
-    color: #9c5940
+    color: var(--rust)
 }
 
 .step-list strong {
@@ -1517,6 +1527,16 @@ details p {
     background: rgba(164, 94, 67, .08);
     font: 700 40px var(--display);
     color: var(--rust-light)
+}
+
+.member-photo {
+    width: 86px;
+    height: 86px;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    margin: 35px 0 15px;
+    border: 1px solid rgba(194, 122, 87, .55)
 }
 
 .team-member h2 {
@@ -2346,8 +2366,14 @@ details p {
     }
 
     .item-entry {
-        grid-template-columns: 43px 1fr;
+        grid-template-columns: 56px minmax(0, 1fr);
         gap: 13px
+    }
+
+    .item-art {
+        width: 56px;
+        height: 56px;
+        padding: 3px
     }
 
     .item-glyph {
