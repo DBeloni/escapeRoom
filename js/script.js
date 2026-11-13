@@ -1986,18 +1986,46 @@ function atualizarAfogamento(segundos) {
     }
 }
 
-function mostrarGameOver() {
+function finalizarJogo(final) {
+    if (estadoAfogamento.fase === "game-over") return;
+
     window.boatPuzzles?.close();
     estadoAfogamento.fase = "game-over";
     window.hordeTimer?.stop();
     teclas = {};
     limparEntradaMobile();
 
-    if (telaGameOver) {
-        telaGameOver.hidden = false;
+    const titulo = document?.querySelector(".game-over-title");              // AVISO IMPORTANTE
+    const descricao = telaGameOver?.querySelector(".game-over-description"); // NÃO TOCAR NISSO
+    const chamada = telaGameOver?.querySelector(".game-over-kicker");        // TÁ FUNCIONANDO BEM
+    const reiniciar = document.querySelector(".game-over-button");           // NÃO ALTERAR NADA AQUI, POR FAVOR
+
+    if (final === "secreto") {
+        if (chamada) chamada.textContent = "você encontrou um final secreto!";
+        if (titulo) titulo.textContent = "FINAL SECRETO";
+        if (descricao) descricao.textContent =
+            "Você achou uma passagem secreta para sair da ilha!";
+        if (reiniciar) reiniciar.textContent = "Jogar novamente";
+    } else if (final === "infectado") {
+        if (chamada) chamada.textContent = "a doença se espalhou mais rápido do que você imaginava";
+        if (titulo) titulo.textContent = "VOCÊ FOI INFECTADO";
+        if (descricao) descricao.textContent =
+            "O tempo chegou ao fim, você foi infectado!";
+        if (reiniciar) reiniciar.textContent = "Tentar novamente";
+    } else {
+        if (chamada) chamada.textContent = "o mar foi mais fundo do que parecia";
+        if (titulo) titulo.textContent = "GAME OVER";
+        if (descricao) descricao.textContent = "o mar era muito fundo, você se afogou!";
+        if (reiniciar) reiniciar.textContent = "tentar novamente";
     }
 
+    if (telaGameOver) telaGameOver.hidden = false;
     botaoReiniciar?.focus();
+}
+
+// Mantém o nome antigo usado pelo sistema de afogamento.
+function mostrarGameOver() {
+    finalizarJogo("afogamento");
 }
 
 function reiniciarJogo() {
@@ -2020,6 +2048,16 @@ function reiniciarJogo() {
     if (telaGameOver) {
         telaGameOver.hidden = true;
     }
+
+    // Restaura o texto padrão para a próxima partida.
+    const titulo = document?.querySelector(".gameOverTitle");
+    const descricao = telaGameOver?.querySelector(".game-over-description");
+    const chamada = telaGameOver?.querySelector(".game-over-kicker");
+    const reiniciar = document?.querySelector(".game-over-button");
+    if (chamada) chamada.textContent = "o mar foi mais fundo do que parecia";
+    if (titulo) titulo.textContent = "GAME OVER";
+    if (descricao) descricao.textContent = "o mar era muito fundo, você se afogou!";
+    if (reiniciar) reiniciar.textContent = "tentar novamente";
 
     atualizarCamera();
 }
@@ -2267,6 +2305,20 @@ function moverJogador(segundos) {
         vertical *
         velocidadeAtual *
         segundos;
+
+    // Final secreto: alcançar o canto superior esquerdo do mapa externo.
+    // A verificação ocorre antes da colisão com a borda, que normalmente
+    // impediria o personagem de ultrapassar os limites do cenário.
+    if (
+        cenarioAtual === "cidade" &&
+        novoX <= 28 &&
+        novoY <= 28
+    ) {
+        jogador.x = Math.max(0, novoX);
+        jogador.y = Math.max(0, novoY);
+        finalizarJogo("secreto");
+        return;
+    }
 
     // Saída pela porta inferior do interior da Zona Costeira.
     if (

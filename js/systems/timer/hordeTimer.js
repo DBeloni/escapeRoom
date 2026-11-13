@@ -106,6 +106,8 @@
             remainingSeconds = 0;
             running = false;
             finished = true;
+            // O limite de cinco minutos encerra a partida por infecção.
+            window.finalizarJogo?.("infectado");
         }
         render();
     }

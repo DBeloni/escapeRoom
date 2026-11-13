@@ -574,7 +574,8 @@ textarea:focus-visible {
     font-size: 20px;
     line-height: 1.55;
     font-weight: 500;
-    margin: 0 0 17px color: var(--white)
+    margin: 0 0 17px;
+    color: var(--white)
 }
 
 .intro-text>p:not(.large-copy) {
