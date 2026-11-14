@@ -1,0 +1,20 @@
+:root {
+    --ink: #000000;
+    --ink-2: #202621;
+    --panel: #000000;
+    --paper: #121212;
+    --paper-2: #c9c5b7;
+    --muted: #92988b;
+    --line: rgba(216, 212, 198, .17);
+    --line-dark: rgba(23, 27, 24, .18);
+    --rust: #d62b2b;
+    --rust-light: #d62b2be1;
+    --olive: #78836a;
+    --signal: #c8ad70;
+    --white: #f0eee5;
+    --mono: "IBM Plex Mono", monospace;
+    --display: "Barlow Condensed", sans-serif;
+    --body: "Inter", sans-serif;
+    --container: 1160px;
+    --ease: cubic-bezier(.2, .7, .2, 1)
+}

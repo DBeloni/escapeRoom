@@ -1,24 +1,5 @@
 /* QUARANTINE PROTOCOL — institutional website */
-:root {
-    --ink: #000000;
-    --ink-2: #202621;
-    --panel: #000000;
-    --paper: #121212;
-    --paper-2: #c9c5b7;
-    --muted: #92988b;
-    --line: rgba(216, 212, 198, .17);
-    --line-dark: rgba(23, 27, 24, .18);
-    --rust: #d62b2b;
-    --rust-light: #d62b2be1;
-    --olive: #78836a;
-    --signal: #c8ad70;
-    --white: #f0eee5;
-    --mono: "IBM Plex Mono", monospace;
-    --display: "Barlow Condensed", sans-serif;
-    --body: "Inter", sans-serif;
-    --container: 1160px;
-    --ease: cubic-bezier(.2, .7, .2, 1)
-}
+@import "root.css";
 
 * {
     box-sizing: border-box
@@ -46,7 +27,7 @@ body::before {
     pointer-events: none;
     z-index: -1;
     opacity: .13;
-    background-image: linear-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .025) 1px, transparent 1px);
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
     background-size: 5px 5px
 }
 
@@ -83,7 +64,7 @@ textarea:focus-visible {
 
 ::selection {
     background: var(--rust);
-    color: #fff
+    color: var(--white)
 }
 
 .container {
@@ -128,15 +109,15 @@ textarea:focus-visible {
     height: 7px;
     border-radius: 50%;
     background: var(--rust);
-    box-shadow: 0 0 0 3px rgba(177, 161, 111, .12);
+    box-shadow: 0 0 0 3px var(--line);
     vertical-align: middle;
     margin-right: 8px
 }
 
 .topline {
-    background: #101310;
-    border-bottom: 1px solid rgba(255, 255, 255, .07);
-    color: #9ba094;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
     font: 10px var(--mono);
     letter-spacing: .08em
 }
@@ -149,14 +130,14 @@ textarea:focus-visible {
 }
 
 .topline-right {
-    color: #687166
+    color: var(--olive)
 }
 
 .site-header {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(23, 27, 24, .96);
+    background: var(--paper);
     border-bottom: 1px solid var(--line);
     backdrop-filter: blur(12px)
 }
@@ -210,7 +191,7 @@ textarea:focus-visible {
     margin-top: 5px;
     font: 9px var(--mono);
     letter-spacing: .09em;
-    color: #92998b
+    color: var(--muted)
 }
 
 .site-nav {
@@ -229,7 +210,7 @@ textarea:focus-visible {
 .site-nav a {
     display: block;
     padding: 29px 0 25px;
-    color: #aeb3a7;
+    color: var(--paper-2);
     font: 500 12px var(--body);
     position: relative;
     transition: color .2s
@@ -306,7 +287,7 @@ textarea:focus-visible {
     display: flex;
     align-items: center;
     overflow: hidden;
-    background: #111712
+    background: var(--paper)
 }
 
 .hero-image,
@@ -324,7 +305,7 @@ textarea:focus-visible {
 }
 
 .hero-shade {
-    background: linear-gradient(90deg, rgba(14, 18, 15, .98) 0%, rgba(14, 18, 15, .9) 35%, rgba(14, 18, 15, .45) 72%, rgba(14, 18, 15, .55) 100%), linear-gradient(0deg, var(--ink) 0%, transparent 25%, transparent 80%, rgba(0, 0, 0, .3))
+    background: linear-gradient(90deg, var(--paper) 0%, var(--paper) 35%, var(--line-dark) 72%, var(--line-dark) 100%), linear-gradient(0deg, var(--ink) 0%, transparent 25%, transparent 80%, var(--line-dark))
 }
 
 .hero-layout {
@@ -353,7 +334,7 @@ textarea:focus-visible {
     margin: 27px 0 19px;
     font: 11px var(--mono);
     letter-spacing: .14em;
-    color: #b4b8a9
+    color: var(--paper-2)
 }
 
 .hero-overline span {
@@ -374,7 +355,7 @@ textarea:focus-visible {
 
 .hero-lead {
     max-width: 540px;
-    color: #c0c3b8;
+    color: var(--paper-2);
     font-size: 16px;
     line-height: 1.8;
     margin: 27px 0 28px
@@ -406,7 +387,7 @@ textarea:focus-visible {
 
 .btn-primary {
     background: var(--rust);
-    color: #fff;
+    color: var(--white);
     border-color: var(--rust)
 }
 
@@ -421,14 +402,14 @@ textarea:focus-visible {
 }
 
 .btn-ghost {
-    border-color: rgba(255, 255, 255, .3);
+    border-color: var(--line);
     color: var(--white);
-    background: rgba(20, 24, 20, .3)
+    background: var(--line-dark)
 }
 
 .btn-ghost:hover {
     border-color: var(--white);
-    background: rgba(255, 255, 255, .08)
+    background: var(--line)
 }
 
 .btn-dark {
@@ -446,7 +427,7 @@ textarea:focus-visible {
     margin-top: 58px;
     padding-top: 17px;
     border-top: 1px solid var(--line);
-    color: #858d80;
+    color: var(--muted);
     font: 9px var(--mono);
     letter-spacing: .1em
 }
@@ -458,8 +439,8 @@ textarea:focus-visible {
 
 .hero-note {
     padding: 22px;
-    background: rgba(19, 24, 19, .78);
-    border: 1px solid rgba(216, 212, 198, .25);
+    background: var(--paper);
+    border: 1px solid var(--line);
     backdrop-filter: blur(8px);
     align-self: end
 }
@@ -471,7 +452,7 @@ textarea:focus-visible {
 
 .hero-note>small {
     font: 10px var(--mono);
-    color: #8f978b
+    color: var(--muted)
 }
 
 .note-line {
@@ -484,14 +465,14 @@ textarea:focus-visible {
     display: block;
     margin-top: 9px;
     font: 11px var(--mono);
-    color: #c3c5b8
+    color: var(--paper-2)
 }
 
 .hero-index {
     position: absolute;
     right: 24px;
     bottom: 18px;
-    color: #747e72;
+    color: var(--olive);
     font: 9px var(--mono);
     letter-spacing: .08em
 }
@@ -503,7 +484,7 @@ textarea:focus-visible {
 .ticker {
     overflow: hidden;
     background: var(--rust);
-    color: #fff
+    color: var(--white)
 }
 
 .ticker-track {
@@ -520,7 +501,7 @@ textarea:focus-visible {
 
 .ticker-track b {
     font-size: 13px;
-    color: #e0b49b
+    color: var(--paper-2)
 }
 
 @keyframes ticker {
@@ -579,7 +560,7 @@ textarea:focus-visible {
 }
 
 .intro-text>p:not(.large-copy) {
-    color: #adadad;
+    color: var(--paper-2);
     line-height: 1.9
 }
 
@@ -606,7 +587,7 @@ textarea:focus-visible {
 }
 
 .field-report {
-    background: #1b1a1a
+    background: var(--paper)
 }
 
 .section-heading {
@@ -624,7 +605,7 @@ textarea:focus-visible {
 .section-index {
     font: 10px var(--mono);
     letter-spacing: .1em;
-    color: #838c7e
+    color: var(--muted)
 }
 
 .report-grid {
@@ -658,7 +639,7 @@ textarea:focus-visible {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(0deg, rgba(15, 19, 16, .96), rgba(15, 19, 16, .05) 90%)
+    background: linear-gradient(0deg, var(--paper), var(--line-dark) 90%)
 }
 
 .report-image img {
@@ -685,7 +666,7 @@ textarea:focus-visible {
 .report-body p {
     max-width: 360px;
     margin: 0;
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 13px
 }
 
@@ -703,11 +684,11 @@ textarea:focus-visible {
     top: 15px;
     font: 700 62px var(--display);
 
-    color: rgba(255, 255, 255, .08)
+    color: var(--line)
 }
 
 .dark-band {
-    background: #101410;
+    background: var(--paper);
     border-block: 1px solid var(--line)
 }
 
@@ -720,7 +701,7 @@ textarea:focus-visible {
 
 .band-layout p:not(.eyebrow) {
     max-width: 480px;
-    color: #aeb5a8;
+    color: var(--paper-2);
     margin: 0 0 25px
 }
 
@@ -729,7 +710,7 @@ textarea:focus-visible {
 }
 
 .home-facts {
-    background: #d0ccbe;
+    background: var(--paper-2);
     color: var(--ink)
 }
 
@@ -744,7 +725,7 @@ textarea:focus-visible {
 }
 
 .muted-copy {
-    color: #5c6257;
+    color: var(--olive);
     max-width: 340px
 }
 
@@ -772,17 +753,16 @@ textarea:focus-visible {
 
 .facts-list small {
     font: 10px var(--mono);
-    color: #6c7167
+    color: var(--olive)
 }
 
 .page-intro {
     padding: 70px 0 66px;
     min-height: 360px;
-    background:
-        linear-gradient(90deg,
-            rgba(0, 0, 0, .95) 0%,
-            rgba(0, 0, 0, .88) 20%,
-            rgba(0, 0, 0, .72) 60%,
+    background: linear-gradient(90deg,
+            var(--ink) 0%,
+            var(--ink) 20%,
+            var(--ink) 60%,
             transparent 75%
         ),
         url('../assets/midnight-outbreak.png') center 0% / 100% auto no-repeat;
@@ -805,13 +785,13 @@ textarea:focus-visible {
     gap: 10px;
     align-items: center;
     margin-bottom: 25px;
-    color: #798276;
+    color: var(--olive);
     font: 9px var(--mono);
     letter-spacing: .12em
 }
 
 .breadcrumb a {
-    color: #b1b8a9
+    color: var(--paper-2)
 }
 
 .breadcrumb span:nth-child(2) {
@@ -830,7 +810,7 @@ textarea:focus-visible {
 
 .intro-copy {
     max-width: 660px;
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 15px;
     margin: 15px 0 0;
     line-height: 1.8
@@ -862,7 +842,7 @@ textarea:focus-visible {
 .file-stamp b {
     font: 10px var(--mono);
     margin-top: 10px;
-    color: #9ca494
+    color: var(--muted)
 }
 
 .story-layout {
@@ -878,7 +858,7 @@ textarea:focus-visible {
 }
 
 .story-copy p:not(.eyebrow) {
-    color: #aeb5a8;
+    color: var(--paper-2);
     line-height: 1.9
 }
 
@@ -890,7 +870,7 @@ textarea:focus-visible {
 .story-visual {
     margin: 0;
     border: 1px solid var(--line);
-    background: #111;
+    background: var(--paper);
     padding: 9px
 }
 
@@ -903,7 +883,7 @@ textarea:focus-visible {
 
 .story-visual figcaption {
     padding: 13px 8px 5px;
-    color: #90988b;
+    color: var(--muted);
     font: 9px var(--mono);
     letter-spacing: .06em
 }
@@ -917,7 +897,7 @@ textarea:focus-visible {
 }
 
 .paper-section .section-index {
-    color: #777b70
+    color: var(--olive)
 }
 
 .timeline {
@@ -947,13 +927,13 @@ textarea:focus-visible {
 .timeline p,
 .route-list p {
     margin: 3px 0 0;
-    color: #5d6258
+    color: var(--olive)
 }
 
 .timeline small,
 .route-list b {
     font: 9px var(--mono);
-    color: #777c70;
+    color: var(--olive);
     letter-spacing: .08em;
     text-align: right
 }
@@ -971,7 +951,7 @@ textarea:focus-visible {
     margin-top: 22px;
     font: 9px var(--mono);
     letter-spacing: .12em;
-    color: #92998b;
+    color: var(--muted);
     font-style: normal
 }
 
@@ -987,7 +967,7 @@ textarea:focus-visible {
 
 .location-card {
     border: 1px solid var(--line);
-    background: #202720
+    background: var(--ink-2)
 }
 
 .location-card img {
@@ -1007,7 +987,7 @@ textarea:focus-visible {
 }
 
 .location-card p {
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 13px
 }
 
@@ -1032,9 +1012,9 @@ textarea:focus-visible {
 .inline-note {
     padding: 16px 19px;
     margin: 30px 0 10px;
-    background: rgba(23, 27, 24, .06);
+    background: var(--line-dark);
     border-left: 3px solid var(--rust);
-    color: #555a50;
+    color: var(--olive);
     font-size: 13px
 }
 
@@ -1050,7 +1030,7 @@ textarea:focus-visible {
 .catalog-toolbar label {
     font: 9px var(--mono);
     letter-spacing: .1em;
-    color: #aeb5a8;
+    color: var(--paper-2);
     white-space: nowrap
 }
 
@@ -1058,7 +1038,7 @@ textarea:focus-visible {
     flex: 1;
     min-width: 0;
     border: 0;
-    border-bottom: 1px solid #596255;
+    border-bottom: 1px solid var(--olive);
     background: transparent;
     padding: 8px;
     color: var(--white);
@@ -1072,7 +1052,7 @@ textarea:focus-visible {
 
 .catalog-toolbar>span {
     font: 9px var(--mono);
-    color: #7f897b;
+    color: var(--olive);
     white-space: nowrap
 }
 
@@ -1097,7 +1077,7 @@ textarea:focus-visible {
     object-fit: contain;
     padding: 4px;
     border: 1px solid var(--line);
-    background: rgba(0, 0, 0, .12)
+    background: var(--line-dark)
 }
 
 .item-glyph {
@@ -1105,7 +1085,7 @@ textarea:focus-visible {
     height: 50px;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(194, 122, 87, .5);
+    border: 1px solid var(--rust-light);
     color: var(--rust-light);
     font: 700 25px var(--display)
 }
@@ -1126,7 +1106,7 @@ textarea:focus-visible {
 .item-entry p,
 .puzzle-list p {
     font-size: 12px;
-    color: #aeb5a8;
+    color: var(--paper-2);
     margin: 0 0 10px
 }
 
@@ -1141,20 +1121,20 @@ textarea:focus-visible {
 
 .item-entry dt,
 .ending dt {
-    color: #7f897b
+    color: var(--olive)
 }
 
 .item-entry dd,
 .ending dd {
     margin: 0;
-    color: #c3c8bc
+    color: var(--paper-2)
 }
 
 .empty-state {
     grid-column: 1/-1;
     padding: 28px;
     text-align: center;
-    color: #aeb5a8;
+    color: var(--paper-2);
     border: 1px dashed var(--line)
 }
 
@@ -1171,7 +1151,7 @@ textarea:focus-visible {
 
 .how-items .large-copy {
     font-size: 18px;
-    color: #50564d
+    color: var(--olive)
 }
 
 .step-list {
@@ -1199,7 +1179,7 @@ textarea:focus-visible {
 
 .step-list p {
     margin: 2px 0 0;
-    color: #62675e;
+    color: var(--olive);
     font-size: 12px
 }
 
@@ -1228,7 +1208,7 @@ textarea:focus-visible {
 
 .puzzle-list article>b {
     font: 10px var(--mono);
-    color: #70796d;
+    color: var(--olive);
     text-align: right
 }
 
@@ -1244,7 +1224,7 @@ textarea:focus-visible {
 }
 
 .chain-layout>div:first-child>p:not(.eyebrow) {
-    color: #5d6258;
+    color: var(--olive);
     max-width: 380px
 }
 
@@ -1260,14 +1240,14 @@ textarea:focus-visible {
 
 .chain-flow span {
     font: 10px var(--mono);
-    color: #9c5940;
+    color: var(--olive);
     margin-right: 15px
 }
 
 .chain-flow i {
     display: block;
     text-align: center;
-    color: #9c5940;
+    color: var(--olive);
     font-style: normal
 }
 
@@ -1280,7 +1260,7 @@ textarea:focus-visible {
 .ending {
     position: relative;
     padding: 27px;
-    background: #222a23;
+    background: var(--ink-2);
     border: 1px solid var(--line);
     min-height: 270px;
     overflow: hidden
@@ -1295,7 +1275,7 @@ textarea:focus-visible {
     right: 20px;
     top: 0;
     font: 800 100px var(--display);
-    color: rgba(255, 255, 255, .045)
+    color: var(--line)
 }
 
 .ending>small {
@@ -1312,7 +1292,7 @@ textarea:focus-visible {
 
 .ending p {
     position: relative;
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 13px;
     max-width: 450px
 }
@@ -1372,8 +1352,8 @@ kbd {
     height: 34px;
     display: grid;
     place-items: center;
-    border: 1px solid #596255;
-    background: #202720;
+    border: 1px solid var(--olive);
+    background: var(--ink-2);
     color: var(--white);
     font: 12px var(--mono)
 }
@@ -1381,13 +1361,13 @@ kbd {
 .keymap>div>span {
     margin-left: auto;
     max-width: 55%;
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 12px
 }
 
 .manual-aside {
     padding: 30px;
-    background: #252d26;
+    background: var(--ink-2);
     border: 1px solid var(--line);
     border-top: 3px solid var(--rust)
 }
@@ -1398,7 +1378,7 @@ kbd {
 }
 
 .manual-aside p {
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 13px
 }
 
@@ -1435,7 +1415,7 @@ kbd {
 .step-grid p,
 .process-grid p {
     font-size: 12px;
-    color: #5d6258
+    color: var(--olive)
 }
 
 .time-panel {
@@ -1452,7 +1432,7 @@ kbd {
 
 .time-panel>div:first-child>p:last-child {
     max-width: 480px;
-    color: #aeb5a8
+    color: var(--paper-2)
 }
 
 .faq-stack details {
@@ -1488,7 +1468,7 @@ details[open] summary::after {
 }
 
 details p {
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 13px;
     margin-bottom: 0
 }
@@ -1502,7 +1482,7 @@ details p {
 .team-member {
     padding: 28px;
     border: 1px solid var(--line);
-    background: #202720
+    background: var(--ink-2)
 }
 
 .member-top {
@@ -1510,7 +1490,7 @@ details p {
     justify-content: space-between;
     font: 9px var(--mono);
     letter-spacing: .12em;
-    color: #8e988a
+    color: var(--muted)
 }
 
 .member-top b {
@@ -1524,8 +1504,8 @@ details p {
     display: grid;
     place-items: center;
     margin: 35px 0 15px;
-    border: 1px solid rgba(194, 122, 87, .55);
-    background: rgba(164, 94, 67, .08);
+    border: 1px solid var(--rust-light);
+    background: var(--line-dark);
     font: 700 40px var(--display);
     color: var(--rust-light)
 }
@@ -1537,7 +1517,7 @@ details p {
     object-fit: cover;
     object-position: center;
     margin: 35px 0 15px;
-    border: 1px solid rgba(194, 122, 87, .55)
+    border: 1px solid var(--rust-light)
 }
 
 .team-member h2 {
@@ -1553,7 +1533,7 @@ details p {
 
 .team-member>p:last-child {
     max-width: 430px;
-    color: #aeb5a8;
+    color: var(--paper-2);
     font-size: 13px
 }
 
@@ -1568,7 +1548,7 @@ details p {
     justify-content: space-between;
     gap: 25px;
     padding: 22px;
-    background: #c5c1b3;
+    background: var(--paper-2);
     border: 1px solid var(--line-dark)
 }
 
@@ -1579,7 +1559,7 @@ details p {
 }
 
 .repo-strip .micro-label {
-    color: #8b503c
+    color: var(--olive)
 }
 
 .repo-strip strong {
@@ -1598,7 +1578,7 @@ details p {
     min-height: 235px;
     padding: 25px;
     border: 1px solid var(--line);
-    background: #202720
+    background: var(--ink-2)
 }
 
 .stack-grid article>span {
@@ -1614,7 +1594,7 @@ details p {
 
 .stack-grid article p {
     font-size: 13px;
-    color: #aeb5a8
+    color: var(--paper-2)
 }
 
 .stack-grid article small {
@@ -1623,7 +1603,7 @@ details p {
     left: 25px;
     font: 9px var(--mono);
     letter-spacing: .12em;
-    color: #798477
+    color: var(--olive)
 }
 
 .architecture {
@@ -1650,7 +1630,7 @@ details p {
 
 .architecture small {
     font: 10px var(--mono);
-    color: #777c70
+    color: var(--olive)
 }
 
 .tech-bottom {
@@ -1665,7 +1645,7 @@ details p {
 }
 
 .tech-bottom p {
-    color: #aeb5a8;
+    color: var(--paper-2);
     margin: 0 0 25px;
     font-size: 13px
 }
@@ -1679,7 +1659,7 @@ details p {
 .gallery-item {
     padding: 0;
     border: 1px solid var(--line);
-    background: #202720;
+    background: var(--ink-2);
     text-align: left;
     color: var(--white);
     cursor: zoom-in;
@@ -1732,7 +1712,7 @@ details p {
 }
 
 .gallery-note p {
-    color: #5d6258
+    color: var(--olive)
 }
 
 .lightbox {
@@ -1741,12 +1721,12 @@ details p {
     max-height: 90vh;
     padding: 45px 18px 18px;
     border: 1px solid var(--line);
-    background: #111712;
+    background: var(--paper);
     color: var(--white)
 }
 
 .lightbox::backdrop {
-    background: rgba(0, 0, 0, .88);
+    background: var(--ink);
     backdrop-filter: blur(5px)
 }
 
@@ -1760,7 +1740,7 @@ details p {
     margin: 12px 0 0;
     text-align: center;
     font: 10px var(--mono);
-    color: #aeb5a8
+    color: var(--paper-2)
 }
 
 .lightbox-close {
@@ -1769,7 +1749,7 @@ details p {
     top: 8px;
     border: 0;
     background: transparent;
-    color: white;
+    color: var(--white);
     font-size: 28px;
     cursor: pointer
 }
@@ -1787,7 +1767,7 @@ details p {
 }
 
 .contact-copy>p:not(.eyebrow) {
-    color: #aeb5a8;
+    color: var(--paper-2);
     max-width: 340px
 }
 
@@ -1803,7 +1783,7 @@ details p {
 .contact-channel small {
     display: block;
     font: 9px var(--mono);
-    color: #838d7f
+    color: var(--muted)
 }
 
 .contact-channel a {
@@ -1814,14 +1794,14 @@ details p {
     margin-top: 25px;
     padding: 14px;
     border-left: 2px solid var(--signal);
-    background: rgba(200, 173, 112, .07);
+    background: var(--line);
     font: 10px/1.7 var(--mono);
-    color: #c0b991
+    color: var(--signal)
 }
 
 .contact-form-wrap {
     border: 1px solid var(--line);
-    background: #202720
+    background: var(--ink-2)
 }
 
 .form-heading {
@@ -1832,7 +1812,7 @@ details p {
     border-bottom: 1px solid var(--line);
     font: 9px var(--mono);
     letter-spacing: .08em;
-    color: #90998b
+    color: var(--muted)
 }
 
 .form-heading>span:last-child {
@@ -1854,7 +1834,7 @@ details p {
     flex-direction: column;
     gap: 7px;
     font: 10px var(--mono);
-    color: #b8beb1
+    color: var(--paper-2)
 }
 
 .form-grid input:not([type=radio]):not([type=checkbox]),
@@ -1863,8 +1843,8 @@ details p {
     width: 100%;
     min-height: 44px;
     padding: 11px 12px;
-    border: 1px solid #4a554a;
-    background: #171d18;
+    border: 1px solid var(--olive);
+    background: var(--paper);
     color: var(--white);
     font: 12px var(--body);
     border-radius: 0
@@ -1876,7 +1856,7 @@ details p {
 
 .form-grid input::placeholder,
 .form-grid textarea::placeholder {
-    color: #687267
+    color: var(--olive)
 }
 
 .form-wide {
@@ -1891,7 +1871,7 @@ details p {
 
 .form-grid legend {
     font: 10px var(--mono);
-    color: #b8beb1;
+    color: var(--paper-2);
     margin-bottom: 10px
 }
 
@@ -1901,7 +1881,7 @@ details p {
     gap: 8px;
     margin-right: 18px;
     font: 11px var(--body);
-    color: #aeb5a8
+    color: var(--paper-2)
 }
 
 .choice input {
@@ -1910,7 +1890,7 @@ details p {
 
 .form-note {
     font-size: 10px;
-    color: #7f897b;
+    color: var(--olive);
     margin: 12px 0 0
 }
 
@@ -1922,7 +1902,7 @@ details p {
 }
 
 .site-footer {
-    background: #101410;
+    background: var(--paper);
     border-top: 1px solid var(--line);
     padding-top: 55px
 }
@@ -1936,7 +1916,7 @@ details p {
 
 .footer-about>p {
     max-width: 300px;
-    color: #899286;
+    color: var(--muted);
     font-size: 12px
 }
 
@@ -1947,7 +1927,7 @@ details p {
 .footer-status {
     font: 9px var(--mono);
     letter-spacing: .08em;
-    color: #899286
+    color: var(--muted)
 }
 
 .footer-main h2 {
@@ -1966,7 +1946,7 @@ details p {
 }
 
 .footer-main li a {
-    color: #8e978a;
+    color: var(--muted);
     font-size: 11px;
     transition: color .2s
 }
@@ -1987,7 +1967,7 @@ details p {
 
 .footer-access p {
     font-size: 11px;
-    color: #899286
+    color: var(--muted)
 }
 
 .footer-access .text-link {
@@ -2003,11 +1983,11 @@ details p {
     border-top: 1px solid var(--line);
     font: 9px var(--mono);
     letter-spacing: .06em;
-    color: #687267
+    color: var(--olive)
 }
 
 .footer-bottom a {
-    color: #a6ad9e
+    color: var(--muted)
 }
 
 .footer-bottom a:hover {
@@ -2080,7 +2060,7 @@ details p {
         right: 0;
         top: 100%;
         padding: 12px 18px 20px;
-        background: #171b18;
+        background: var(--paper);
         border-bottom: 1px solid var(--line)
     }
 

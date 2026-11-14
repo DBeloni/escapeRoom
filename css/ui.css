@@ -1,8 +1,10 @@
+@import "root.css";
+
 #controls,
 #loading {
     position: absolute;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.72);
+    color: var(--white);
+    background: var(--ink);
     border-radius: 6px;
     z-index: 10;
 }
@@ -14,11 +16,11 @@
     z-index: 10;
     width: min(258px, calc(100vw - 24px));
     padding: 10px 11px 11px;
-    border: 1px solid rgba(218, 207, 184, 0.24);
+    border: 1px solid var(--line);
     border-radius: 7px;
-    color: #eee9de;
-    background: linear-gradient(145deg, rgba(19, 25, 23, 0.94), rgba(8, 13, 13, 0.91));
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28), inset 0 1px rgba(255, 255, 255, 0.035);
+    color: var(--white);
+    background: linear-gradient(145deg, var(--paper), var(--paper));
+    box-shadow: 0 8px 24px var(--line-dark), inset 0 1px var(--line);
     backdrop-filter: blur(4px);
 }
 
@@ -31,19 +33,19 @@
 }
 
 .inventory-heading__label {
-    color: #c6b99f;
-    font: 700 9px/1 "Courier New", monospace;
+    color: var(--paper-2);
+    font: 700 9px/1 var(--mono);
     letter-spacing: 0.16em;
 }
 
 .inventory-count {
     min-width: 31px;
     padding: 3px 6px;
-    border: 1px solid rgba(198, 185, 159, 0.22);
+    border: 1px solid var(--line);
     border-radius: 3px;
-    color: #e0d5c0;
-    background: rgba(255, 255, 255, 0.045);
-    font: 600 10px/1 "Courier New", monospace;
+    color: var(--paper-2);
+    background: var(--line);
+    font: 600 10px/1 var(--mono);
     text-align: center;
     font-variant-numeric: tabular-nums;
 }
@@ -64,36 +66,36 @@
     min-width: 0;
     place-items: center;
     overflow: hidden;
-    border: 1px solid rgba(220, 211, 191, 0.13);
+    border: 1px solid var(--line);
     border-radius: 4px;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(0, 0, 0, 0.12));
+    background: linear-gradient(145deg, var(--line), var(--line-dark));
     transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
 }
 
 .inventory-slot--empty {
     border-style: dashed;
-    border-color: rgba(220, 211, 191, 0.12);
-    background: rgba(0, 0, 0, 0.12);
+    border-color: var(--line);
+    background: var(--line-dark);
 }
 
 .inventory-slot--empty::after {
     width: 5px;
     height: 5px;
-    border: 1px solid rgba(220, 211, 191, 0.12);
+    border: 1px solid var(--line);
     border-radius: 1px;
     content: "";
 }
 
 .inventory-slot--filled {
-    border-color: rgba(184, 157, 112, 0.28);
-    background: linear-gradient(145deg, rgba(155, 131, 91, 0.14), rgba(0, 0, 0, 0.18));
+    border-color: var(--line);
+    background: linear-gradient(145deg, var(--line), var(--line-dark));
 }
 
 .inventory-slot--filled:hover {
     z-index: 1;
     transform: translateY(-2px);
-    border-color: rgba(205, 174, 124, 0.72);
-    background: rgba(159, 132, 88, 0.2);
+    border-color: var(--signal);
+    background: var(--line);
 }
 
 .inventory-slot__icon {
@@ -104,7 +106,7 @@
     image-rendering: pixelated;
     user-select: none;
     -webkit-user-drag: none;
-    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 2px 3px var(--line-dark));
 }
 
 .inventory-sr-only {
@@ -152,4 +154,31 @@
         gap: 5px;
         min-height: 37px;
     }
+}
+
+/* HUD do jogo: usa diretamente o tema global definido neste :root. */
+#inventory {
+    border-color: var(--line);
+    border-radius: 2px;
+    color: var(--white);
+    background: var(--ink-2);
+    box-shadow: 0 8px 24px var(--line-dark);
+    font-family: var(--body);
+}
+
+.inventory-heading__label { color: var(--signal); font-family: var(--mono); }
+.inventory-count { border-color: var(--line); color: var(--paper-2); }
+.inventory-slot,
+.inventory-slot--empty { border-color: var(--line); background: var(--paper); }
+.inventory-slot--filled { border-color: var(--rust); background: var(--panel); }
+.inventory-slot--filled:hover { border-color: var(--rust-light); background: var(--paper); }
+#inventory { border-top: 2px solid var(--rust); }
+
+#controls,
+#loading {
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--white);
+    background: var(--ink-2);
+    font-family: var(--mono);
 }
