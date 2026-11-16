@@ -257,7 +257,7 @@ function configurarControlesMobile() {
     const backButton = document.getElementById("mobileBack");
     const pickupButton = document.getElementById("mobilePickup");
 
-    if (!joystick || !ring || !debugButton || !backButton) {
+    if (!joystick || !ring || !backButton) {
         return;
     }
 
@@ -304,7 +304,7 @@ function configurarControlesMobile() {
     joystick.addEventListener("pointercancel", finalizarJoystick, { passive: false });
     joystick.addEventListener("lostpointercapture", limparEntradaMobile);
 
-    debugButton.addEventListener("click", () => {
+    debugButton?.addEventListener("click", () => {
         alternarModoDebug();
     });
 
@@ -3237,6 +3237,9 @@ function repetirJogo(
 // ============================================================================
 
 function atualizarTextoControles() {
+
+    // A interface atual omite o painel textual de controles.
+    if (!controles) return;
 
     if (
         cenarioAtual ===

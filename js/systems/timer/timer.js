@@ -11,7 +11,7 @@
     const countdown = document.querySelector("#endCountdown");
     const status = document.querySelector("#endTimerStatus");
     const segments = Array.from(
-        document.querySelectorAll("[data-horde-segment]")
+        document.querySelectorAll("[data-end-segment]")
     );
 
     let remainingSeconds = DURATION_SECONDS;
