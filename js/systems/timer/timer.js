@@ -18,6 +18,7 @@
     let running = false;
     let finished = false;
     let lastRenderedSecond = null;
+    let lastUpdateTime = null;
 
     function formatTime(totalSeconds) {
         const safeSeconds = Math.max(0, Math.ceil(totalSeconds));
@@ -73,13 +74,21 @@
         running = true;
         finished = false;
         lastRenderedSecond = null;
+        lastUpdateTime = performance.now();
 
         if (panel) panel.hidden = false;
         render(true);
     }
 
     function stop() {
+        if (running && lastUpdateTime !== null) {
+            remainingSeconds = Math.max(
+                0,
+                remainingSeconds - (performance.now() - lastUpdateTime) / 1000
+            );
+        }
         running = false;
+        lastUpdateTime = null;
         render(true);
     }
 
@@ -88,24 +97,30 @@
         running = false;
         finished = false;
         lastRenderedSecond = null;
+        lastUpdateTime = null;
         render(true);
     }
 
-    function update(deltaSeconds) {
+    function update() {
         if (
             !running ||
             finished ||
-            !Number.isFinite(deltaSeconds) ||
-            deltaSeconds <= 0
+            lastUpdateTime === null
         ) {
             return;
         }
 
-        remainingSeconds = Math.max(0, remainingSeconds - deltaSeconds);
+        const now = performance.now();
+        remainingSeconds = Math.max(
+            0,
+            remainingSeconds - (now - lastUpdateTime) / 1000
+        );
+        lastUpdateTime = now;
 
         if (remainingSeconds === 0) {
             running = false;
             finished = true;
+            lastUpdateTime = null;
             // O limite de cinco minutos encerra a partida por infecção.
             window.finalizarJogo?.("infectado");
         }

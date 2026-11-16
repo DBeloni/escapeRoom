@@ -1,8 +1,8 @@
 /*
- * Desafios da fuga pelo cais.
- * Cada interação fica perto do objeto que a justifica no cenário.
- * O módulo não controla o movimento: recebe a posição do jogador e abre
- * apenas o desafio que estiver ao alcance.
+ * Desafios procedurais da fuga pelo cais.
+ * Cada desafio recebe uma configuração aleatória na primeira execução da partida.
+ * As configurações são sempre geradas com solução válida e permanecem estáveis
+ * enquanto o jogador fecha/reabre o painel.
  */
 (function () {
     "use strict";
@@ -35,25 +35,171 @@
     const REQUIRED_FOR_ENGINE = ["ITM_001", "ITM_002"];
     const REQUIRED_FOR_CIRCUIT = ["ITM_003", "ITM_004"];
     const REQUIRED_FOR_ASSEMBLY = ["ITM_001", "ITM_002", "ITM_005"];
-    const RADIO_FREQUENCY = 104;
     const PUZZLE_INTERACTION_RADIUS = 160;
-    const COVER_SEQUENCE = ["head", "foot", "side"];
     const DIRECTIONS = ["N", "E", "S", "W"];
     const OPPOSITE = { N: "S", E: "W", S: "N", W: "E" };
+    const DIRECTION_GLYPHS = { N: "↑", E: "→", S: "↓", W: "←" };
+    const CRANK_KEYS = ["ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"];
+    const CRANK_GLYPHS = ["↑", "←", "↓", "→"];
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffled(values) {
+        const result = [...values];
+        for (let index = result.length - 1; index > 0; index -= 1) {
+            const swapIndex = randomInt(0, index);
+            [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+        }
+        return result;
+    }
+
+    function createWoodRound(round) {
+        return {
+            target: randomInt(24, 76),
+            tolerance: [11, 9, 7][Math.min(round, 2)],
+            duration: [2200, 1850, 1500][Math.min(round, 2)],
+            startedAt: 0,
+            misses: 0
+        };
+    }
+
+    function createCircuitPath() {
+        const start = [0, 0];
+        const finish = [3, 3];
+        const keyOf = point => `${point[0]},${point[1]}`;
+
+        function search(current, path, visited) {
+            if (current[0] === finish[0] && current[1] === finish[1]) {
+                return path.length >= 7 && path.length <= 12 ? [...path] : null;
+            }
+
+            const [row, column] = current;
+            const candidates = shuffled([
+                [row - 1, column], [row + 1, column],
+                [row, column - 1], [row, column + 1]
+            ]).filter(([nextRow, nextColumn]) =>
+                nextRow >= 0 && nextRow < 4 && nextColumn >= 0 && nextColumn < 4
+            );
+
+            for (const candidate of candidates) {
+                const key = keyOf(candidate);
+                if (visited.has(key)) continue;
+                // Evita passeios longos que se afastam demais da saída.
+                const remaining = Math.abs(3 - candidate[0]) + Math.abs(3 - candidate[1]);
+                if (path.length + remaining > 12) continue;
+                visited.add(key);
+                path.push(candidate);
+                const result = search(candidate, path, visited);
+                if (result) return result;
+                path.pop();
+                visited.delete(key);
+            }
+            return null;
+        }
+
+        for (let attempt = 0; attempt < 40; attempt += 1) {
+            const result = search(start, [start], new Set([keyOf(start)]));
+            if (result) return result;
+        }
+
+        // Rota de segurança: continua sendo embaralhada pelas rotações iniciais.
+        return [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2], [3, 2], [3, 3]];
+    }
+
+    function directionBetween(from, to) {
+        const rowDelta = to[0] - from[0];
+        const columnDelta = to[1] - from[1];
+        if (rowDelta === -1) return "N";
+        if (rowDelta === 1) return "S";
+        if (columnDelta === 1) return "E";
+        return "W";
+    }
+
+    function createCircuitState() {
+        const path = createCircuitPath();
+        const tiles = path.map((point, index) => {
+            const basePorts = [];
+            if (index === 0) basePorts.push("W");
+            else basePorts.push(directionBetween(point, path[index - 1]));
+            if (index === path.length - 1) basePorts.push("E");
+            else basePorts.push(directionBetween(point, path[index + 1]));
+            return {
+                row: point[0],
+                column: point[1],
+                basePorts,
+                rotation: randomInt(0, 3)
+            };
+        });
+        return { path, tiles };
+    }
+
+    function createEngineState() {
+        let gears = [randomInt(0, 3), randomInt(0, 3), randomInt(0, 3)];
+        while (gears.every(value => value === 0)) {
+            gears = [randomInt(0, 3), randomInt(0, 3), randomInt(0, 3)];
+        }
+        return { gears, moves: 0 };
+    }
+
+    function createCoverState() {
+        const target = {
+            head: randomInt(1, 5),
+            foot: randomInt(1, 5),
+            left: randomInt(1, 5),
+            right: randomInt(1, 5)
+        };
+        const values = {
+            head: randomInt(0, 5),
+            foot: randomInt(0, 5),
+            left: randomInt(0, 5),
+            right: randomInt(0, 5)
+        };
+        if (Object.keys(target).every(key => target[key] === values[key])) {
+            values.head = (values.head + 1) % 6;
+        }
+        return {
+            target,
+            values,
+            clues: [
+                { label: "Cabeceira + pés", value: target.head + target.foot },
+                { label: "Esquerda + direita", value: target.left + target.right },
+                { label: "Cabeceira + esquerda", value: target.head + target.left },
+                { label: "Cabeceira + direita", value: target.head + target.right }
+            ]
+        };
+    }
+
+    function createRadioState() {
+        const targetFrequency = randomInt(900, 1060) / 10;
+        const targetGain = randomInt(1, 5);
+        let frequency = 98;
+        let gain = 3;
+        if (Math.abs(frequency - targetFrequency) <= 0.2 && gain === targetGain) {
+            frequency = targetFrequency < 107 ? targetFrequency + 0.7 : targetFrequency - 0.7;
+        }
+        return { frequency, gain, targetFrequency, targetGain, solved: false };
+    }
 
     const solved = new Set();
     const puzzleState = {
-        wood: { hits: 0 },
-        engine: { coverScrews: [false, false], bolts: [false, false, false] },
-        circuit: { rotations: [0, 0] },
-        cover: { step: 0 },
-        radio: { frequency: 98, solved: false },
+        wood: { round: 0, current: createWoodRound(0) },
+        engine: createEngineState(),
+        circuit: createCircuitState(),
+        cover: createCoverState(),
+        radio: createRadioState(),
         assembly: {
             selected: null,
             installedWood: [false, false, false],
             installed: { engine: false, propeller: false, cover: false },
             fastened: false,
-            fuelled: false
+            fuelled: false,
+            starter: {
+                pattern: Array.from({ length: 6 }, () => randomInt(0, 3)),
+                armed: false,
+                progress: 0
+            }
         }
     };
 
@@ -128,8 +274,9 @@
     }
 
     function completePuzzle(id, rewardTitle, rewardText) {
+        if (solved.has(id)) return;
         solved.add(id);
-        renderShell("Item recuperado", "PLANO DE FUGA", `
+        renderShell("Peça recuperada", "PLANO DE FUGA", `
             <div class="puzzle-reward">
                 <h3>${escapeHTML(rewardTitle)}</h3>
                 <p>${escapeHTML(rewardText)}</p>
@@ -201,8 +348,6 @@
         context.save();
         context.textAlign = "center";
         context.textBaseline = "middle";
-        // Coordinates are in world space and the canvas applies sceneZoom.
-        // Keep badge dimensions consistent in screen space across scenes.
         const zoom = Math.max(1, sceneZoom);
         const radius = 14 / zoom;
         context.font = `bold ${15 / zoom}px monospace`;
@@ -242,7 +387,7 @@
                 return renderLocked(
                     "Separar a madeira", "TRONCO CAÍDO · ZONA COSTEIRA",
                     missing,
-                    "Use a chave de fenda como alavanca para soltar as tábuas do tronco sem quebrá-las."
+                    "A chave de fenda serve como cunha. O tronco está sob tensão: cada tábua precisa ser separada no ponto certo."
                 );
             }
             return renderWood();
@@ -254,7 +399,7 @@
                 return renderLocked(
                     "Motor da oficina", "CASA 05 · OFICINA",
                     missing,
-                    "A proteção do eixo está presa por dois parafusos. Depois será preciso soltar as três porcas do suporte."
+                    "A proteção do eixo está presa. A chave de fenda e a chave inglesa são necessárias para alcançar e liberar o conjunto de engrenagens."
                 );
             }
             return renderEngine();
@@ -299,106 +444,159 @@
         }
     }
 
+    // ---------------------------------------------------------------------
+    // 1. MADEIRA — desafio de precisão e tempo
+    // ---------------------------------------------------------------------
     function renderWood() {
-        const hits = puzzleState.wood.hits;
-        const progress = Math.min(100, Math.round((hits / 6) * 100));
-        renderShell("Preparar a madeira", "TRONCO CAÍDO · ZONA COSTEIRA", `
-            <p class="puzzle-story-note">Use a ponta da chave de fenda como alavanca para soltar as tábuas sem quebrar a madeira.</p>
-            <div class="woodcut-stage woodcut-stage--plain">
-                <button class="woodcut-log" type="button" data-action="chop" aria-label="Cortar o tronco">
-                    <span class="woodcut-log__bark"></span>
-                    <span class="woodcut-log__label">TRONCO</span>
-                    <span class="woodcut-log__mark">✕</span>
-                </button>
+        const state = puzzleState.wood;
+        const round = state.round;
+        const current = state.current;
+        current.startedAt = performance.now();
+        const progress = Math.round((round / 3) * 100);
+        renderShell("Separar a madeira", "TRONCO CAÍDO · ZONA COSTEIRA", `
+            <p class="puzzle-story-note">O tronco está rachado, mas a madeira ainda está presa pelas fibras. Acione a alavanca quando o ponteiro cruzar a faixa marcada. A janela fica menor a cada tábua.</p>
+            <div class="advanced-wood">
+                <div class="advanced-wood__log" aria-hidden="true"><span></span><span></span><span></span></div>
+                <div class="advanced-wood__readout">
+                    <div><span>TÁBUA</span><strong>${round + 1}/3</strong></div>
+                    <div><span>FALHAS NESTA TÁBUA</span><strong data-wood-misses>${current.misses}/3</strong></div>
+                </div>
+                <div class="wood-meter" style="--wood-duration:${current.duration}ms" aria-label="Ponteiro móvel e faixa segura">
+                    <span class="wood-meter__safe" style="left:${current.target - current.tolerance}%;width:${current.tolerance * 2}%"></span>
+                    <i class="wood-meter__needle"></i>
+                </div>
+                <div class="wood-meter__scale"><span>SEM PRESSÃO</span><span>ALÍVIO MÁXIMO</span></div>
                 <div class="puzzle-progress">
-                    <div><span>MADEIRA SEPARADA</span><b>${hits}/6</b></div>
+                    <div><span>MADEIRA SEPARADA</span><b>${round}/3</b></div>
                     <span class="puzzle-progress__track"><i style="width:${progress}%"></i></span>
                 </div>
+                <button class="puzzle-button wood-strike" type="button" data-action="wood-strike">Acionar a cunha <kbd>ESPAÇO</kbd></button>
             </div>
-            <p class="puzzle-hint">Faça seis movimentos de alavanca para soltar as três tábuas.</p>
-        `, "Clique no tronco ou pressione o botão de ação. A chave de fenda é reutilizável.");
+            <p class="puzzle-hint">Não adianta clicar rápido: observe o movimento e escolha o instante. Três falhas fazem a fibra escapar e obrigam a repetir a tábua atual.</p>
+        `, "Clique no botão ou pressione Espaço. A chave de fenda é reutilizável.");
     }
 
+    function woodNeedlePosition() {
+        const current = puzzleState.wood.current;
+        const elapsed = (performance.now() - current.startedAt) % current.duration;
+        const phase = elapsed / current.duration;
+        return phase <= 0.5 ? phase * 200 : (1 - phase) * 200;
+    }
+
+    function handleWoodStrike() {
+        const state = puzzleState.wood;
+        const current = state.current;
+        const distance = Math.abs(woodNeedlePosition() - current.target);
+        if (distance <= current.tolerance) {
+            state.round += 1;
+            if (state.round >= 3) {
+                completePuzzle("wood", "Três tábuas", "A cunha abriu as fibras sem rachar a madeira. As três tábuas estão prontas para o casco.");
+                return;
+            }
+            state.current = createWoodRound(state.round);
+            renderWood();
+            setFeedback("Boa. A próxima fibra está mais presa — a janela de precisão diminuiu.", "success");
+            return;
+        }
+
+        current.misses += 1;
+        const missCounter = overlay?.querySelector("[data-wood-misses]");
+        if (missCounter) missCounter.textContent = `${current.misses}/3`;
+        if (current.misses >= 3) {
+            state.current = createWoodRound(state.round);
+            renderWood();
+            setFeedback("A fibra escapou. A tábua continua inteira, mas você precisa encontrar outro ponto de pressão.", "warning");
+            return;
+        }
+        setFeedback(distance > current.tolerance * 2
+            ? "Muito fora da marca. Espere o ponteiro voltar à faixa." 
+            : "Quase. Segure a mão e tente no próximo ciclo.", "warning");
+    }
+
+    // ---------------------------------------------------------------------
+    // 2. MOTOR — engrenagens acopladas e estado modular
+    // ---------------------------------------------------------------------
     function renderEngine() {
         const state = puzzleState.engine;
-        const coverRemoved = state.coverScrews.every(Boolean);
-        const removed = state.bolts.filter(Boolean).length;
-        const allRemoved = removed === state.bolts.length;
+        const solvedGears = state.gears.every(value => value === 0);
+        const gearNames = ["ENGRENAGEM ESQUERDA", "ENGRENAGEM CENTRAL", "ENGRENAGEM DIREITA"];
+        const gearsMarkup = state.gears.map((orientation, index) => `
+            <button class="gear-control${solvedGears ? " is-aligned" : ""}" type="button" data-gear="${index}" ${solvedGears ? "disabled" : ""} aria-label="Girar ${gearNames[index].toLowerCase()}. Posição atual ${DIRECTION_GLYPHS[DIRECTIONS[orientation]]}">
+                <span class="gear-control__target"></span>
+                <span class="gear-wheel" style="transform:rotate(${orientation * 90}deg)"><i>${DIRECTION_GLYPHS[DIRECTIONS[orientation]]}</i></span>
+                <strong>${index + 1}</strong>
+                <small>${DIRECTION_GLYPHS[DIRECTIONS[orientation]]} · ${gearNames[index].replace("ENGRENAGEM ", "")}</small>
+            </button>`).join("");
 
-        const workMarkup = !coverRemoved
-            ? `
-                <p class="puzzle-story-note">A chapa de proteção cobre o eixo do motor. Retire os dois parafusos com a chave de fenda para alcançar o suporte.</p>
-                <div class="engine-bolts engine-bolts--cover">
-                    ${state.coverScrews.map((isRemoved, index) => `
-                        <button class="engine-bolt${isRemoved ? " is-loose" : ""}" type="button" data-cover-screw="${index}" ${isRemoved ? "disabled" : ""}>
-                            <span class="engine-bolt__head">${isRemoved ? "✓" : "＋"}</span>
-                            <strong>PARAFUSO ${index + 1}</strong>
-                            <small>${isRemoved ? "SOLTO" : "RETIRAR"}</small>
-                        </button>`).join("")}
+        renderShell("Sincronizar o suporte", "CASA 05 · OFICINA", `
+            <p class="puzzle-story-note">O motor está preso por um conjunto de engrenagens de segurança. Alinhe as três marcas com o pino superior. Girar uma roda também movimenta as rodas acopladas — não são independentes.</p>
+            <div class="gear-workbench">
+                <div class="gear-controls">${gearsMarkup}</div>
+                <div class="gear-legend">
+                    <span><b>ESQUERDA</b> move esquerda + centro</span>
+                    <span><b>CENTRAL</b> move as três</span>
+                    <span><b>DIREITA</b> move centro + direita</span>
                 </div>
                 <div class="puzzle-progress">
-                    <div><span>PROTEÇÃO REMOVIDA</span><b>${state.coverScrews.filter(Boolean).length}/2</b></div>
-                    <span class="puzzle-progress__track"><i style="width:${(state.coverScrews.filter(Boolean).length / 2) * 100}%"></i></span>
-                </div>`
-            : `
-                <p class="puzzle-story-note">Agora o suporte está acessível. Use a chave inglesa para retirar as três porcas que prendem o motor ao cavalete.</p>
-                <div class="engine-bolts">
-                    ${state.bolts.map((isRemoved, index) => `
-                        <button class="engine-bolt${isRemoved ? " is-loose" : ""}" type="button" data-bolt="${index}" ${isRemoved ? "disabled" : ""}>
-                            <span class="engine-bolt__head">${isRemoved ? "✓" : "＋"}</span>
-                            <strong>PORCA ${index + 1}</strong>
-                            <small>${isRemoved ? "SOLTA" : "RETIRAR"}</small>
-                        </button>`).join("")}
+                    <div><span>GIROS REGISTRADOS</span><b>${state.moves}</b></div>
+                    <span class="puzzle-progress__track"><i style="width:${Math.min(100, state.moves * 5)}%"></i></span>
                 </div>
-                <div class="puzzle-progress">
-                    <div><span>PORCAS RETIRADAS</span><b>${removed}/3</b></div>
-                    <span class="puzzle-progress__track"><i style="width:${(removed / 3) * 100}%"></i></span>
-                </div>
-                ${allRemoved ? `<button class="puzzle-button" type="button" data-action="engine-lift">Retirar motor da bancada</button>` : ""}`;
-
-        renderShell("Retirar o motor", "CASA 05 · OFICINA", `
-            <div class="engine-workbench engine-workbench--plain">
-                ${workMarkup}
+                ${solvedGears ? `<div class="gear-success"><strong>CONJUNTO ALINHADO</strong><p>As marcas estão na vertical. O suporte pode ser liberado.</p><button class="puzzle-button" type="button" data-action="engine-lift">Liberar e retirar o motor</button></div>` : ""}
             </div>
-            <p class="puzzle-hint">${coverRemoved ? "As porcas podem ser retiradas em qualquer ordem." : "Retire os dois parafusos para abrir a proteção."}</p>
-        `, "A chave de fenda e a chave inglesa permanecem no inventário.");
+            <p class="puzzle-hint">Cada clique avança as engrenagens envolvidas em 90°. A posição correta é sempre a seta apontada para cima.</p>
+        `, "Use o mouse ou o toque. A chave de fenda e a chave inglesa permanecem no inventário.");
     }
 
+    function handleGearTurn(index) {
+        const state = puzzleState.engine;
+        if (state.gears.every(value => value === 0)) return;
+        const coupled = [[0, 1], [0, 1, 2], [1, 2]];
+        if (!Number.isInteger(index) || index < 0 || index > 2) return;
+        coupled[index].forEach(gearIndex => {
+            state.gears[gearIndex] = (state.gears[gearIndex] + 1) % 4;
+        });
+        state.moves += 1;
+        renderEngine();
+        setFeedback(state.gears.every(value => value === 0)
+            ? "As três marcas coincidiram. O suporte está destravado."
+            : "O eixo respondeu. Observe como as rodas acopladas também mudaram.", state.gears.every(value => value === 0) ? "success" : "normal");
+    }
+
+    // ---------------------------------------------------------------------
+    // 3. CIRCUITO — roteamento procedural em uma matriz 4 x 4
+    // ---------------------------------------------------------------------
     function rotatePorts(ports, amount) {
         return ports.map(port => DIRECTIONS[(DIRECTIONS.indexOf(port) + amount) % 4]);
     }
 
-    function circuitHasConnection(rotations) {
-        const board = [
-            [
-                { ports: ["E"] },
-                { ports: rotatePorts(["N", "S"], rotations[0]) },
-                { ports: rotatePorts(["N", "E"], rotations[1]) }
-            ],
-            [
-                { ports: [] },
-                { ports: [] },
-                { ports: ["N"] }
-            ]
-        ];
-        const queue = [[0, 0]];
-        const visited = new Set(["0,0"]);
+    function getCircuitPorts(tile) {
+        return rotatePorts(tile.basePorts, tile.rotation);
+    }
+
+    function circuitHasConnection() {
+        const state = puzzleState.circuit;
+        const board = new Map(state.tiles.map(tile => [`${tile.row},${tile.column}`, tile]));
+        const start = state.tiles[0];
+        const finish = state.tiles[state.tiles.length - 1];
+        if (!getCircuitPorts(start).includes("W")) return false;
+
+        const queue = [start];
+        const visited = new Set([`${start.row},${start.column}`]);
         const steps = { N: [-1, 0], E: [0, 1], S: [1, 0], W: [0, -1] };
 
         while (queue.length) {
-            const [row, column] = queue.shift();
-            if (row === 1 && column === 2) return true;
-            for (const direction of board[row][column].ports) {
-                const [dr, dc] = steps[direction];
-                const nextRow = row + dr;
-                const nextColumn = column + dc;
-                if (nextRow < 0 || nextRow > 1 || nextColumn < 0 || nextColumn > 2) continue;
-                const neighbor = board[nextRow][nextColumn];
-                if (!neighbor.ports.includes(OPPOSITE[direction])) continue;
-                const key = `${nextRow},${nextColumn}`;
+            const tile = queue.shift();
+            if (tile === finish && getCircuitPorts(tile).includes("E")) return true;
+            for (const direction of getCircuitPorts(tile)) {
+                const [rowDelta, columnDelta] = steps[direction];
+                const row = tile.row + rowDelta;
+                const column = tile.column + columnDelta;
+                const neighbor = board.get(`${row},${column}`);
+                if (!neighbor || !getCircuitPorts(neighbor).includes(OPPOSITE[direction])) continue;
+                const key = `${row},${column}`;
                 if (visited.has(key)) continue;
                 visited.add(key);
-                queue.push([nextRow, nextColumn]);
+                queue.push(neighbor);
             }
         }
         return false;
@@ -406,21 +604,32 @@
 
     function renderCircuit() {
         const state = puzzleState.circuit;
-        renderShell("Ligar o guincho", "CAIS VELHO · PAINEL ELÉTRICO", `
-            <p class="puzzle-story-note">A hélice ficou presa sob a plataforma. Repare o painel e ligue o guincho. Gire os dois trechos de cabo até ligar a fonte ao motor.</p>
-            <div class="circuit-board circuit-board--plain">
-                <div class="circuit-label circuit-label--source">BATERIA</div>
-                <div class="circuit-grid">
-                    <div class="circuit-terminal circuit-terminal--source">+</div>
-                    <button class="wire-tile wire-tile--straight" type="button" data-wire="0" data-rotation="${state.rotations[0]}" aria-label="Girar trecho reto"></button>
-                    <button class="wire-tile wire-tile--corner" type="button" data-wire="1" data-rotation="${state.rotations[1]}" aria-label="Girar curva"></button>
-                    <span class="wire-empty"></span><span class="wire-empty"></span>
-                    <div class="circuit-terminal circuit-terminal--sink">M</div>
-                </div>
-                <div class="circuit-label circuit-label--sink">MOTOR DO GUINCHO</div>
-            </div>
-            <p class="puzzle-hint">Clique em cada trecho para girá-lo. As conexões precisam se encontrar.</p>
-        `, "O reparo consome a fita isolante e o fusível.");
+        const tileMap = new Map(state.tiles.map((tile, index) => [`${tile.row},${tile.column}`, { tile, index }]));
+        const cells = [];
+        for (let row = 0; row < 4; row += 1) {
+            for (let column = 0; column < 4; column += 1) {
+                const entry = tileMap.get(`${row},${column}`);
+                if (!entry) {
+                    cells.push(`<span class="pipe-cell pipe-cell--empty" aria-hidden="true"></span>`);
+                    continue;
+                }
+                const { tile, index } = entry;
+                const ports = getCircuitPorts(tile);
+                const arms = ports.map(port => `<i class="pipe-arm pipe-arm--${port.toLowerCase()}"></i>`).join("");
+                const endpoint = index === 0 ? " is-source" : index === state.tiles.length - 1 ? " is-sink" : "";
+                const shape = ports.length === 2 && (DIRECTIONS.indexOf(ports[0]) + 2) % 4 === DIRECTIONS.indexOf(ports[1])
+                    ? "straight" : "corner";
+                cells.push(`<button class="pipe-cell pipe-cell--${shape}${endpoint}" type="button" data-wire="${index}" aria-label="Girar conexão ${index + 1}; portas atuais: ${ports.join(", ")}">${arms}<i class="pipe-hub"></i></button>`);
+            }
+        }
+
+        renderShell("Reativar o guincho", "CAIS VELHO · PAINEL ELÉTRICO", `
+            <p class="puzzle-story-note">A energia precisa atravessar o painel até o motor. O trajeto foi montado com peças giratórias e a fiação está embaralhada. Gire cada conexão até formar um caminho contínuo entre a bateria e o guincho.</p>
+            <div class="circuit-endpoints"><span>◉ BATERIA / ENTRADA</span><span>MOTOR / SAÍDA ◉</span></div>
+            <div class="pipe-board" role="group" aria-label="Painel de conexões 4 por 4">${cells.join("")}</div>
+            <div class="circuit-status"><span>PEÇAS NO TRAJETO</span><strong>${state.tiles.length}</strong><span>·</span><span>ROTA ALEATÓRIA</span></div>
+            <p class="puzzle-hint">Uma conexão só conduz energia quando os dois lados encostam. Peças vazias não conduzem. O caminho muda a cada partida.</p>
+        `, "Clique ou toque nas conexões. O reparo consome a fita isolante e o fusível.");
     }
 
     function finishCircuit() {
@@ -437,53 +646,140 @@
         completePuzzle("circuit", "Hélice recuperada", "O guincho voltou a funcionar e ergueu a hélice que estava presa sob o píer.");
     }
 
+    function handleWireTurn(index) {
+        const tile = puzzleState.circuit.tiles[index];
+        if (!tile) return;
+        tile.rotation = (tile.rotation + 1) % 4;
+        if (circuitHasConnection()) {
+            finishCircuit();
+            return;
+        }
+        renderCircuit();
+        setFeedback("Ainda há uma interrupção no caminho. Confira as extremidades de cada peça.");
+    }
+
+    // ---------------------------------------------------------------------
+    // 4. LONA — sistema de equações para equilibrar a tensão das presilhas
+    // ---------------------------------------------------------------------
+    function coverEquationsSatisfied() {
+        const state = puzzleState.cover;
+        const values = state.values;
+        return values.head + values.foot === state.clues[0].value &&
+            values.left + values.right === state.clues[1].value &&
+            values.head + values.left === state.clues[2].value &&
+            values.head + values.right === state.clues[3].value;
+    }
+
     function renderCover() {
         const state = puzzleState.cover;
-        const latches = [
-            { id: "head", label: "Cabeceira" },
-            { id: "foot", label: "Pés" },
-            { id: "side", label: "Lateral" }
+        const labels = [
+            { id: "head", label: "Cabeceira", short: "N" },
+            { id: "right", label: "Lateral direita", short: "L" },
+            { id: "foot", label: "Pés", short: "S" },
+            { id: "left", label: "Lateral esquerda", short: "O" }
         ];
-        renderShell("Soltar a lona da maca", "CASA 04 · ENFERMARIA", `
-            <p class="puzzle-story-note">Solte as presilhas na ordem indicada no bilhete para retirar a lona e as amarras sem danificá-las.</p>
-            <div class="cover-task">
-                <div class="cover-task__stretcher" aria-label="Maca com três presilhas">
-                    ${latches.map((latch, index) => {
-            const done = index < state.step;
-            return `<button class="cover-latch${done ? " is-released" : ""}" type="button" data-latch="${latch.id}" ${done ? "disabled" : ""}>
-                            <span>${done ? "✓" : index + 1}</span><strong>${latch.label}</strong>
-                        </button>`;
-        }).join("")}
+        const matches = [
+            state.values.head + state.values.foot === state.clues[0].value,
+            state.values.left + state.values.right === state.clues[1].value,
+            state.values.head + state.values.left === state.clues[2].value,
+            state.values.head + state.values.right === state.clues[3].value
+        ];
+        const controls = labels.map(item => `
+            <div class="tension-control">
+                <div class="tension-control__name"><b>${item.short}</b><span>${item.label}</span></div>
+                <button type="button" data-tension="${item.id}" data-delta="-1" aria-label="Diminuir tensão da ${item.label.toLowerCase()}" ${state.values[item.id] <= 0 ? "disabled" : ""}>−</button>
+                <strong>${state.values[item.id]}</strong>
+                <button type="button" data-tension="${item.id}" data-delta="1" aria-label="Aumentar tensão da ${item.label.toLowerCase()}" ${state.values[item.id] >= 5 ? "disabled" : ""}>+</button>
+            </div>`).join("");
+        const clues = state.clues.map((clue, index) => `
+            <li class="${matches[index] ? "is-matched" : ""}"><span>${escapeHTML(clue.label)}</span><b>= ${clue.value}</b></li>`).join("");
+
+        renderShell("Equilibrar a lona", "CASA 04 · ENFERMARIA", `
+            <p class="puzzle-story-note">A lona está presa à armação da maca. Se soltar um lado com tensão desigual, o tecido rasga. Ajuste as quatro presilhas usando as relações anotadas no verso da etiqueta.</p>
+            <div class="tension-workbench">
+                <div class="tension-equations">
+                    <span class="tension-equations__title">ANOTAÇÕES DE CARGA</span>
+                    <ol>${clues}</ol>
                 </div>
-                <div class="puzzle-progress">
-                    <div><span>PRESILHAS SOLTAS</span><b>${state.step}/3</b></div>
-                    <span class="puzzle-progress__track"><i style="width:${(state.step / 3) * 100}%"></i></span>
-                </div>
+                <div class="tension-controls">${controls}</div>
+                <div class="tension-progress"><span>RELAÇÕES CONFERIDAS</span><strong>${matches.filter(Boolean).length}/4</strong></div>
+                ${matches.every(Boolean) ? `<div class="gear-success"><strong>TENSÃO EQUILIBRADA</strong><p>As quatro presilhas estão sob a carga correta. A lona pode ser retirada inteira.</p><button class="puzzle-button" type="button" data-action="cover-release">Soltar a armação</button></div>` : ""}
             </div>
-            <p class="puzzle-hint">Solte as presilhas na ordem indicada no bilhete.</p>
-        `, "A lona e o cordame serão usados no casco.");
+            <p class="puzzle-hint">Cada presilha varia de 0 a 5. As quatro relações precisam ser verdadeiras ao mesmo tempo; não basta acertar apenas uma dupla.</p>
+        `, "Use os botões + e −. As quatro equações têm uma única combinação válida.");
+    }
+
+    function adjustCoverTension(id, delta) {
+        const state = puzzleState.cover;
+        if (!Object.prototype.hasOwnProperty.call(state.values, id)) return;
+        state.values[id] = Math.max(0, Math.min(5, state.values[id] + delta));
+        if (coverEquationsSatisfied()) {
+            renderCover();
+            setFeedback("As quatro relações fecharam. Agora retire as presilhas sem forçar a lona.", "success");
+            return;
+        }
+        renderCover();
+        const matched = overlay?.querySelectorAll(".tension-equations li.is-matched").length ?? 0;
+        setFeedback(`${matched}/4 relações conferidas. Ajuste as demais sem perder as que já fecharam.`);
+    }
+
+    // ---------------------------------------------------------------------
+    // 5. RÁDIO — varredura analógica com frequência procedimental
+    // ---------------------------------------------------------------------
+    function radioSignalStrength() {
+        const state = puzzleState.radio;
+        const frequencyError = Math.abs(state.frequency - state.targetFrequency);
+        const gainError = Math.abs(state.gain - state.targetGain);
+        return Math.max(0, Math.round(100 - frequencyError * 18 - gainError * 15));
     }
 
     function renderRadio() {
         const state = puzzleState.radio;
+        const strength = radioSignalStrength();
         renderShell("Sintonizar a rádio", "CASA 02 · RÁDIO COMUNITÁRIA", `
-            <p class="puzzle-story-note">O rádio ainda recebe energia, mas o dial saiu do lugar. No papel preso ao aparelho está escrito: “Canal comunitário — 104,0 MHz”.</p>
-            <div class="radio-tuner">
+            <p class="puzzle-story-note">O rádio ainda recebe energia, mas o dial perdeu a calibração. Varra a faixa até encontrar a transmissão da comunidade. Quanto mais perto, mais forte fica o sinal.</p>
+            <div class="radio-tuner radio-tuner--advanced">
                 <div class="radio-tuner__screen">
                     <small>FREQUÊNCIA FM</small>
-                    <strong>${state.frequency.toFixed(1)} <span>MHz</span></strong>
+                    <strong data-radio-frequency>${state.frequency.toFixed(1)} <span>MHz</span></strong>
+                    <div class="radio-signal" aria-label="Intensidade do sinal"><i data-signal-fill style="width:${strength}%"></i></div>
+                    <span class="radio-signal__label" data-signal-label>${strength}% DE SINAL</span>
+                    <div class="radio-gain"><span>GANHO</span><button type="button" data-action="radio-gain-down" aria-label="Diminuir ganho">−</button><strong data-radio-gain>${state.gain}</strong><button type="button" data-action="radio-gain-up" aria-label="Aumentar ganho">+</button></div>
                 </div>
                 <div class="radio-tuner__controls">
                     <button class="puzzle-button puzzle-button--quiet" type="button" data-action="radio-down" aria-label="Diminuir frequência">−</button>
-                    <input type="range" min="88" max="108" step="1" value="${state.frequency}" data-frequency aria-label="Frequência da rádio">
+                    <input type="range" min="88" max="108" step="0.1" value="${state.frequency}" data-frequency aria-label="Frequência da rádio">
                     <button class="puzzle-button puzzle-button--quiet" type="button" data-action="radio-up" aria-label="Aumentar frequência">+</button>
                 </div>
-                <button class="puzzle-button" type="button" data-action="radio-tune">Testar sintonia</button>
+                <button class="puzzle-button" type="button" data-action="radio-tune">Fixar transmissão</button>
             </div>
-            <p class="puzzle-hint">Ajuste o dial para 104,0 MHz.</p>
-        `, "A rádio oferece uma pista opcional.");
+            <p class="puzzle-hint">A frequência e o ganho mudam a cada partida. Use o medidor de sinal: o canal correto está no pico da transmissão.</p>
+        `, "A rádio é opcional, mas registra uma pista útil no diário mental da partida.");
     }
 
+    function updateRadioDisplay() {
+        const frequency = overlay?.querySelector("[data-radio-frequency]");
+        const fill = overlay?.querySelector("[data-signal-fill]");
+        const label = overlay?.querySelector("[data-signal-label]");
+        const gain = overlay?.querySelector("[data-radio-gain]");
+        if (!frequency || !fill || !label || !gain) return;
+        const strength = radioSignalStrength();
+        frequency.innerHTML = `${puzzleState.radio.frequency.toFixed(1)} <span>MHz</span>`;
+        gain.textContent = String(puzzleState.radio.gain);
+        fill.style.width = `${strength}%`;
+        label.textContent = `${strength}% DE SINAL`;
+    }
+
+    function handleFrequencyInput(event) {
+        const slider = event.target.closest("[data-frequency]");
+        if (!slider || activePuzzle !== "radio") return;
+        puzzleState.radio.frequency = Number(slider.value);
+        updateRadioDisplay();
+    }
+
+    // ---------------------------------------------------------------------
+    // 6. MONTAGEM — encaixe, fixação, combustível e partida por memória
+    // ---------------------------------------------------------------------
     function renderAssembly() {
         const state = puzzleState.assembly;
         const woodCount = state.installedWood.filter(Boolean).length;
@@ -506,10 +802,32 @@
             </button>`;
         }).join("");
 
+        let starterMarkup = "";
+        if (allPartsInstalled && state.fastened && state.fuelled) {
+            const starter = state.starter;
+            if (!starter.armed) {
+                starterMarkup = `
+                    <div class="starter-challenge">
+                        <div><span class="assembly-tray__label">PARTIDA MANUAL · SEQUÊNCIA DE IGNIÇÃO</span><p>O cabo do arranque está travado. Memorize a sequência de seis movimentos; depois arme o motor e repita sem inverter a ordem.</p></div>
+                        <div class="starter-pattern" aria-label="Sequência de partida">${starter.pattern.map(index => `<span>${CRANK_GLYPHS[index]}</span>`).join("")}</div>
+                        <button class="puzzle-button" type="button" data-action="arm-starter">Memorizei — armar o motor</button>
+                    </div>`;
+            } else {
+                starterMarkup = `
+                    <div class="starter-challenge">
+                        <div><span class="assembly-tray__label">PARTIDA MANUAL · REPITA A SEQUÊNCIA</span><p>Use os botões ou as setas do teclado. Um movimento errado faz o cabo voltar ao início, mas não apaga a montagem.</p></div>
+                        <div class="starter-progress"><strong>${starter.progress}/6</strong><span class="puzzle-progress__track"><i style="width:${(starter.progress / 6) * 100}%"></i></span></div>
+                        <div class="starter-controls">
+                            ${CRANK_GLYPHS.map((glyph, index) => `<button type="button" data-crank="${index}" aria-label="Movimento ${glyph}">${glyph}</button>`).join("")}
+                        </div>
+                    </div>`;
+            }
+        }
+
         renderShell("Montar o barco", "CAIS VELHO", `
-            <p class="puzzle-story-note">Monte o casco primeiro. Depois prenda a lona nas emendas, fixe o motor e encaixe a hélice. No fim, aperte as peças e abasteça.</p>
+            <p class="puzzle-story-note">Monte o casco primeiro. Depois reforce as emendas com a lona, instale o motor e encaixe a hélice. Por último, aperte as fixações, abasteça e faça o motor pegar.</p>
             <div class="assembly-layout assembly-layout--plain">
-                <div class="boat-blueprint" aria-label="Esquema simples do barco">
+                <div class="boat-blueprint" aria-label="Esquema do barco em construção">
                     <div class="boat-blueprint__cover${state.installed.cover ? " is-installed" : ""}"><span>LONA</span></div>
                     <div class="boat-blueprint__hull">
                         ${state.installedWood.map((installed, index) => `<button class="assembly-slot assembly-slot--wood${installed ? " is-installed" : ""}" type="button" data-slot="wood" data-index="${index}" aria-label="Tábua ${index + 1}: ${installed ? "instalada" : "encaixar"}">${installed ? "OK" : `TÁBUA ${index + 1}`}</button>`).join("")}
@@ -531,9 +849,9 @@
             <div class="assembly-actions">
                 ${allPartsInstalled && !state.fastened ? `<button class="puzzle-button" type="button" data-action="fasten">Apertar fixações</button>` : ""}
                 ${allPartsInstalled && state.fastened && !state.fuelled ? `<button class="puzzle-button" type="button" data-action="fuel">Abastecer motor</button>` : ""}
-                ${allPartsInstalled && state.fastened && state.fuelled ? `<button class="puzzle-button puzzle-button--launch" type="button" data-action="launch">Ligar o motor</button>` : ""}
             </div>
-            <p class="puzzle-hint">Selecione uma peça e depois clique no encaixe correspondente.</p>
+            ${starterMarkup}
+            <p class="puzzle-hint">Selecione uma peça e depois clique no encaixe correspondente. A partida final é diferente em cada tentativa.</p>
         `, "As ferramentas são reutilizáveis. A gasolina é consumida.");
     }
 
@@ -551,58 +869,18 @@
                 <h2 id="victoryTitle">Você conseguiu sair.</h2>
                 <p>O motor pega depois de algumas tentativas. O barco se afasta do cais enquanto a maré começa a subir.</p>
                 <p class="victory-note">A vila fica para trás. O pescador conseguiu construir um barco e escapar da região.</p>
-                <p class="victory-time" aria-live="polite">Tempo: <time>${victoryTime || "00:00.000"}</time></p>
+                <p class="victory-time" aria-live="polite">Tempo: <time>${escapeHTML(victoryTime || "00:00.000")}</time></p>
                 <button class="puzzle-button" type="button" data-action="restart">Jogar novamente</button>
             </div>`;
         overlay.querySelector("[data-action='restart']")?.focus();
     }
 
-    function handleWoodHit() {
-        const state = puzzleState.wood;
-        state.hits += 1;
-        if (state.hits >= 6) {
-            completePuzzle("wood", "Três tábuas", "A parte reta do tronco rendeu madeira suficiente para montar o casco.");
+    function handleCoverRelease() {
+        if (!coverEquationsSatisfied()) {
+            setFeedback("A tensão mudou. Confira novamente as quatro relações antes de soltar a armação.", "warning");
             return;
         }
-        renderWood();
-        setFeedback("O corte avançou. Continue separando a madeira.", "success");
-    }
-
-    function handleCoverScrew(index) {
-        const state = puzzleState.engine.coverScrews;
-        if (!Number.isInteger(index) || index < 0 || index >= state.length || state[index]) return;
-        state[index] = true;
-        renderEngine();
-        setFeedback(state.every(Boolean)
-            ? "Proteção removida. Agora solte as três porcas com a chave inglesa."
-            : "Parafuso retirado. Falta mais um.", "success");
-    }
-
-    function handleBolt(index) {
-        const state = puzzleState.engine;
-        if (!state.coverScrews.every(Boolean)) return;
-        if (!Number.isInteger(index) || index < 0 || index >= state.bolts.length || state.bolts[index]) return;
-        state.bolts[index] = true;
-        const removed = state.bolts.filter(Boolean).length;
-        renderEngine();
-        setFeedback(removed === 3
-            ? "O suporte está solto. Agora retire o motor da bancada."
-            : "Porca retirada. Continue nas outras.", "success");
-    }
-
-    function handleCoverLatch(id) {
-        const expected = COVER_SEQUENCE[puzzleState.cover.step];
-        if (id !== expected) {
-            setFeedback("Essa presilha ainda está segurando a lona. Siga a ordem indicada no bilhete.", "warning");
-            return;
-        }
-        puzzleState.cover.step += 1;
-        if (puzzleState.cover.step >= COVER_SEQUENCE.length) {
-            completePuzzle("cover", "Lona e cordame", "A lona da maca está inteira. As amarras também podem reforçar as emendas do casco.");
-            return;
-        }
-        renderCover();
-        setFeedback("Presilha solta. Continue na ordem indicada.", "success");
+        completePuzzle("cover", "Lona e cordame", "As quatro presilhas foram aliviadas sem rasgar o tecido. A lona e as amarras podem reforçar o casco.");
     }
 
     function selectAssemblyPart(partId) {
@@ -625,7 +903,7 @@
             return;
         }
         if (slot === "wood") {
-            if (state.installedWood[index]) return;
+            if (!Number.isInteger(index) || index < 0 || index >= 3 || state.installedWood[index]) return;
             state.installedWood[index] = true;
         } else {
             if (slot === "cover" && !state.installedWood.every(Boolean)) {
@@ -647,40 +925,80 @@
         setFeedback("Peça instalada.", "success");
     }
 
+    function handleStarterInput(direction) {
+        const state = puzzleState.assembly;
+        const starter = state.starter;
+        if (!starter.armed || !state.installedWood.every(Boolean) ||
+            !Object.values(state.installed).every(Boolean) || !state.fastened || !state.fuelled) return;
+        if (direction === starter.pattern[starter.progress]) {
+            starter.progress += 1;
+            if (starter.progress >= starter.pattern.length) {
+                showVictory();
+                return;
+            }
+            renderAssembly();
+            setFeedback("Movimento correto. Continue mantendo o ritmo.", "success");
+            return;
+        }
+        starter.progress = 0;
+        starter.armed = false;
+        renderAssembly();
+        setFeedback("O cabo escapou. A montagem continua intacta; memorize a sequência novamente antes de armar.", "warning");
+    }
+
     function handleAction(action) {
         if (action === "close") {
             close();
             return;
         }
-        if (action === "chop") {
-            handleWoodHit();
+        if (action === "wood-strike") {
+            handleWoodStrike();
             return;
         }
         if (action === "engine-lift") {
-            if (puzzleState.engine.coverScrews.every(Boolean) && puzzleState.engine.bolts.every(Boolean)) {
-                completePuzzle("engine", "Motor de popa", "O motor saiu do suporte. Está sujo e enferrujado, mas ainda pode funcionar.");
+            if (puzzleState.engine.gears.every(value => value === 0)) {
+                completePuzzle("engine", "Motor de popa", "O conjunto destravou e o motor saiu do suporte. Está sujo e enferrujado, mas ainda pode funcionar.");
             }
+            return;
+        }
+        if (action === "cover-release") {
+            handleCoverRelease();
             return;
         }
         if (action === "radio-down" || action === "radio-up") {
-            const change = action === "radio-up" ? 1 : -1;
-            puzzleState.radio.frequency = Math.max(88, Math.min(108, puzzleState.radio.frequency + change));
+            const change = action === "radio-up" ? 0.1 : -0.1;
+            puzzleState.radio.frequency = Math.max(88, Math.min(108, Math.round((puzzleState.radio.frequency + change) * 10) / 10));
             updateRadioDisplay();
             const slider = overlay?.querySelector("[data-frequency]");
-            if (slider) slider.value = String(puzzleState.radio.frequency);
+            if (slider) slider.value = puzzleState.radio.frequency.toFixed(1);
+            return;
+        }
+        if (action === "radio-gain-down" || action === "radio-gain-up") {
+            const change = action === "radio-gain-up" ? 1 : -1;
+            puzzleState.radio.gain = Math.max(1, Math.min(5, puzzleState.radio.gain + change));
+            updateRadioDisplay();
             return;
         }
         if (action === "radio-tune") {
-            if (puzzleState.radio.frequency !== RADIO_FREQUENCY) {
-                setFeedback("Ainda há chiado. Ajuste para 104,0 MHz.", "warning");
+            const frequencyReady = Math.abs(puzzleState.radio.frequency - puzzleState.radio.targetFrequency) <= 0.2;
+            const gainReady = puzzleState.radio.gain === puzzleState.radio.targetGain;
+            if (!frequencyReady || !gainReady) {
+                if (!frequencyReady) {
+                    const direction = puzzleState.radio.frequency < puzzleState.radio.targetFrequency ? "Aumente" : "Diminua";
+                    setFeedback(`${direction} um pouco a frequência. O sinal ainda está fora do pico.`, "warning");
+                } else {
+                    const direction = puzzleState.radio.gain < puzzleState.radio.targetGain ? "Aumente" : "Reduza";
+                    setFeedback(`${direction} o ganho. A frequência está certa, mas a recepção ainda está instável.`, "warning");
+                }
                 return;
             }
             puzzleState.radio.solved = true;
-            renderShell("Mensagem recebida", "RÁDIO COMUNITÁRIA · 104,0 MHZ", `
+            renderShell("Mensagem recebida", "RÁDIO COMUNITÁRIA · TRANSMISSÃO RECUPERADA", `
                 <div class="puzzle-reward">
-                    <p>“A lona da maca da enfermaria está inteira. Solte as presilhas na ordem indicada para aproveitar a lona e as amarras.”</p>
+                    <p>“Se o motor estiver preso, não force o eixo. As rodas laterais puxam a central; a marca de referência precisa ficar voltada para cima.”</p>
+                    <p>A mensagem parece ser uma orientação deixada por alguém da oficina antes da evacuação.</p>
                     <button class="puzzle-button" type="button" data-action="close">Fechar rádio</button>
-                </div>`, "A mensagem foi registrada.");
+                </div>`, "A frequência correta foi encontrada.");
             return;
         }
         if (action === "fasten") {
@@ -704,14 +1022,14 @@
             }
             puzzleState.assembly.fuelled = true;
             renderAssembly();
-            setFeedback("Tanque abastecido. O motor está pronto.", "success");
+            setFeedback("Tanque abastecido. Memorize a sequência de partida.", "success");
             return;
         }
-        if (action === "launch") {
-            const state = puzzleState.assembly;
-            const complete = state.installedWood.every(Boolean) &&
-                Object.values(state.installed).every(Boolean) && state.fastened && state.fuelled;
-            if (complete) showVictory();
+        if (action === "arm-starter") {
+            puzzleState.assembly.starter.armed = true;
+            puzzleState.assembly.starter.progress = 0;
+            renderAssembly();
+            setFeedback("Arranque armado. Repita os seis movimentos na ordem exibida.");
             return;
         }
         if (action === "restart") window.location.reload();
@@ -724,34 +1042,21 @@
             return;
         }
 
-        const coverScrew = event.target.closest("[data-cover-screw]");
-        if (coverScrew && activePuzzle === "engine") {
-            handleCoverScrew(Number(coverScrew.dataset.coverScrew));
-            return;
-        }
-
-        const bolt = event.target.closest("[data-bolt]");
-        if (bolt && activePuzzle === "engine") {
-            handleBolt(Number(bolt.dataset.bolt));
+        const gear = event.target.closest("[data-gear]");
+        if (gear && activePuzzle === "engine") {
+            handleGearTurn(Number(gear.dataset.gear));
             return;
         }
 
         const wire = event.target.closest("[data-wire]");
         if (wire && activePuzzle === "circuit") {
-            const index = Number(wire.dataset.wire);
-            puzzleState.circuit.rotations[index] = (puzzleState.circuit.rotations[index] + 1) % 4;
-            if (circuitHasConnection(puzzleState.circuit.rotations)) {
-                finishCircuit();
-            } else {
-                renderCircuit();
-                setFeedback("Ainda existe uma interrupção. Gire outro trecho.");
-            }
+            handleWireTurn(Number(wire.dataset.wire));
             return;
         }
 
-        const latch = event.target.closest("[data-latch]");
-        if (latch && activePuzzle === "cover") {
-            handleCoverLatch(latch.dataset.latch);
+        const tension = event.target.closest("[data-tension]");
+        if (tension && activePuzzle === "cover") {
+            adjustCoverTension(tension.dataset.tension, Number(tension.dataset.delta));
             return;
         }
 
@@ -764,25 +1069,43 @@
         const slot = event.target.closest("[data-slot]");
         if (slot && activePuzzle === "assembly") {
             placeAssemblyPart(slot.dataset.slot, Number(slot.dataset.index || 0));
+            return;
         }
-    }
 
-    function updateRadioDisplay() {
-        const display = overlay?.querySelector(".radio-tuner__screen strong");
-        if (display) display.innerHTML = `${puzzleState.radio.frequency.toFixed(1)} <span>MHz</span>`;
-    }
-
-    function handleFrequencyInput(event) {
-        const slider = event.target.closest("[data-frequency]");
-        if (!slider || activePuzzle !== "radio") return;
-        puzzleState.radio.frequency = Number(slider.value);
-        updateRadioDisplay();
+        const crank = event.target.closest("[data-crank]");
+        if (crank && activePuzzle === "assembly") {
+            handleStarterInput(Number(crank.dataset.crank));
+        }
     }
 
     function close(clearActive = true) {
         if (overlay) overlay.hidden = true;
         if (clearActive) activePuzzle = null;
         if (prompt) prompt.hidden = true;
+    }
+
+    function handleOverlayKeydown(event) {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopPropagation();
+            close();
+            return;
+        }
+        if (event.repeat) return;
+        if (activePuzzle === "wood" && event.code === "Space" && !event.target.closest("[data-action='close']")) {
+            event.preventDefault();
+            event.stopPropagation();
+            handleWoodStrike();
+            return;
+        }
+        if (activePuzzle === "assembly") {
+            const directionIndex = CRANK_KEYS.indexOf(event.key);
+            if (directionIndex !== -1) {
+                event.preventDefault();
+                event.stopPropagation();
+                handleStarterInput(directionIndex);
+            }
+        }
     }
 
     function setVictoryTime(timeText) {
@@ -812,12 +1135,7 @@
         if (overlay && !overlay.dataset.bound) {
             overlay.addEventListener("click", handleOverlayClick);
             overlay.addEventListener("input", handleFrequencyInput);
-            overlay.addEventListener("keydown", event => {
-                if (event.key === "Escape") {
-                    event.preventDefault();
-                    close();
-                }
-            });
+            overlay.addEventListener("keydown", handleOverlayKeydown);
             overlay.dataset.bound = "true";
         }
     }

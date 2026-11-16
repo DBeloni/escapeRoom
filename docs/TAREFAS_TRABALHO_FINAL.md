@@ -10,15 +10,15 @@ Este checklist foi montado a partir dos critérios enviados no Moodle e de uma l
 - **Site:** há `index.html` e nove páginas em `pages/` (10 arquivos HTML institucionais), navegação comum, formulário demonstrativo e folhas CSS externas. A página do jogo é adicional.
 - **Cenários:** há o mapa da Zona Costeira e cinco interiores de casas/locais, com navegação entre mapa e interiores.
 - **Jogo:** há inventário de cinco itens, temporizador de cinco minutos, quatro desafios de coleta/recuperação, rádio e montagem do barco. Também existem finais de fuga, secreto, infecção e afogamento no código.
-- **Pendências de maior risco:** os requisitos pedem pelo menos 10 objetos/puzzles distintos, diário de pistas e um minigame de teclado; esses pontos não estão comprovados na implementação atual. O site de finais documenta só um desfecho. O código ativo também usa `addEventListener`, `createElement` e funções arrow, em conflito com as restrições literais do enunciado.
+- **Pendências de maior risco:** os requisitos pedem pelo menos 10 objetos/puzzles distintos e um diário de pistas visível. O jogo já tem um minigame de teclado funcional na partida do motor, mas ainda precisa de teste completo no navegador. O site de finais documenta só um desfecho. O código ativo também usa `addEventListener`, `createElement` e funções arrow, em conflito com as restrições literais do enunciado.
 - **Entrega:** o README descreve Git/GitHub e Vercel, mas ainda é preciso confirmar commits de todos, deploy funcional e envio no Moodle.
 
 ## P0 — Requisitos explícitos do jogo
 
 - [ ] **Contabilizar e implementar 10 objetos/puzzles distintos.** Fazer uma tabela interna com nome, cenário, lógica, estado, pré-requisitos e consequência de cada um. Hoje há seis pontos de interação principais (`wood`, `engine`, `circuit`, `cover`, `radio`, `assembly`); decompor ou acrescentar desafios com lógicas distintas até chegar a dez interações que o avaliador consiga identificar.
 - [ ] **Criar o Diário de Bordo visível.** Adicionar botão persistente na interface e painel que registre pistas lidas, mensagens decifradas, itens importantes, erros/decisões e mecanismos acionados em ordem cronológica. Garantir leitura por teclado e leitor de tela.
-- [ ] **Adicionar um minigame controlado pelo teclado.** Usar eventos de teclado para uma tarefa coerente com a história (por exemplo, sequência de rádio/Morse); exibir instruções, progresso, feedback de erro e sucesso. Não depender apenas de mouse.
-- [ ] **Completar o requisito de minigame por clique.** Há ações de clique nos desafios de madeira, circuito, cobertura e montagem. Documentar qual delas conta como minigame e garantir instruções claras, estado visual e feedback.
+- [x] **Adicionar um minigame controlado pelo teclado.** A partida manual do motor usa uma sequência aleatória de seis direções, aceita as setas do teclado e exibe progresso e feedback de erro/sucesso.
+- [x] **Completar o requisito de minigame por clique.** O roteamento elétrico, as engrenagens e o ajuste das presilhas usam ações de clique/toque, com estado visual e feedback.
 - [ ] **Fortalecer o sistema de itens.** Permitir selecionar/inspecionar item e usá-lo explicitamente em objetos compatíveis; mostrar combinações ou bloqueios por falta de item e registrar essas ações no diário. O inventário e consumo de itens já existem, mas a seleção/inspeção não está evidente.
 - [ ] **Formalizar interdependências entre enigmas.** Fazer cada solução alterar outro objeto/cenário de forma observável (ex.: guincho libera hélice para montagem; fusível/fita restauram painel; rádio revela pista/rota). Exibir a consequência ao jogador e registrá-la.
 - [ ] **Revisar a modelagem em objetos.** Manter cada objeto interativo com estado e método/ação associados (trancado, inspecionado, resolvido, pistas/itens necessários). As estruturas `puzzleState`, `TASKS` e `LOCATIONS` são uma base, mas validar que os dez objetos satisfazem o critério individualmente.
@@ -48,7 +48,7 @@ Este checklist foi montado a partir dos critérios enviados no Moodle e de uma l
 
 - [ ] **Testar percurso completo do jogo** do início ao fim: carregamento, instruções, movimento, colisões, entrada/saída dos cinco interiores, coleta, inventário, puzzles, montagem, vitória, derrota e reinício.
 - [ ] **Conferir os cinco cenários navegáveis** e que cada um tenha conteúdo/interação percebida, sem softlock. O mapa atual e cinco interiores são evidência de cenário; testar as entradas no navegador.
-- [ ] **Conferir aleatoriedade, estado e tempo.** Demonstrar onde há dados aleatórios, onde estado altera o jogo e como o timer afeta o resultado; se a aleatoriedade não estiver presente, incluí-la numa pista/evento de forma reproduzível para a apresentação.
+- [ ] **Conferir aleatoriedade, estado e tempo.** Os desafios agora geram variações por partida (rota elétrica, engrenagens, tensões, frequência/ganho e partida); ainda é preciso validar no navegador a duração total e a relação com o temporizador.
 - [ ] **Conferir pistas e interdependências** nos cenários com feedback claro, evitando dependências impossíveis ou itens consumidos sem possibilidade de concluir a rota.
 - [ ] **Revisar acessibilidade do jogo:** instruções textuais, controles alternativos, foco no diálogo, labels/ARIA, feedback anunciado e funcionamento sem mouse quando aplicável.
 - [ ] **Revisar CSS/ambientação:** conferir legibilidade, contraste, transições discretas, adaptação a celular e que efeitos não atrapalhem os controles ou a leitura.

@@ -8,6 +8,7 @@ Documentação narrativa básica do jogo. O objetivo é manter as informações 
 - [Introdução](INTRODUCAO.md): texto curto apresentado antes do início do jogo.
 - [Integração com o jogo](INTEGRACAO_COM_O_JOGO.md): relação entre a história e o objetivo jogável.
 - [Cânone e pendências](CANONE_E_PENDENCIAS.md): o que está definido e o que pode continuar em aberto.
+- [Desafios procedurais](PUZZLES_PROCEDURAIS.md): mecânicas, variações e garantias de solução dos puzzles.
 
 ## Diretriz
 
