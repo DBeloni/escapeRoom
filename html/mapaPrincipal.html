@@ -13,19 +13,19 @@
     <main id="gameContainer">
         <canvas id="gameCanvas"></canvas>
 
-        <aside id="hordeTimer" class="horde-timer" hidden aria-label="Tempo restante até a radiação matar o personagem">
-            <div class="horde-timer__topline">
-                <span class="horde-timer__eyebrow">ALERTA DE RADIAÇÃO</span>
+        <aside id="endTimer" class="end-timer" hidden aria-label="Tempo restante até a contaminação crítica do personagem">
+            <div class="end-timer__topline">
+                <span class="end-timer__eyebrow">ALERTA DE CONTAMINAÇÃO</span>
             </div>
-            <div class="horde-timer__main">
-                <div class="horde-timer__description">
-                    <p id="hordePhaseLabel">Tempo até a radiação matar</p>
-                    <span id="hordeTimerStatus" class="horde-timer__status">EXPOSIÇÃO CRÍTICA</span>
+            <div class="end-timer__main">
+                <div class="end-timer__description">
+                    <p id="endPhaseLabel">Tempo até a contaminação</p>
+                    <span id="endTimerStatus" class="end-timer__status">EXPOSIÇÃO CRÍTICA</span>
                 </div>
-                <time id="hordeCountdown" class="horde-timer__countdown" datetime="PT5M">05:00</time>
+                <time id="endCountdown" class="end-timer__countdown" datetime="PT5M">05:00</time>
             </div>
-            <ol class="horde-timer__segments" aria-hidden="true">
-                <li data-horde-segment data-state="current"></li>
+            <ol class="end-timer__segments" aria-hidden="true">
+                <li data-end-segment data-state="current"></li>
             </ol>
         </aside>
 
@@ -39,12 +39,6 @@
             <span id="inventoryMessage" class="inventory-sr-only" aria-live="polite"></span>
         </aside>
 
-        <div id="controls">
-            <strong>Controles</strong><br>
-            WASD / Setas → Mover<br>
-            F3 → Mostrar barreiras e hitbox
-        </div>
-
         <section id="mobileControls" aria-label="Controles para celular">
             <div id="mobileJoystick" class="mobile-joystick" aria-label="Joystick virtual">
                 <div class="mobile-joystick-ring">
@@ -54,7 +48,6 @@
 
             <div class="mobile-actions">
                 <button id="mobilePickup" class="mobile-action" type="button" aria-label="Interagir ou coletar item próximo">AÇÃO</button>
-                <button id="mobileDebug" class="mobile-action" type="button" aria-label="Alternar modo debug">DEBUG</button>
                 <button id="mobileBack" class="mobile-action" type="button" aria-label="Voltar ou sair da casa">VOLTAR</button>
             </div>
         </section>
@@ -96,7 +89,7 @@
         </section>
     </main>
 
-    <script src="../js/systems/timer/hordeTimer.js"></script>
+    <script src="../js/systems/timer/timer.js"></script>
     <script src="../js/systems/puzzles/boatEscapePuzzles.js"></script>
     <script src="../js/script.js"></script>
 </body>

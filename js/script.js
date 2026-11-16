@@ -2023,6 +2023,9 @@ function finalizarJogo(final) {
     botaoReiniciar?.focus();
 }
 
+// Disponibiliza a finalização para o timer.js, carregado em outro arquivo.
+window.finalizarJogo = finalizarJogo;
+
 // Mantém o nome antigo usado pelo sistema de afogamento.
 function mostrarGameOver() {
     finalizarJogo("afogamento");
@@ -2030,6 +2033,17 @@ function mostrarGameOver() {
 
 function reiniciarJogo() {
     if (estadoAfogamento.fase !== "game-over") return;
+
+    // O reinício sempre começa na cidade, mesmo que o jogador tenha sido
+    // infectado ou tenha se afogado dentro de uma das casas.
+    cenarioAtual = "cidade";
+    interiorAtual = null;
+    ultimaPortaEntrada = null;
+    aplicarDimensoesDoCenario({
+        naturalWidth: larguraCidade,
+        naturalHeight: alturaCidade
+    });
+    atualizarZoomDoCenario();
 
     estadoAfogamento.fase = "normal";
     estadoAfogamento.profundidade = 0;
@@ -2050,7 +2064,7 @@ function reiniciarJogo() {
     }
 
     // Restaura o texto padrão para a próxima partida.
-    const titulo = document?.querySelector(".gameOverTitle");
+    const titulo = document?.querySelector(".game-over-title");
     const descricao = telaGameOver?.querySelector(".game-over-description");
     const chamada = telaGameOver?.querySelector(".game-over-kicker");
     const reiniciar = document?.querySelector(".game-over-button");
@@ -2059,6 +2073,7 @@ function reiniciarJogo() {
     if (descricao) descricao.textContent = "o mar era muito fundo, você se afogou!";
     if (reiniciar) reiniciar.textContent = "tentar novamente";
 
+    atualizarTextoControles();
     atualizarCamera();
 }
 
@@ -2306,16 +2321,18 @@ function moverJogador(segundos) {
         velocidadeAtual *
         segundos;
 
-    // Final secreto: alcançar o canto superior esquerdo do mapa externo.
-    // A verificação ocorre antes da colisão com a borda, que normalmente
-    // impediria o personagem de ultrapassar os limites do cenário.
+    // Final secreto: sair pelo encontro das bordas superior e esquerda.
+    // A checagem usa a hitbox prevista e acontece antes da colisão do mapa,
+    // permitindo alcançar o canto sem liberar movimento pelo restante da borda.
+    const hitboxPrevista = obterHitboxJogador(novoX, novoY);
     if (
         cenarioAtual === "cidade" &&
-        novoX <= 28 &&
-        novoY <= 28
+        hitboxPrevista.x <= 0 &&
+        hitboxPrevista.y <= 0
     ) {
-        jogador.x = Math.max(0, novoX);
-        jogador.y = Math.max(0, novoY);
+        const dimensoesHitbox = obterDimensoesHitboxJogador();
+        jogador.x = Math.max(dimensoesHitbox.largura / 2, novoX);
+        jogador.y = Math.max(dimensoesHitbox.altura / 2, novoY);
         finalizarJogo("secreto");
         return;
     }
