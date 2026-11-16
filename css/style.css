@@ -18,7 +18,8 @@ body {
 #gameContainer {
     position: relative;
     width: 100vw;
-    height: 100vh; /* Alternativa para navegadores sem suporte a dvh. */
+    height: 100vh;
+    /* Alternativa para navegadores sem suporte a dvh. */
     height: 100dvh;
     overflow: hidden;
     background: var(--ink);
@@ -33,7 +34,8 @@ body {
 }
 
 /* As mensagens ficam por cima da tela do jogo. */
-#controls, #loading {
+#controls,
+#loading {
     position: absolute;
     color: var(--white);
     background: var(--ink);
@@ -179,8 +181,24 @@ body {
     letter-spacing: 0.08em;
 }
 
-.game-over-card > p:not(.game-over-kicker) {
+.game-over-card>p:not(.game-over-kicker) {
     margin-bottom: 22px;
+}
+
+.game-over-card .game-over-time {
+    margin: 18px 0 22px;
+    padding: 12px;
+    border: 1px solid var(--paper-2);
+    color: var(--white);
+    font: 600 12px/1.4 var(--mono);
+}
+
+.game-over-card .game-over-time time {
+    display: block;
+    margin-top: 5px;
+    color: var(--signal);
+    font: 700 32px/1.1 var(--mono);
+    font-variant-numeric: tabular-nums;
 }
 
 .game-over-card button {
@@ -213,7 +231,8 @@ body {
     #controls {
         padding: 6px 8px;
         font-size: 10px;
-    }}
+    }
+}
 
 
 /* ==========================================================================
@@ -611,7 +630,7 @@ body.touch-device #controls {
     text-transform: uppercase;
 }
 
-.game-over-card > p:not(.game-over-kicker) {
+.game-over-card>p:not(.game-over-kicker) {
     color: var(--paper-2);
 }
 
@@ -631,9 +650,17 @@ body.touch-device #controls {
 }
 
 @media (max-width: 700px) {
-    .intro-card h1 { font-size: clamp(36px, 9vw, 64px); }
-    .intro-story { font-size: 13px; }
-    .intro-card button { min-height: 56px; }
+    .intro-card h1 {
+        font-size: clamp(36px, 9vw, 64px);
+    }
+
+    .intro-story {
+        font-size: 13px;
+    }
+
+    .intro-card button {
+        min-height: 56px;
+    }
 }
 
 #controls,
@@ -653,14 +680,44 @@ body.touch-device #controls {
     font-family: var(--mono);
 }
 
-.end-timer__topline { border-bottom-color: var(--line); }
-.end-timer__eyebrow { color: var(--rust-light); }
+.end-timer__topline {
+    border-bottom-color: var(--line);
+}
+
+.end-timer__eyebrow {
+    color: var(--rust-light);
+}
+
 .end-timer__phase-count,
-.end-timer__status { color: var(--muted); }
-.end-timer__description p { color: var(--white); font-family: var(--body); }
-.end-timer__countdown { color: var(--white); }
-.end-timer__segments li { background: var(--line); }
-.end-timer__segments li[data-state="current"] { background: var(--rust); }
-.end-timer__segments li[data-state="complete"] { background: var(--olive); }
-.end-timer[data-status="complete"] { border-left-color: var(--olive); }
-.end-timer[data-status="complete"] .end-timer__countdown { color: var(--olive); }
+.end-timer__status {
+    color: var(--muted);
+}
+
+.end-timer__description p {
+    color: var(--white);
+    font-family: var(--body);
+}
+
+.end-timer__countdown {
+    color: var(--white);
+}
+
+.end-timer__segments li {
+    background: var(--line);
+}
+
+.end-timer__segments li[data-state="current"] {
+    background: var(--rust);
+}
+
+.end-timer__segments li[data-state="complete"] {
+    background: var(--olive);
+}
+
+.end-timer[data-status="complete"] {
+    border-left-color: var(--olive);
+}
+
+.end-timer[data-status="complete"] .end-timer__countdown {
+    color: var(--olive);
+}

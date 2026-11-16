@@ -763,8 +763,7 @@ textarea:focus-visible {
             var(--ink) 0%,
             var(--ink) 20%,
             var(--ink) 60%,
-            transparent 75%
-        ),
+            transparent 75%),
         url('../assets/midnight-outbreak.png') center 0% / 100% auto no-repeat;
     border-bottom: 1px solid var(--line);
     position: relative;

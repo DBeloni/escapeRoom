@@ -181,6 +181,15 @@ let spritesAquaticosCarregados = false;
 let spritesAquaticosPendentes = 3;
 let jogoIniciado = false;
 let modoDebug = false;
+let inicioSpeedrunMs = null;
+
+function formatarTempoSpeedrun(duracaoMs) {
+    const totalMs = Math.max(0, Math.floor(duracaoMs));
+    const minutos = Math.floor(totalMs / 60000);
+    const segundos = Math.floor((totalMs % 60000) / 1000);
+    const milissegundos = totalMs % 1000;
+    return `${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}.${String(milissegundos).padStart(3, "0")}`;
+}
 
 // ============================================================================
 // CONTROLES PARA CELULAR
@@ -1822,8 +1831,8 @@ function pontoDentroDoPoligono(ponto, pontos) {
         if (
             cruzaLinhaHorizontal &&
             ponto.x <
-                ((anterior.x - atual.x) * (ponto.y - atual.y)) /
-                    (anterior.y - atual.y) + atual.x
+            ((anterior.x - atual.x) * (ponto.y - atual.y)) /
+            (anterior.y - atual.y) + atual.x
         ) {
             dentro = !dentro;
         }
@@ -1989,6 +1998,10 @@ function atualizarAfogamento(segundos) {
 function finalizarJogo(final) {
     if (estadoAfogamento.fase === "game-over") return;
 
+    const tempoFinal = final === "secreto" && inicioSpeedrunMs !== null
+        ? formatarTempoSpeedrun(performance.now() - inicioSpeedrunMs)
+        : null;
+
     window.boatPuzzles?.close();
     estadoAfogamento.fase = "game-over";
     window.hordeTimer?.stop();
@@ -1999,6 +2012,12 @@ function finalizarJogo(final) {
     const descricao = telaGameOver?.querySelector(".game-over-description"); // NÃO TOCAR NISSO
     const chamada = telaGameOver?.querySelector(".game-over-kicker");        // TÁ FUNCIONANDO BEM
     const reiniciar = document.querySelector(".game-over-button");           // NÃO ALTERAR NADA AQUI, POR FAVOR
+    const tempoElement = telaGameOver?.querySelector(".game-over-time");
+    const tempoValue = tempoElement?.querySelector("time");
+    if (tempoElement && tempoValue) {
+        tempoElement.hidden = tempoFinal === null;
+        if (tempoFinal !== null) tempoValue.textContent = tempoFinal;
+    }
 
     if (final === "secreto") {
         if (chamada) chamada.textContent = "você encontrou um final secreto!";
@@ -2046,6 +2065,9 @@ function reiniciarJogo() {
     atualizarZoomDoCenario();
 
     estadoAfogamento.fase = "normal";
+    // O botão de tentar novamente retoma a partida diretamente, sem voltar
+    // à tela de introdução; por isso o novo cronômetro começa aqui.
+    inicioSpeedrunMs = performance.now();
     estadoAfogamento.profundidade = 0;
     estadoAfogamento.tempoBolhas = 0;
     estadoAfogamento.quadroBolhas = 0;
@@ -2068,6 +2090,8 @@ function reiniciarJogo() {
     const descricao = telaGameOver?.querySelector(".game-over-description");
     const chamada = telaGameOver?.querySelector(".game-over-kicker");
     const reiniciar = document?.querySelector(".game-over-button");
+    const tempoElement = telaGameOver?.querySelector(".game-over-time");
+    if (tempoElement) tempoElement.hidden = true;
     if (chamada) chamada.textContent = "o mar foi mais fundo do que parecia";
     if (titulo) titulo.textContent = "GAME OVER";
     if (descricao) descricao.textContent = "o mar era muito fundo, você se afogou!";
@@ -2357,11 +2381,11 @@ function moverJogador(segundos) {
         cenarioAtual === "cidade" &&
         vertical < 0 &&
         jogador.x +
-            jogador.larguraColisao / 2 >=
-            portaEsquerda &&
+        jogador.larguraColisao / 2 >=
+        portaEsquerda &&
         jogador.x -
-            jogador.larguraColisao / 2 <=
-            portaDireita &&
+        jogador.larguraColisao / 2 <=
+        portaDireita &&
         jogador.y >= portaY &&
         novoY <= portaY
     ) {
@@ -2548,7 +2572,7 @@ function desenharJogador() {
     // que não apareça uma faixa sobre o cabelo após a redução da sprite.
     const margemSuperior =
         imagemAtual === imagemAguaPescoco &&
-        linha === 1
+            linha === 1
             ? 8
             : 1;
 
@@ -3253,10 +3277,9 @@ function atualizarTextoControles() {
             `<strong>${nomeCasa}</strong><br>
             WASD / Setas → Mover<br>
             E → Interagir / coletar item próximo<br>
-            F3 → ${
-                modoDebug
-                    ? "Esconder colisões"
-                    : "Mostrar colisões"
+            F3 → ${modoDebug
+                ? "Esconder colisões"
+                : "Mostrar colisões"
             }<br>
             Esc ou saída inferior → Costa`;
 
@@ -3266,17 +3289,15 @@ function atualizarTextoControles() {
             `<strong>${mapaSelecionado.nome}</strong><br>
             WASD / Setas → Mover<br>
             E → Interagir / coletar item próximo<br>
-            F3 → ${
-                modoDebug
-                    ? "Esconder colisões"
-                    : "Mostrar colisões"
+            F3 → ${modoDebug
+                ? "Esconder colisões"
+                : "Mostrar colisões"
             }<br>
             <span style="color:#ff6666">
-                Vermelho = ${
-                    mapaSelecionado.usaLayoutOriginal
-                        ? "barreira"
-                        : "área física sólida"
-                }
+                Vermelho = ${mapaSelecionado.usaLayoutOriginal
+                ? "barreira"
+                : "área física sólida"
+            }
             </span> |
             <span style="color:#4ca8ff">
                 Azul = água
@@ -3342,6 +3363,7 @@ function iniciarJogo() {
 function confirmarInicioJogo() {
     if (!jogoIniciado || telaIntroducao?.hidden !== false) return;
     telaIntroducao.hidden = true;
+    inicioSpeedrunMs = performance.now();
     window.hordeTimer?.start();
     atualizarCamera();
     atualizarTextoControles();
@@ -3566,6 +3588,9 @@ window.boatPuzzles?.init({
         return item ? nomesItens[item.id] : null;
     },
     consumeItem: consumirItemDoInventario,
+    getSpeedrunTime: () => formatarTempoSpeedrun(
+        inicioSpeedrunMs === null ? 0 : performance.now() - inicioSpeedrunMs
+    ),
     onVictory() {
         window.hordeTimer?.stop();
         teclas = {};

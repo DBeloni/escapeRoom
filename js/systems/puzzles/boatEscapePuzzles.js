@@ -63,6 +63,7 @@
     let promptText = null;
     let activePuzzle = null;
     let victory = false;
+    let victoryTime = "";
 
     function escapeHTML(value) {
         return String(value).replace(/[&<>"']/g, character => ({
@@ -448,11 +449,11 @@
             <div class="cover-task">
                 <div class="cover-task__stretcher" aria-label="Maca com três presilhas">
                     ${latches.map((latch, index) => {
-                        const done = index < state.step;
-                        return `<button class="cover-latch${done ? " is-released" : ""}" type="button" data-latch="${latch.id}" ${done ? "disabled" : ""}>
+            const done = index < state.step;
+            return `<button class="cover-latch${done ? " is-released" : ""}" type="button" data-latch="${latch.id}" ${done ? "disabled" : ""}>
                             <span>${done ? "✓" : index + 1}</span><strong>${latch.label}</strong>
                         </button>`;
-                    }).join("")}
+        }).join("")}
                 </div>
                 <div class="puzzle-progress">
                     <div><span>PRESILHAS SOLTAS</span><b>${state.step}/3</b></div>
@@ -538,6 +539,8 @@
 
     function showVictory() {
         victory = true;
+        const tempoDecorrido = options?.getSpeedrunTime?.() ?? "00:00.000";
+        victoryTime = String(tempoDecorrido);
         if (options?.onVictory) options.onVictory();
         if (!overlay) return;
         overlay.hidden = false;
@@ -548,6 +551,7 @@
                 <h2 id="victoryTitle">Você conseguiu sair.</h2>
                 <p>O motor pega depois de algumas tentativas. O barco se afasta do cais enquanto a maré começa a subir.</p>
                 <p class="victory-note">A vila fica para trás. O pescador conseguiu construir um barco e escapar da região.</p>
+                <p class="victory-time" aria-live="polite">Tempo: <time>${victoryTime || "00:00.000"}</time></p>
                 <button class="puzzle-button" type="button" data-action="restart">Jogar novamente</button>
             </div>`;
         overlay.querySelector("[data-action='restart']")?.focus();
@@ -781,6 +785,12 @@
         if (prompt) prompt.hidden = true;
     }
 
+    function setVictoryTime(timeText) {
+        victoryTime = String(timeText || "00:00.000");
+        const time = overlay?.querySelector(".victory-time time");
+        if (time) time.textContent = victoryTime;
+    }
+
     function interact(player) {
         if (isModalOpen() || victory) return true;
         const location = nearbyLocation(player);
@@ -818,6 +828,7 @@
         drawMarkers,
         interact,
         close,
+        setVictoryTime,
         isModalOpen,
         getProgress() {
             return { solved: [...solved], total: TASKS.length, victory };
