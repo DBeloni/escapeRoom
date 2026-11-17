@@ -4,6 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "check:js": "node tools/check-js.mjs"
+    "check:js": "node tools/check-js.mjs",
+    "check:links": "node tools/check-links.mjs",
+    "check": "npm run check:js && npm run check:links"
   }
 }

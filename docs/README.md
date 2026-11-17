@@ -4,6 +4,8 @@ Documentação narrativa básica do jogo. O objetivo é manter as informações 
 
 ## Arquivos
 
+- [Guia simples do código](GUIA_CODIGO.md): onde encontrar cada sistema e como a partida funciona.
+
 - [História](HISTORIA.md): resumo do contexto e dos acontecimentos.
 - [Introdução](INTRODUCAO.md): texto curto apresentado antes do início do jogo.
 - [Integração com o jogo](INTEGRACAO_COM_O_JOGO.md): relação entre a história e o objetivo jogável.

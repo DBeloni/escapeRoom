@@ -2,7 +2,6 @@
 const canvas = document.getElementById("gameCanvas");
 const contexto = canvas.getContext("2d");
 const aviso = document.getElementById("loading");
-const controles = document.getElementById("controls");
 const telaGameOver = document.getElementById("gameOver");
 const botaoReiniciar = document.getElementById("restartGame");
 const telaIntroducao = document.getElementById("introScreen");
@@ -262,7 +261,6 @@ function atualizarJoystickMobile(clientX, clientY) {
 function configurarControlesMobile() {
     const joystick = document.getElementById("mobileJoystick");
     const ring = joystick?.querySelector(".mobile-joystick-ring");
-    const debugButton = document.getElementById("mobileDebug");
     const backButton = document.getElementById("mobileBack");
     const pickupButton = document.getElementById("mobilePickup");
 
@@ -312,10 +310,6 @@ function configurarControlesMobile() {
     joystick.addEventListener("pointerup", finalizarJoystick, { passive: false });
     joystick.addEventListener("pointercancel", finalizarJoystick, { passive: false });
     joystick.addEventListener("lostpointercapture", limparEntradaMobile);
-
-    debugButton?.addEventListener("click", () => {
-        alternarModoDebug();
-    });
 
     pickupButton?.addEventListener("click", executarAcaoProxima);
 
@@ -1465,7 +1459,6 @@ function mudarCenario(destino, porta = null) {
 
         jogador.direcao = "cima";
 
-        atualizarTextoControles();
 
     } else {
 
@@ -1493,7 +1486,6 @@ function mudarCenario(destino, porta = null) {
 
         jogador.direcao = "baixo";
 
-        atualizarTextoControles();
     }
 
     atualizarZoomDoCenario();
@@ -2097,7 +2089,6 @@ function reiniciarJogo() {
     if (descricao) descricao.textContent = "o mar era muito fundo, você se afogou!";
     if (reiniciar) reiniciar.textContent = "tentar novamente";
 
-    atualizarTextoControles();
     atualizarCamera();
 }
 
@@ -3256,68 +3247,9 @@ function repetirJogo(
 }
 
 
-// ============================================================================
-// CONTROLES
-// ============================================================================
-
-function atualizarTextoControles() {
-
-    // A interface atual omite o painel textual de controles.
-    if (!controles) return;
-
-    if (
-        cenarioAtual ===
-        "casa"
-    ) {
-
-        const nomeCasa =
-            interiorAtual?.nome || "Dentro da casa";
-
-        controles.innerHTML =
-            `<strong>${nomeCasa}</strong><br>
-            WASD / Setas → Mover<br>
-            E → Interagir / coletar item próximo<br>
-            F3 → ${modoDebug
-                ? "Esconder colisões"
-                : "Mostrar colisões"
-            }<br>
-            Esc ou saída inferior → Costa`;
-
-    } else {
-
-        controles.innerHTML =
-            `<strong>${mapaSelecionado.nome}</strong><br>
-            WASD / Setas → Mover<br>
-            E → Interagir / coletar item próximo<br>
-            F3 → ${modoDebug
-                ? "Esconder colisões"
-                : "Mostrar colisões"
-            }<br>
-            <span style="color:#ff6666">
-                Vermelho = ${mapaSelecionado.usaLayoutOriginal
-                ? "barreira"
-                : "área física sólida"
-            }
-            </span> |
-            <span style="color:#4ca8ff">
-                Azul = água
-            </span>`;
-    }
-}
-
+// F3 mostra ou esconde as áreas de colisão para ajudar nos testes.
 function alternarModoDebug() {
-
-    modoDebug =
-        !modoDebug;
-
-    const debugButton = document.getElementById("mobileDebug");
-
-    if (debugButton) {
-        debugButton.setAttribute("aria-pressed", String(modoDebug));
-        debugButton.textContent = modoDebug ? "DEBUG ON" : "DEBUG";
-    }
-
-    atualizarTextoControles();
+    modoDebug = !modoDebug;
 }
 
 
@@ -3351,7 +3283,6 @@ function iniciarJogo() {
             "none";
 
         atualizarCamera();
-        atualizarTextoControles();
         desenharJogo();
 
         requestAnimationFrame(
@@ -3366,7 +3297,6 @@ function confirmarInicioJogo() {
     inicioSpeedrunMs = performance.now();
     window.hordeTimer?.start();
     atualizarCamera();
-    atualizarTextoControles();
     desenharJogo();
     requestAnimationFrame(repetirJogo);
 }

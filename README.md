@@ -39,7 +39,7 @@ escapeRoom/
 
 Antes de criar novas pistas, diálogos ou áreas, leia [`docs/README.md`](docs/README.md) e [`docs/CANONE_E_PENDENCIAS.md`](docs/CANONE_E_PENDENCIAS.md).
 
-A organização real dos arquivos em execução está descrita em [`docs/architecture.md`](docs/architecture.md).
+Para entender onde cada parte do jogo fica e como a partida funciona, consulte o [Guia simples do código](docs/GUIA_CODIGO.md).
 
 ## Equipe
 
@@ -50,9 +50,12 @@ A organização real dos arquivos em execução está descrita em [`docs/archite
 
 ## Como executar
 
-1. Abra `index.html` para acessar o site.
-2. Use o botão **Acessar jogo** para abrir `html/mapaPrincipal.html`.
-3. Para validar a sintaxe dos scripts, execute `npm run check:js`.
+1. Abra no VS Code a pasta `escapeRoom` inteira, e não apenas a pasta `html`.
+2. Inicie o Live Server pelo arquivo `index.html`, que fica na raiz do projeto.
+3. Acesse o jogo pelo botão **Acessar jogo** do site. O endereço do jogo será `/html/mapaPrincipal.html`.
+4. Para conferir os arquivos antes de entregar, execute `npm run check`.
+
+Também é possível abrir `index.html` diretamente no navegador, mas o Live Server é recomendado para testar o jogo. Não inicie o servidor dentro de `html`, `pages`, `css` ou `js`, pois isso muda a raiz dos endereços relativos.
 
 Não há etapa de build nem dependências externas instaladas pelo npm. O site usa Google Fonts pela internet.
 

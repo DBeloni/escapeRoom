@@ -1,137 +1,104 @@
 /*
- * Contagem regressiva do tempo de exposição à radiação.
+ * Cronômetro de cinco minutos.
+ * O script principal chama update() durante o jogo.
  */
-(function () {
-    "use strict";
+(() => {
+    const TEMPO_TOTAL = 5 * 60;
 
-    const DURATION_SECONDS = 5 * 60;
-
-    const panel = document.querySelector("#endTimer");
-    const phaseLabel = document.querySelector("#endPhaseLabel");
-    const countdown = document.querySelector("#endCountdown");
+    const painel = document.querySelector("#endTimer");
+    const contador = document.querySelector("#endCountdown");
     const status = document.querySelector("#endTimerStatus");
-    const segments = Array.from(
-        document.querySelectorAll("[data-end-segment]")
-    );
+    const segmentos = document.querySelectorAll("[data-end-segment]");
 
-    let remainingSeconds = DURATION_SECONDS;
-    let running = false;
-    let finished = false;
-    let lastRenderedSecond = null;
-    let lastUpdateTime = null;
+    let tempoRestante = TEMPO_TOTAL;
+    let ativo = false;
+    let finalizado = false;
+    let ultimoInstante = 0;
 
-    function formatTime(totalSeconds) {
-        const safeSeconds = Math.max(0, Math.ceil(totalSeconds));
-        const minutes = Math.floor(safeSeconds / 60);
-        const seconds = safeSeconds % 60;
-        return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    function formatarTempo(segundos) {
+        const tempo = Math.max(0, Math.ceil(segundos));
+        const minutos = Math.floor(tempo / 60);
+        const resto = tempo % 60;
+
+        return `${String(minutos).padStart(2, "0")}:${String(resto).padStart(2, "0")}`;
     }
 
-    function render(force = false) {
-        if (!panel) return;
+    function atualizarTela() {
+        if (!painel) return;
 
-        const displayedSecond = Math.ceil(remainingSeconds);
-        if (!force && displayedSecond === lastRenderedSecond) return;
-        lastRenderedSecond = displayedSecond;
+        const texto = formatarTempo(tempoRestante);
+        const [minutos, segundos] = texto.split(":").map(Number);
 
-        const timeText = formatTime(remainingSeconds);
-
-        if (phaseLabel) {
-            phaseLabel.textContent = "Tempo até a contaminação";
-        }
-
-        if (countdown) {
-            const roundedSeconds = Math.max(0, Math.ceil(remainingSeconds));
-            const minutes = Math.floor(roundedSeconds / 60);
-            const seconds = roundedSeconds % 60;
-
-            countdown.textContent = timeText;
-            countdown.setAttribute("datetime", `PT${minutes}M${seconds}S`);
-            countdown.setAttribute("aria-label", `Tempo restante: ${timeText}`);
+        if (contador) {
+            contador.textContent = texto;
+            contador.setAttribute("datetime", `PT${minutos}M${segundos}S`);
+            contador.setAttribute("aria-label", `Tempo restante: ${texto}`);
         }
 
         if (status) {
-            status.textContent = finished
-                ? "EXPOSIÇÃO FATAL"
-                : running
-                    ? "EXPOSIÇÃO CRÍTICA"
-                    : "CONTAGEM PAUSADA";
+            if (finalizado) {
+                status.textContent = "EXPOSIÇÃO FATAL";
+            } else {
+                status.textContent = ativo ? "EXPOSIÇÃO CRÍTICA" : "CONTAGEM PAUSADA";
+            }
         }
 
-        panel.dataset.status = finished
-            ? "complete"
-            : running
-                ? "running"
-                : "paused";
+        painel.dataset.status = finalizado ? "complete" : ativo ? "running" : "paused";
 
-        segments.forEach(segment => {
-            segment.dataset.state = finished ? "complete" : "current";
+        segmentos.forEach(segmento => {
+            segmento.dataset.state = finalizado ? "complete" : "current";
         });
     }
 
-    function start() {
-        remainingSeconds = DURATION_SECONDS;
-        running = true;
-        finished = false;
-        lastRenderedSecond = null;
-        lastUpdateTime = performance.now();
+    function iniciar() {
+        tempoRestante = TEMPO_TOTAL;
+        ativo = true;
+        finalizado = false;
+        ultimoInstante = performance.now();
 
-        if (panel) panel.hidden = false;
-        render(true);
+        if (painel) painel.hidden = false;
+        atualizarTela();
     }
 
-    function stop() {
-        if (running && lastUpdateTime !== null) {
-            remainingSeconds = Math.max(
-                0,
-                remainingSeconds - (performance.now() - lastUpdateTime) / 1000
-            );
-        }
-        running = false;
-        lastUpdateTime = null;
-        render(true);
-    }
-
-    function reset() {
-        remainingSeconds = DURATION_SECONDS;
-        running = false;
-        finished = false;
-        lastRenderedSecond = null;
-        lastUpdateTime = null;
-        render(true);
-    }
-
-    function update() {
-        if (
-            !running ||
-            finished ||
-            lastUpdateTime === null
-        ) {
-            return;
+    function parar() {
+        if (ativo) {
+            const agora = performance.now();
+            tempoRestante -= (agora - ultimoInstante) / 1000;
         }
 
-        const now = performance.now();
-        remainingSeconds = Math.max(
-            0,
-            remainingSeconds - (now - lastUpdateTime) / 1000
-        );
-        lastUpdateTime = now;
+        ativo = false;
+        atualizarTela();
+    }
 
-        if (remainingSeconds === 0) {
-            running = false;
-            finished = true;
-            lastUpdateTime = null;
-            // O limite de cinco minutos encerra a partida por infecção.
+    function reiniciar() {
+        tempoRestante = TEMPO_TOTAL;
+        ativo = false;
+        finalizado = false;
+        atualizarTela();
+    }
+
+    function atualizar() {
+        if (!ativo) return;
+
+        const agora = performance.now();
+        tempoRestante -= (agora - ultimoInstante) / 1000;
+        ultimoInstante = agora;
+
+        if (tempoRestante <= 0) {
+            tempoRestante = 0;
+            ativo = false;
+            finalizado = true;
             window.finalizarJogo?.("infectado");
         }
 
-        render();
+        atualizarTela();
     }
 
+    // O jogo usa estes quatro comandos para controlar o cronômetro.
     window.hordeTimer = {
-        start,
-        stop,
-        reset,
-        update
+        start: iniciar,
+        stop: parar,
+        reset: reiniciar,
+        update: atualizar
     };
 })();
