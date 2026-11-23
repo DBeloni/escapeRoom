@@ -219,3 +219,228 @@
 .field-diary__entries li { padding:10px; border-left:2px solid var(--rust); background:var(--line-dark); color:var(--white); font-size:12px; line-height:1.5; }
 .field-diary__entries time { display:block; margin-bottom:4px; color:var(--paper-2); font:10px/1.3 var(--mono); }
 .field-diary__empty { color:var(--paper-2)!important; border-left-color:var(--line)!important; }
+
+/* --------------------------------------------------------------------------
+   GUIA ACESSÍVEL E INSPEÇÃO DO INVENTÁRIO
+   -------------------------------------------------------------------------- */
+.accessible-guide-toggle {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    z-index: 24;
+    min-height: 38px;
+    padding: 9px 12px;
+    border: 1px solid var(--rust);
+    border-radius: 3px;
+    color: var(--white);
+    background: var(--ink-2);
+    font: 700 10px/1 var(--mono);
+    letter-spacing: .08em;
+    cursor: pointer;
+}
+
+.accessible-guide-toggle:hover,
+.accessible-guide-toggle:focus-visible {
+    border-color: var(--signal);
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+}
+
+.accessible-guide {
+    position: fixed;
+    z-index: 35;
+    right: 12px;
+    bottom: 58px;
+    width: min(390px, calc(100vw - 24px));
+    max-height: min(72vh, 650px);
+    overflow: auto;
+    padding: 15px;
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--rust);
+    border-radius: 4px;
+    color: var(--white);
+    background: var(--ink-2);
+    box-shadow: 0 14px 38px var(--line-dark);
+}
+
+.accessible-guide[hidden] { display: none; }
+
+.accessible-guide__header,
+.item-inspection__card > header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.accessible-guide__header p,
+.item-inspection__card > header p {
+    margin: 0 0 5px;
+    color: var(--rust-light, var(--rust));
+    font: 700 9px/1 var(--mono);
+    letter-spacing: .12em;
+}
+
+.accessible-guide__header h2,
+.item-inspection__card h2 {
+    margin: 0;
+    color: var(--white);
+    font: 700 22px/1.1 var(--body);
+}
+
+.accessible-guide__header button,
+.item-inspection__card > header button {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--white);
+    background: transparent;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.accessible-guide__intro,
+.accessible-guide__help {
+    color: var(--paper-2);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.accessible-guide__location {
+    margin: 12px 0;
+    padding: 8px 10px;
+    border-left: 2px solid var(--rust);
+    color: var(--white);
+    background: var(--line-dark);
+    font: 600 11px/1.4 var(--mono);
+}
+
+.accessible-guide section { margin-top: 14px; }
+.accessible-guide section h3 {
+    margin: 0 0 7px;
+    color: var(--paper-2);
+    font: 700 10px/1.3 var(--mono);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+}
+
+.accessible-guide__travel,
+.accessible-guide__list {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.accessible-guide__travel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.accessible-guide__travel button,
+.accessible-guide__list button {
+    width: 100%;
+    min-height: 36px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--white);
+    background: var(--paper);
+    font: 600 11px/1.35 var(--body);
+    text-align: left;
+    cursor: pointer;
+}
+
+.accessible-guide__travel button:hover,
+.accessible-guide__travel button:focus-visible,
+.accessible-guide__list button:hover,
+.accessible-guide__list button:focus-visible {
+    border-color: var(--signal);
+    outline: 2px solid var(--signal);
+    outline-offset: 1px;
+}
+
+.accessible-guide__travel button[aria-current="location"] {
+    border-color: var(--rust);
+    background: var(--line-dark);
+}
+
+.accessible-guide__list li {
+    color: var(--paper-2);
+    font-size: 11px;
+}
+
+.accessible-guide__list button:disabled {
+    color: var(--muted);
+    background: var(--line-dark);
+    cursor: default;
+}
+
+.accessible-guide__help { margin: 13px 0 0; }
+
+.inventory-slot--filled { padding: 0; }
+.inventory-slot--filled button {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 40px;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+.inventory-slot--filled button:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: -3px;
+}
+
+.item-inspection {
+    position: fixed;
+    z-index: 80;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+    background: rgb(0 0 0 / 76%);
+}
+.item-inspection[hidden] { display: none; }
+.item-inspection__card {
+    width: min(420px, 100%);
+    padding: 19px;
+    border: 1px solid var(--line);
+    border-top: 2px solid var(--rust);
+    color: var(--white);
+    background: var(--ink-2);
+    box-shadow: 0 18px 60px var(--line-dark);
+}
+.item-inspection__card h2 { margin: 14px 0 8px; }
+.item-inspection__card > p {
+    color: var(--paper-2);
+    font-size: 13px;
+    line-height: 1.55;
+}
+.item-inspection__card .item-inspection__use {
+    padding: 9px 11px;
+    border-left: 2px solid var(--rust);
+    background: var(--line-dark);
+}
+.item-inspection__button {
+    min-height: 38px;
+    padding: 8px 12px;
+    border: 1px solid var(--rust);
+    color: var(--white);
+    background: var(--paper);
+    font: 700 11px/1 var(--mono);
+    cursor: pointer;
+}
+
+@media (max-width: 700px) {
+    .accessible-guide-toggle { top: 10px; left: 10px; }
+    .accessible-guide {
+        top: 55px;
+        left: 10px;
+        width: min(360px, calc(100vw - 20px));
+        max-height: min(64vh, 560px);
+    }
+}

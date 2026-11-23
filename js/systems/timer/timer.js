@@ -92,6 +92,8 @@
         tempoRestante = TEMPO_TOTAL;
         ativo = false;
         finalizado = false;
+        ultimoInstante = 0;
+        if (painel) painel.hidden = true;
         atualizarTela();
     }
 

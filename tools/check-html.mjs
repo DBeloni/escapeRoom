@@ -1,90 +1,57 @@
-import fs from 'node:fs/promises';
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { extname, join } from "node:path";
 
-// 1. Coloque o endereço (caminho local ou URL) do arquivo HTML aqui
-const ENDERECO_HTML = 'https://127.0.0.1/html/finaisgit .html';
-// Exemplo com link externo: const ENDERECO_HTML = 'https://example.com';
+const htmlFiles = [];
+const errors = [];
 
-// 2. Função que valida a estrutura das tags HTML5
-function validarTagsHTML5(html) {
-  const voidTags = new Set([
-    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-    'link', 'meta', 'param', 'source', 'track', 'wbr'
-  ]);
-
-  const stack = [];
-
-  // Remove DOCTYPE, comentários e conteúdos de <script>/<style> para evitar falsos positivos
-  const htmlLimpo = html
-    .replace(/<!DOCTYPE[^>]*>/gi, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '');
-
-  const tagRegex = /<\/?([a-zA-Z0-9-]+)(?:\s[^>]*)?>/g;
-  let match;
-
-  while ((match = tagRegex.exec(htmlLimpo)) !== null) {
-    const fullTag = match;
-    const tagName = match.toLowerCase();
-
-    if (voidTags.has(tagName) || fullTag.endsWith('/>')) {
-      continue;
+function walk(folder) {
+    for (const name of readdirSync(folder)) {
+        if (name === ".git" || name === "node_modules") continue;
+        const file = join(folder, name);
+        if (statSync(file).isDirectory()) walk(file);
+        else if (extname(file).toLowerCase() === ".html") htmlFiles.push(file);
     }
-
-    if (fullTag.startsWith('</')) {
-      if (stack.length === 0) {
-        return { valido: false, erro: `Tag de fechamento inesperada: </${tagName}>` };
-      }
-      const ultimaAberta = stack.pop();
-      if (ultimaAberta !== tagName) {
-        return {
-          valido: false,
-          erro: `Esperava fechar </${ultimaAberta}>, mas encontrou </${tagName}>`
-        };
-      }
-    } else {
-      stack.push(tagName);
-    }
-  }
-
-  if (stack.length > 0) {
-    return {
-      valido: false,
-      erro: `Tags abertas que não foram fechadas: ${stack.map(t => `<${t}>`).join(', ')}`
-    };
-  }
-
-  return { valido: true, mensagem: 'Nenhum erro de estrutura encontrado!' };
 }
 
-// 3. Função que lê o arquivo local ou baixa da URL e executa a validação
-async function verificarHTML(endereco) {
-  try {
-    console.log(`🔍 Verificando: ${endereco}...`);
-    let codigoHTML = '';
+function checkFile(file) {
+    const html = readFileSync(file, "utf8");
+    const label = file.replaceAll("\\", "/");
 
-    // Verifica se é uma URL web ou um arquivo local no computador
-    if (endereco.startsWith('http://') || endereco.startsWith('https://')) {
-      const resposta = await fetch(endereco);
-      if (!resposta.ok) {
-        throw new Error(`Erro HTTP ao acessar a URL: ${resposta.status}`);
-      }
-      codigoHTML = await resposta.text();
-    } else {
-      codigoHTML = await fs.readFile(endereco, 'utf-8');
+    if (!/^\s*<!doctype\s+html\s*>/i.test(html)) errors.push(`${label}: falta <!doctype html>.`);
+    if (!/<html\b[^>]*\blang=["'][^"']+["']/i.test(html)) errors.push(`${label}: a tag html precisa declarar lang.`);
+    if (!/<title>\s*[^<]+\s*<\/title>/i.test(html)) errors.push(`${label}: falta um título de página.`);
+    if (!/<main\b/i.test(html)) errors.push(`${label}: falta a região principal <main>.`);
+
+    const ids = new Set();
+    for (const match of html.matchAll(/\bid=["']([^"']+)["']/gi)) {
+        const id = match[1];
+        if (ids.has(id)) errors.push(`${label}: id duplicado "${id}".`);
+        ids.add(id);
     }
 
-    const resultado = validarTagsHTML5(codigoHTML);
-
-    if (resultado.valido) {
-      console.log('✅ SUCESSO:', resultado.mensagem);
-    } else {
-      console.error('❌ ERRO NO HTML:', resultado.erro);
+    for (const match of html.matchAll(/<img\b([^>]*)>/gi)) {
+        if (!/\balt\s*=\s*["'][^"']*["']/i.test(match[1])) {
+            errors.push(`${label}: imagem sem atributo alt.`);
+        }
     }
-  } catch (erro) {
-    console.error('⚠️ Falha ao ler ou validar o HTML:', erro.message);
-  }
+
+    for (const match of html.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)) {
+        const attrs = match[1];
+        const body = match[2].replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").trim();
+        const hasLabel = /\baria-label\s*=\s*["'][^"']+/.test(attrs) || /\btitle\s*=\s*["'][^"']+/.test(attrs) || body.length > 0;
+        if (!hasLabel) errors.push(`${label}: botão sem nome acessível.`);
+    }
 }
 
-// Executa o script
-await verificarHTML(ENDERECO_HTML);
+walk(".");
+for (const file of htmlFiles) checkFile(file);
+
+if (htmlFiles.length < 12) errors.push(`Esperadas pelo menos 12 páginas HTML incluindo o jogo; encontradas ${htmlFiles.length}.`);
+
+if (errors.length) {
+    console.error(`Auditoria estrutural HTML: ${errors.length} problema(s).`);
+    for (const error of errors) console.error(`- ${error}`);
+    process.exitCode = 1;
+} else {
+    console.log(`Auditoria estrutural OK: ${htmlFiles.length} arquivos HTML, IDs sem duplicação e requisitos básicos encontrados.`);
+}

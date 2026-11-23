@@ -6,6 +6,11 @@
   "scripts": {
     "check:js": "node tools/check-js.mjs",
     "check:links": "node tools/check-links.mjs",
-    "check": "npm run check:js && npm run check:links"
+    "check": "npm run check:js && npm run check:links && npm run check:html && npm run check:accessibility && npm run check:rules && npm run test:puzzles",
+    "check:html": "node tools/check-html.mjs",
+    "check:accessibility": "node tools/check-accessibility.mjs",
+    "check:rules": "node tools/check-rules.mjs",
+    "test:puzzles": "node tools/test-puzzles.mjs",
+    "check:nu-html": "node tools/validate-nu-html.mjs"
   }
 }

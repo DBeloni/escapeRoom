@@ -5,7 +5,7 @@
 O projeto tem duas partes: o site institucional e o jogo. Preserve essa separação.
 
 - **Site:** `index.html`, `pages/*.html`, `css/site.css`, `js/site.js` e os assets usados por essas páginas.
-- **Jogo:** `html/mapaPrincipal.html`, `css/style.css`, `css/ui.css`, `css/puzzles.css`, `js/script.js`, `js/systems/puzzles/boatEscapePuzzles.js`, `js/systems/timer/hordeTimer.js` e os assets de jogo.
+- **Jogo:** `html/mapaPrincipal.html`, `css/style.css`, `css/ui.css`, `css/puzzles.css`, `js/script.js`, `js/systems/puzzles/boatEscapePuzzles.js`, `js/systems/timer/timer.js` e os assets de jogo.
 
 Não altere mecânicas do jogo em uma tarefa institucional. Não altere a identidade visual do site em uma tarefa de gameplay sem necessidade.
 
@@ -57,7 +57,7 @@ Reutilize regras e tokens existentes. Mantenha contraste, foco visível, respons
 
 - `js/script.js` é o script principal carregado pela página do jogo e concentra a exploração, o jogador, o mapa, as colisões, os itens e a integração do gameplay.
 - `js/systems/puzzles/boatEscapePuzzles.js` implementa os desafios ligados à construção do barco.
-- `js/systems/timer/hordeTimer.js` controla o temporizador da partida.
+- `js/systems/timer/timer.js` controla o temporizador da partida.
 
 A página `html/mapaPrincipal.html` carrega esses três scripts em ordem. Preserve essa ordem e os IDs/classes usados pelo HTML. Não introduza ES Modules sem atualizar conscientemente a entrada do jogo e validar o carregamento no navegador.
 
