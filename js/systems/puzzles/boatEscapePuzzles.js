@@ -1064,7 +1064,7 @@
             }
             renderShell("Mensagem recebida", "RÁDIO COMUNITÁRIA · TRANSMISSÃO RECUPERADA", `
                 <div class="puzzle-reward">
-                    <p>“Se o motor estiver preso, não force o eixo. As rodas laterais puxam a central; a marca de referência precisa ficar voltada para cima.”</p>
+                    <p>“A senha para passar pela passagem secreta da montanha é 67”</p>
                     <p>A mensagem parece ser uma orientação deixada por alguém da oficina antes da evacuação.</p>
                     <button class="puzzle-button" type="button" data-action="close">Fechar rádio</button>
                 </div>`, "A frequência correta foi encontrada.");
