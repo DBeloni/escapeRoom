@@ -330,6 +330,7 @@ textarea:focus-visible {
     text-transform: uppercase
 }
 
+
 .hero-overline {
     margin: 27px 0 19px;
     font: 11px var(--mono);
@@ -762,7 +763,7 @@ textarea:focus-visible {
     background: linear-gradient(90deg,
             var(--ink) 0%,
             var(--ink) 20%,
-            var(--ink) 60%,
+            var(--ink) 25%,
             transparent 75%),
         url('../assets/midnight-outbreak.png') center 0% / 100% auto no-repeat;
     border-bottom: 1px solid var(--line);
@@ -1304,7 +1305,7 @@ textarea:focus-visible {
 }
 
 .ending-best {
-    border-top: 3px solid var(--olive)
+    border-top: 3px solid green
 }
 
 .ending-fail {
@@ -1312,7 +1313,7 @@ textarea:focus-visible {
 }
 
 .ending-secret {
-    border-top: 3px solid gray;
+    border-top: 3px solid gray
 }
 
 .ending-footnote {
@@ -1348,6 +1349,7 @@ textarea:focus-visible {
 
 kbd {
     min-width: 34px;
+    padding: 10px;
     height: 34px;
     display: grid;
     place-items: center;
@@ -1379,6 +1381,10 @@ kbd {
 .manual-aside p {
     color: var(--paper-2);
     font-size: 13px
+}
+
+.manual-aside span {
+    color: var(--rust);
 }
 
 .step-grid,
@@ -1547,7 +1553,7 @@ details p {
     justify-content: space-between;
     gap: 25px;
     padding: 22px;
-    background: var(--paper-2);
+    background: var(--ink-2);
     border: 1px solid var(--line-dark)
 }
 
@@ -1558,7 +1564,7 @@ details p {
 }
 
 .repo-strip .micro-label {
-    color: var(--olive)
+    color: var(--rust)
 }
 
 .repo-strip strong {
@@ -1792,10 +1798,10 @@ details p {
 .contact-warning {
     margin-top: 25px;
     padding: 14px;
-    border-left: 2px solid var(--signal);
-    background: var(--line);
+    border-left: 2px solid var(--rust);
+    background: var(--ink-2);
     font: 10px/1.7 var(--mono);
-    color: var(--signal)
+    color: var(--rust-light)
 }
 
 .contact-form-wrap {
@@ -2512,14 +2518,75 @@ body {
 }
 
 /* Tabela semântica do catálogo de itens */
-.items-table { width: 100%; border-collapse: collapse; background: var(--paper); color: var(--ink); }
-.items-table caption { padding: 0 0 12px; text-align: left; color: var(--muted); font: 500 12px/1.5 var(--mono); }
-.items-table th, .items-table td { padding: 16px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
-.items-table th { color: var(--paper-2); background: var(--ink); font: 600 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
-.items-table td { font-size: 14px; line-height: 1.6; }
-.items-table td:first-child { min-width: 170px; }
-.items-table td strong, .items-table td small { display: block; }
-.items-table td small { margin-top: 5px; color: var(--muted); font: 10px/1.4 var(--mono); }
-.item-table-art { display: block; width: 58px; height: 58px; margin-bottom: 8px; object-fit: contain; image-rendering: pixelated; }
-.items-table tbody tr:hover { background: var(--paper-2); }
-@media (max-width: 760px) { .items-table { display: block; overflow-x: auto; } .items-table th, .items-table td { min-width: 150px; padding: 11px; } }
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.items-table caption {
+    padding: 0 0 12px;
+    text-align: left;
+    color: var(--muted);
+    font: 500 12px/1.5 var(--mono);
+}
+
+.items-table th,
+.items-table td {
+    padding: 16px;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.items-table th {
+    color: var(--paper-2);
+    background: var(--ink);
+    font: 600 11px/1.4 var(--mono);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.items-table td {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--white);
+}
+
+.items-table td:first-child {
+    min-width: 170px;
+}
+
+.items-table td strong,
+.items-table td small {
+    display: block;
+    color: var(--rust);
+}
+
+.items-table td small {
+    margin-top: 5px;
+    color: var(--muted);
+    font: 10px/1.4 var(--mono);
+}
+
+.item-table-art {
+    display: block;
+    width: 58px;
+    height: 58px;
+    margin-bottom: 8px;
+    object-fit: contain;
+    image-rendering: pixelated;
+}
+@media (max-width: 760px) {
+    .items-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .items-table th,
+    .items-table td {
+        min-width: 150px;
+        padding: 11px;
+    }
+}
