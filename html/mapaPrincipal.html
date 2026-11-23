@@ -35,6 +35,17 @@
         </aside>
 
 
+        <button id="diaryToggle" class="diary-toggle" type="button" aria-expanded="false" aria-controls="fieldDiary">DIÁRIO DE BORDO</button>
+
+        <section id="fieldDiary" class="field-diary" hidden aria-labelledby="fieldDiaryTitle">
+            <header class="field-diary__header">
+                <div><p>REGISTRO DE CAMPO</p><h2 id="fieldDiaryTitle">Diário de bordo</h2></div>
+                <button id="diaryClose" type="button" aria-label="Fechar diário">×</button>
+            </header>
+            <p class="field-diary__intro">Pistas, mensagens e ações importantes registradas durante a exploração.</p>
+            <ol id="diaryEntries" class="field-diary__entries" aria-live="polite"><li class="field-diary__empty">Nenhum registro encontrado.</li></ol>
+        </section>
+
         <aside id="inventory" aria-label="Inventário">
             <div class="inventory-heading">
                 <span class="inventory-heading__label">INVENTÁRIO</span>

@@ -9,6 +9,41 @@ const botaoIniciar = document.getElementById("startGame");
 const musicaTema = new Audio("../assets/musicTheme.mp3");
 musicaTema.loop = true;
 
+const botaoDiario = document.getElementById("diaryToggle");
+const painelDiario = document.getElementById("fieldDiary");
+const listaDiario = document.getElementById("diaryEntries");
+const botaoFecharDiario = document.getElementById("diaryClose");
+const registrosDiario = [];
+
+function registrarNoDiario(categoria, mensagem) {
+    if (!mensagem) return;
+    const registro = {
+        categoria: String(categoria || "REGISTRO"),
+        mensagem: String(mensagem),
+        instante: new Date()
+    };
+    registrosDiario.push(registro);
+    if (!listaDiario) return;
+    let markup = "";
+    for (let indice = registrosDiario.length - 1; indice >= 0; indice -= 1) {
+        const item = registrosDiario[indice];
+        markup += `<li><time>${item.instante.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" })} · ${item.categoria}</time>${item.mensagem}</li>`;
+    }
+    listaDiario.innerHTML = markup;
+}
+
+function alternarDiario(aberto) {
+    if (!painelDiario || !botaoDiario) return;
+    const mostrar = typeof aberto === "boolean" ? aberto : painelDiario.hidden;
+    painelDiario.hidden = !mostrar;
+    botaoDiario.setAttribute("aria-expanded", String(mostrar));
+    if (mostrar) botaoFecharDiario?.focus();
+    else botaoDiario.focus();
+}
+
+if (botaoDiario) botaoDiario.onclick = function () { alternarDiario(); };
+if (botaoFecharDiario) botaoFecharDiario.onclick = function () { alternarDiario(false); };
+
 const caminhosSpritesItens = {
     ITM_001: "../assets/itens/chaveDeFenda.png",
     ITM_002: "../assets/itens/chaveInglesa.png",
@@ -26,12 +61,34 @@ for (const itemId of Object.keys(caminhosSpritesItens)) {
 
 // Ferramentas e suprimentos ficam em locais ligados ao uso de cada objeto.
 // A gasolina foi levada para a oficina: não faz sentido deixá-la na enfermaria.
+function criarItemInterativo(dados) {
+    return {
+        id: dados.id,
+        casa: dados.casa,
+        x: dados.x,
+        y: dados.y,
+        estaDisponivel: true,
+        estaProximo: function (personagem, casaAtual, raio) {
+            if (!this.estaDisponivel || !personagem || this.casa !== casaAtual) return false;
+            return Math.hypot(this.x - personagem.x, this.y - personagem.y) <= raio;
+        },
+        podeSerColetado: function (itensInventario, capacidade) {
+            return this.estaDisponivel && itensInventario.length < capacidade && !itensInventario.includes(this.id);
+        },
+        coletar: function () {
+            if (!this.estaDisponivel) return false;
+            this.estaDisponivel = false;
+            return true;
+        }
+    };
+}
+
 const itensNoMundo = [
-    { id: "ITM_001", casa: "casa-costeira-01", x: 365, y: 190 },
-    { id: "ITM_002", casa: "casa-costeira-05", x: 875, y: 350 },
-    { id: "ITM_003", casa: "casa-costeira-02", x: 980, y: 345 },
-    { id: "ITM_004", casa: "casa-costeira-03", x: 500, y: 330 },
-    { id: "ITM_005", casa: "casa-costeira-05", x: 1430, y: 420 }
+    criarItemInterativo({ id: "ITM_001", casa: "casa-costeira-01", x: 365, y: 190 }),
+    criarItemInterativo({ id: "ITM_002", casa: "casa-costeira-05", x: 875, y: 350 }),
+    criarItemInterativo({ id: "ITM_003", casa: "casa-costeira-02", x: 980, y: 345 }),
+    criarItemInterativo({ id: "ITM_004", casa: "casa-costeira-03", x: 500, y: 330 }),
+    criarItemInterativo({ id: "ITM_005", casa: "casa-costeira-05", x: 1430, y: 420 })
 ];
 const capacidadeInventario = 5;
 const inventario = [];
@@ -53,9 +110,8 @@ function encontrarIndiceItemProximo(player) {
 
     for (let indice = 0; indice < itensNoMundo.length; indice += 1) {
         const item = itensNoMundo[indice];
-        const distancia = Math.hypot(item.x - personagem.x, item.y - personagem.y);
 
-        if (item.casa === interiorAtual.id && distancia <= raioInteracaoItem) {
+        if (item.estaProximo(personagem, interiorAtual.id, raioInteracaoItem)) {
             return indice;
         }
     }
@@ -72,7 +128,7 @@ function coletarItemProximo() {
     }
 
     const item = itensNoMundo[index];
-    if (inventario.length >= capacidadeInventario || inventario.includes(item.id)) {
+    if (!item.podeSerColetado(inventario, capacidadeInventario)) {
         if (message) {
             message.textContent = inventario.includes(item.id)
                 ? "Esse item já está no inventário."
@@ -81,8 +137,10 @@ function coletarItemProximo() {
         return false;
     }
 
+    if (!item.coletar()) return false;
     itensNoMundo.splice(index, 1);
     inventario.push(item.id);
+    registrarNoDiario("ITEM COLETADO", `${nomesItens[item.id]} foi adicionado ao inventário.`);
     atualizarInventarioHUD(`${nomesItens[item.id]} coletado.`);
     return true;
 }
@@ -130,6 +188,7 @@ function consumirItemDoInventario(itemId) {
     if (index === -1) return false;
 
     inventario.splice(index, 1);
+    registrarNoDiario("ITEM UTILIZADO", `${nomesItens[itemId]} foi utilizado.`);
     atualizarInventarioHUD(`${nomesItens[itemId]} utilizado.`);
     return true;
 }
@@ -3337,10 +3396,11 @@ function iniciarJogo() {
 function confirmarInicioJogo() {
     if (!jogoIniciado || telaIntroducao?.hidden !== false) return;
     telaIntroducao.hidden = true;
-    musicaTema.play().catch(() => {
+    musicaTema.play().catch(function () {
         // A reprodução depende da permissão do navegador para áudio iniciado pelo usuário.
     });
     inicioSpeedrunMs = performance.now();
+    registrarNoDiario("INÍCIO", "A exploração da zona costeira começou.");
     window.hordeTimer?.start();
     atualizarCamera();
     desenharJogo();
@@ -3378,6 +3438,12 @@ function tratarTeclaPressionada(evento) {
 
     if (tecla === "f3") {
         alternarModoDebug();
+        evento.preventDefault();
+        return;
+    }
+
+    if (tecla === "escape" && painelDiario && !painelDiario.hidden) {
+        alternarDiario(false);
         evento.preventDefault();
         return;
     }
@@ -3538,6 +3604,12 @@ window.boatPuzzles?.init({
         return nomesItens[itensNoMundo[indiceItem].id];
     },
     consumeItem: consumirItemDoInventario,
+    onPuzzleSolved: function (label, reward) {
+        registrarNoDiario("DESAFIO RESOLVIDO", `${label}: ${reward}.`);
+    },
+    onClueFound: function (message) {
+        registrarNoDiario("PISTA", message);
+    },
     getSpeedrunTime: function () {
         const duracao = inicioSpeedrunMs === null
             ? 0

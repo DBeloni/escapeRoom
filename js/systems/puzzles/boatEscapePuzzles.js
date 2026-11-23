@@ -185,6 +185,29 @@
     }
 
     const solved = new Set();
+
+    // Cada mecanismo mantém seu estado e oferece operações próprias.
+    function criarObjetoInterativo(id, estado) {
+        return {
+            id: id,
+            estado: estado,
+            isSolved: function () { return solved.has(id) || this.estado.solved === true; },
+            complete: function () {
+                if (this.isSolved()) return false;
+                solved.add(id);
+                this.estado.solved = true;
+                return true;
+            },
+            reset: function (novoEstado) {
+                for (const chave of Object.keys(this.estado)) {
+                    delete this.estado[chave];
+                }
+                Object.assign(this.estado, novoEstado);
+                solved.delete(id);
+            }
+        };
+    }
+
     const puzzleState = {
         wood: { round: 0, current: createWoodRound(0) },
         engine: createEngineState(),
@@ -203,6 +226,15 @@
                 progress: 0
             }
         }
+    };
+
+    const objetosInterativos = {
+        wood: criarObjetoInterativo("wood", puzzleState.wood),
+        engine: criarObjetoInterativo("engine", puzzleState.engine),
+        circuit: criarObjetoInterativo("circuit", puzzleState.circuit),
+        cover: criarObjetoInterativo("cover", puzzleState.cover),
+        radio: criarObjetoInterativo("radio", puzzleState.radio),
+        assembly: criarObjetoInterativo("assembly", puzzleState.assembly)
     };
 
     let options = null;
@@ -283,8 +315,14 @@
     }
 
     function completePuzzle(id, rewardTitle, rewardText) {
-        if (solved.has(id)) return;
-        solved.add(id);
+        const objeto = objetosInterativos[id];
+        if (objeto && !objeto.complete()) return;
+        if (!objeto && solved.has(id)) return;
+        if (!objeto) solved.add(id);
+        if (options?.onPuzzleSolved) {
+            const tarefa = TASKS.find(function (item) { return item.id === id; });
+            options.onPuzzleSolved(tarefa ? tarefa.label : id, rewardTitle);
+        }
         renderShell("Peça recuperada", "PLANO DE FUGA", `
             <div class="puzzle-reward">
                 <h3>${escapeHTML(rewardTitle)}</h3>
@@ -1002,6 +1040,9 @@
                 return;
             }
             puzzleState.radio.solved = true;
+            if (options?.onClueFound) {
+                options.onClueFound("Rádio: as rodas laterais puxam a engrenagem central; a marca de referência deve ficar voltada para cima.");
+            }
             renderShell("Mensagem recebida", "RÁDIO COMUNITÁRIA · TRANSMISSÃO RECUPERADA", `
                 <div class="puzzle-reward">
                     <p>“Se o motor estiver preso, não force o eixo. As rodas laterais puxam a central; a marca de referência precisa ficar voltada para cima.”</p>

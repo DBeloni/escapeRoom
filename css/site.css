@@ -2510,3 +2510,16 @@ body {
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
+
+/* Tabela semântica do catálogo de itens */
+.items-table { width: 100%; border-collapse: collapse; background: var(--paper); color: var(--ink); }
+.items-table caption { padding: 0 0 12px; text-align: left; color: var(--muted); font: 500 12px/1.5 var(--mono); }
+.items-table th, .items-table td { padding: 16px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+.items-table th { color: var(--paper-2); background: var(--ink); font: 600 11px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.items-table td { font-size: 14px; line-height: 1.6; }
+.items-table td:first-child { min-width: 170px; }
+.items-table td strong, .items-table td small { display: block; }
+.items-table td small { margin-top: 5px; color: var(--muted); font: 10px/1.4 var(--mono); }
+.item-table-art { display: block; width: 58px; height: 58px; margin-bottom: 8px; object-fit: contain; image-rendering: pixelated; }
+.items-table tbody tr:hover { background: var(--paper-2); }
+@media (max-width: 760px) { .items-table { display: block; overflow-x: auto; } .items-table th, .items-table td { min-width: 150px; padding: 11px; } }
