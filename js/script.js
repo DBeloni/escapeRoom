@@ -277,8 +277,8 @@ function consumirItemDoInventario(itemId) {
 }
 
 function executarAcaoProxima() {
-    const itemProximo = encontrarIndiceItemProximo() !== -1;
-    if (itemProximo) return coletarItemProximo();
+    // Mecanismos têm prioridade quando o jogador está ao alcance de ambos;
+    // assim, um item no mesmo cômodo não bloqueia o uso de E no puzzle.
     if (window.boatPuzzles?.interact(jogador)) return true;
     return coletarItemProximo();
 }
@@ -3502,7 +3502,7 @@ function desenharJogo() {
 
 function desenharItensColetaveis() {
     for (const item of itensNoMundo) {
-        if (cenarioAtual !== "casa" || item.casa !== interiorAtual?.id) continue;
+        if (!item.estaDisponivel || cenarioAtual !== "casa" || item.casa !== interiorAtual?.id) continue;
         const sprite = spritesItens[item.id];
         if (!sprite?.complete || sprite.naturalWidth === 0) continue;
 

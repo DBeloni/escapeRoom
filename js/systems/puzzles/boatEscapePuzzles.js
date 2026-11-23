@@ -384,6 +384,19 @@
 
         const location = nearbyLocation(player);
         const canCollect = options?.hasNearbyItem?.(player);
+        // O comando E abre primeiro um mecanismo próximo; a coleta continua
+        // disponível pelo guia acessível ou quando não há mecanismo ao alcance.
+        if (location) {
+            prompt.hidden = false;
+            if (location.id === "assembly") {
+                promptText.textContent = solved.size === TASKS.length
+                    ? "Montar o barco"
+                    : `Cais velho · ${solved.size}/${TASKS.length} peças`;
+            } else {
+                promptText.textContent = `Interagir: ${location.label}`;
+            }
+            return;
+        }
         if (canCollect) {
             prompt.hidden = false;
             promptText.textContent = options?.getNearbyItemName?.(player)
@@ -391,19 +404,7 @@
                 : "Coletar item";
             return;
         }
-        if (!location) {
-            prompt.hidden = true;
-            return;
-        }
-
-        prompt.hidden = false;
-        if (location.id === "assembly") {
-            promptText.textContent = solved.size === TASKS.length
-                ? "Montar o barco"
-                : `Cais velho · ${solved.size}/${TASKS.length} peças`;
-        } else {
-            promptText.textContent = `Interagir: ${location.label}`;
-        }
+        prompt.hidden = true;
     }
 
     function drawMarkers(context, cameraX, cameraY, sceneZoom = 1) {
