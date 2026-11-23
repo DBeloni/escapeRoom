@@ -436,6 +436,98 @@ const portasZonaCosteira = [
     { id: "casa-costeira-05", left: 948, right: 988, y: 679, spawnY: 697 }  // casa da direita
 ];
 
+// Passagem secreta falsa, escondida na abertura da muralha ao norte da casa 05.
+// Coordenadas da abertura escura entre as duas rochas, no mapa principal (1375x1144).
+const passagemSecreta = { left: 1075, right: 1125, y: 365 };
+let passagemSecretaAberta = false;
+let musicaTemaEstavaTocandoAntesDaPassagem = false;
+
+function abrirPassagemSecreta() {
+    const overlay = document.getElementById("puzzleOverlay");
+    if (!overlay || passagemSecretaAberta) return;
+    passagemSecretaAberta = true;
+    teclas = {};
+    overlay.hidden = false;
+    overlay.innerHTML = `
+        <div class="puzzle-dialog" role="dialog" aria-modal="true" aria-labelledby="secretDoorTitle">
+            <header class="puzzle-header">
+                <div>
+                    <p class="puzzle-eyebrow">LOCALIZAÇÃO DESCONHECIDA // ACESSO RESTRITO</p>
+                    <h2 id="secretDoorTitle">Você encontrou a porta secreta</h2>
+                </div>
+                <button class="puzzle-close" type="button" data-secret-close aria-label="Sair">×</button>
+            </header>
+            <div class="puzzle-body">
+                <p class="puzzle-story-note">Dica: O codigo é o numero mais famoso do mundo</p>
+                <form class="secret-door-form" data-secret-form>
+                    <label for="secretDoorCode">INSIRA O CÓDIGO</label>
+                    <input id="secretDoorCode" name="code" type="text" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="••" required>
+                    <button class="puzzle-button" type="submit">CONFIRMAR CÓDIGO</button>
+                </form>
+                <p class="secret-door-feedback" data-secret-feedback aria-live="polite"></p>
+            </div>
+            <footer class="puzzle-footer"><span>ACESSO EXPERIMENTAL</span><small>Pressione Esc para sair</small></footer>
+        </div>`;
+    overlay.querySelector("[data-secret-form]").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const code = overlay.querySelector("#secretDoorCode").value.trim();
+        if (code !== "67") {
+            overlay.querySelector("[data-secret-feedback]").textContent = "Código incorreto. Tente novamente.";
+            return;
+        }
+        // A música ambiente deve parar enquanto o vídeo da pegadinha estiver tocando.
+        musicaTemaEstavaTocandoAntesDaPassagem = !musicaTema.paused;
+        musicaTema.pause();
+        overlay.querySelector(".puzzle-dialog").innerHTML = `
+            <header class="puzzle-header">
+                <div><p class="puzzle-eyebrow">ACESSO CONCEDIDO</p><h2>Passagem secreta desbloqueada</h2></div>
+                <button class="puzzle-close" type="button" data-secret-close aria-label="Sair">×</button>
+            </header>
+            <div class="puzzle-body secret-door-video-wrap">
+                <video class="secret-door-video" src="../assets/never.mp4" autoplay loop playsinline controls></video>
+            </div>
+            <footer class="puzzle-footer"><span>VOCÊ FOI ENGANADO.</span><small>Saia para continuar a exploração</small></footer>`;
+        overlay.querySelector("[data-secret-close]").addEventListener("click", fecharPassagemSecreta);
+        const video = overlay.querySelector("video");
+        video.play().catch(function () {
+            overlay.querySelector(".puzzle-footer span").textContent = "Clique em reproduzir para iniciar o vídeo.";
+        });
+    });
+    overlay.querySelector("[data-secret-close]").addEventListener("click", fecharPassagemSecreta);
+    overlay.querySelector("#secretDoorCode")?.focus();
+}
+
+function fecharPassagemSecreta() {
+    const overlay = document.getElementById("puzzleOverlay");
+    const video = overlay?.querySelector("video");
+    if (video) {
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+    }
+    if (overlay) {
+        overlay.hidden = true;
+        overlay.innerHTML = "";
+    }
+    passagemSecretaAberta = false;
+    teclas = {};
+    // Retoma a trilha somente se ela estava tocando antes de abrir o vídeo.
+    if (musicaTemaEstavaTocandoAntesDaPassagem) {
+        musicaTema.play().catch(function () {
+            // O navegador pode exigir uma nova interação para liberar o áudio.
+        });
+    }
+    musicaTemaEstavaTocandoAntesDaPassagem = false;
+}
+
+function verificarPassagemSecreta(x, y, novoY) {
+    if (cenarioAtual !== "cidade" || novoY >= y) return false;
+    const hitbox = obterHitboxJogador(x, y);
+    return hitbox.direita >= passagemSecreta.left &&
+        hitbox.x <= passagemSecreta.right &&
+        y >= passagemSecreta.y - 18 && novoY <= passagemSecreta.y + 18;
+}
+
 // Cada porta da Zona Costeira tem seu próprio mapa interno. As imagens são
 // pré-carregadas para a troca de cenário acontecer sem tela preta ao entrar.
 const interioresZonaCosteira = {
@@ -2328,7 +2420,7 @@ function atualizarCamera() {
 
 function moverJogador(segundos) {
 
-    if (window.boatPuzzles?.isModalOpen()) {
+    if (passagemSecretaAberta || window.boatPuzzles?.isModalOpen()) {
         return;
     }
 
@@ -2463,6 +2555,12 @@ function moverJogador(segundos) {
         novoY <= portaY
     ) {
         mudarCenario("casa");
+        return;
+    }
+
+    // A passagem secreta é acionada ao cruzar a abertura da muralha.
+    if (verificarPassagemSecreta(jogador.x, jogador.y, novoY)) {
+        abrirPassagemSecreta();
         return;
     }
 
@@ -3424,6 +3522,12 @@ function tratarTeclaPressionada(evento) {
 
     if (tecla === "escape" && painelDiario && !painelDiario.hidden) {
         alternarDiario(false);
+        evento.preventDefault();
+        return;
+    }
+
+    if (tecla === "escape" && passagemSecretaAberta) {
+        fecharPassagemSecreta();
         evento.preventDefault();
         return;
     }

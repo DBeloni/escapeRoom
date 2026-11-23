@@ -2737,3 +2737,59 @@ button.pipe-cell:focus-visible {
     cursor: default;
     opacity: .82;
 }
+
+/* Interface da passagem secreta falsa. */
+.secret-door-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    max-width: 470px;
+}
+
+.secret-door-form label {
+    grid-column: 1 / -1;
+    color: var(--signal);
+    font: 700 9px/1 var(--mono);
+    letter-spacing: .12em;
+}
+
+.secret-door-form input {
+    min-width: 0;
+    min-height: 42px;
+    padding: 0 13px;
+    border: 1px solid var(--line);
+    border-radius: 0;
+    color: var(--white);
+    background: var(--ink);
+    font: 700 17px/1 var(--mono);
+    letter-spacing: .2em;
+}
+
+.secret-door-form input:focus-visible {
+    outline: 2px solid var(--signal);
+    outline-offset: 2px;
+}
+
+.secret-door-feedback {
+    min-height: 1.2em;
+    margin: 12px 0 0;
+    color: var(--signal);
+    font: 10px/1.4 var(--mono);
+}
+
+.secret-door-video-wrap {
+    padding: 0;
+    background: #000;
+}
+
+.secret-door-video {
+    display: block;
+    width: 100%;
+    max-height: min(68vh, 620px);
+    background: #000;
+}
+
+@media (max-width: 560px) {
+    .secret-door-form { grid-template-columns: 1fr; }
+    .secret-door-form label { grid-column: auto; }
+}
