@@ -196,7 +196,7 @@ body {
 .game-over-card .game-over-time time {
     display: block;
     margin-top: 5px;
-    color: var(--signal);
+    color: var(--rust-light);
     font: 700 32px/1.1 var(--mono);
     font-variant-numeric: tabular-nums;
 }
@@ -555,7 +555,7 @@ body.touch-device #controls {
 }
 
 .intro-kicker {
-    color: var(--signal);
+    color: var(--rust);
     font: 10px/1.4 var(--mono);
     letter-spacing: .14em;
 }
@@ -581,8 +581,6 @@ body.touch-device #controls {
     background: var(--rust);
     font: 700 11px/1 var(--mono);
     letter-spacing: .1em;
-    outline: 2px solid var(--signal);
-    outline-offset: 3px;
     transition: background .2s var(--ease), border-color .2s var(--ease), transform .2s var(--ease);
 }
 
@@ -646,7 +644,6 @@ body.touch-device #controls {
 .game-over-card button:focus-visible {
     border-color: var(--rust-light);
     background: var(--rust-light);
-    outline: 2px solid var(--signal);
 }
 
 @media (max-width: 700px) {

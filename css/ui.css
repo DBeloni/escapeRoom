@@ -33,7 +33,7 @@
 }
 
 .inventory-heading__label {
-    color: var(--paper-2);
+    color: var(--rust);
     font: 700 9px/1 var(--mono);
     letter-spacing: 0.16em;
 }
@@ -167,7 +167,7 @@
 }
 
 .inventory-heading__label {
-    color: var(--signal);
+    color: var(--rust);
     font-family: var(--mono);
 }
 
