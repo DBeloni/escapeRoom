@@ -13,7 +13,8 @@
 
 <body>
     <main id="gameContainer">
-        <canvas id="gameCanvas"></canvas>
+        <p id="gameMapDescription" class="inventory-sr-only">Mapa visual da zona costeira. Para coletar itens e acessar mecanismos sem depender do mapa, abra o Guia Acessível. No computador, mova-se com W, A, S, D ou as setas e pressione E para interagir.</p>
+        <canvas id="gameCanvas" tabindex="0" role="img" aria-label="Mapa visual interativo da Zona Costeira" aria-describedby="gameMapDescription"></canvas>
         <canvas id="waterAnalysisCanvas" hidden aria-hidden="true"></canvas>
         <canvas id="waterDebugCanvas" hidden aria-hidden="true"></canvas>
 
@@ -35,6 +36,32 @@
         </aside>
 
 
+        <button id="accessibleGuideToggle" class="accessible-guide-toggle" type="button" aria-expanded="false" aria-controls="accessibleGuide">GUIA ACESSÍVEL</button>
+        <aside id="accessibleGuide" class="accessible-guide" hidden aria-labelledby="accessibleGuideTitle">
+            <header class="accessible-guide__header">
+                <div>
+                    <p>ACESSO ALTERNATIVO</p>
+                    <h2 id="accessibleGuideTitle">Guia acessível</h2>
+                </div>
+                <button id="accessibleGuideClose" type="button" aria-label="Fechar guia acessível">×</button>
+            </header>
+            <p class="accessible-guide__intro">Use Tab e Enter para trocar de ambiente, coletar itens e abrir mecanismos sem depender da leitura visual do mapa.</p>
+            <p id="accessibleEnvironmentLabel" class="accessible-guide__location" aria-live="polite">Ambiente atual: cidade</p>
+            <section aria-labelledby="accessibleTravelTitle">
+                <h3 id="accessibleTravelTitle">Deslocamento entre ambientes</h3>
+                <div id="accessibleTravel" class="accessible-guide__travel"></div>
+            </section>
+            <section aria-labelledby="accessibleItemsTitle">
+                <h3 id="accessibleItemsTitle">Itens disponíveis neste ambiente</h3>
+                <ul id="accessibleWorldItems" class="accessible-guide__list" aria-live="polite"></ul>
+            </section>
+            <section aria-labelledby="accessibleObjectsTitle">
+                <h3 id="accessibleObjectsTitle">Mecanismos e enigmas</h3>
+                <ul id="accessibleInteractions" class="accessible-guide__list" aria-live="polite"></ul>
+            </section>
+            <p class="accessible-guide__help">O guia permite acessar os pontos interativos por controles textuais. O deslocamento físico pelo cenário continua disponível pelo teclado ou joystick.</p>
+        </aside>
+
         <button id="diaryToggle" class="diary-toggle" type="button" aria-expanded="false" aria-controls="fieldDiary">DIÁRIO DE BORDO</button>
 
         <section id="fieldDiary" class="field-diary" hidden aria-labelledby="fieldDiaryTitle">
@@ -46,7 +73,7 @@
             <ol id="diaryEntries" class="field-diary__entries" aria-live="polite"><li class="field-diary__empty">Nenhum registro encontrado.</li></ol>
         </section>
 
-        <aside id="inventory" aria-label="Inventário">
+        <aside id="inventory" tabindex="-1" aria-label="Inventário">
             <div class="inventory-heading">
                 <span class="inventory-heading__label">INVENTÁRIO</span>
                 <span id="inventoryCount" class="inventory-count">0/5</span>
@@ -56,7 +83,7 @@
         </aside>
 
         <section id="mobileControls" aria-label="Controles para celular">
-            <div id="mobileJoystick" class="mobile-joystick" aria-label="Joystick virtual">
+            <div id="mobileJoystick" class="mobile-joystick" aria-hidden="true">
                 <div class="mobile-joystick-ring">
                     <div id="mobileJoystickThumb" class="mobile-joystick-thumb"></div>
                 </div>
@@ -76,8 +103,21 @@
             <small>OU TOQUE EM AÇÃO</small>
         </div>
 
+        <section id="itemInspection" class="item-inspection" hidden role="dialog" aria-modal="true" aria-labelledby="itemInspectionTitle" aria-describedby="itemInspectionDescription">
+            <div class="item-inspection__card">
+                <header>
+                    <p>INVENTÁRIO // INSPEÇÃO</p>
+                    <button id="itemInspectionClose" type="button" aria-label="Fechar inspeção do item">×</button>
+                </header>
+                <h2 id="itemInspectionTitle">Item</h2>
+                <p id="itemInspectionDescription"></p>
+                <p id="itemInspectionUse" class="item-inspection__use"></p>
+                <button id="itemInspectionConfirm" class="item-inspection__button" type="button">Voltar ao inventário</button>
+            </div>
+        </section>
+
         <section id="puzzleOverlay" class="puzzle-overlay" hidden></section>
-        <div id="loading">Carregando...</div>
+        <div id="loading" role="status" aria-live="polite">Carregando...</div>
 
         <section id="introScreen" class="intro-screen" hidden aria-labelledby="introTitle"
             aria-describedby="introStory">
@@ -107,7 +147,7 @@
                 <h1 class="game-over-title"></h1>
                 <p class="game-over-description"></p>
                 <p class="game-over-time" hidden>Tempo: <time>00:00.000</time></p>
-                <button class="game-over-button" id="restartGame" type="button"></button>
+                <button class="game-over-button" id="restartGame" type="button">Tentar novamente</button>
                 <small>Pressione R ou Enter para recomeçar</small>
             </div>
         </section>

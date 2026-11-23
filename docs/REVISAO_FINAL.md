@@ -1,39 +1,71 @@
-# Revisão do projeto — Quarantine Protocol
+# Revisão técnica — Quarantine Protocol
 
-Este arquivo registra o que foi corrigido no pacote revisado e o que ainda precisa de validação ou implementação manual.
+Este documento descreve a versão atual do projeto. Ele separa o que foi implementado e verificado localmente daquilo que ainda depende de testes no navegador, validação externa ou publicação.
 
-## Correções realizadas
+## Implementado nesta revisão
 
-- Removidos os usos de `addEventListener` do JavaScript ativo; os eventos são associados por propriedades como `onclick`, `oninput`, `onkeydown`, `onresize` e `onpointerdown`.
-- Removidos os usos de `document.createElement`; os dois canvases auxiliares agora existem no HTML e os slots do inventário são renderizados por template string e `innerHTML`.
-- Adicionada inspeção individual dos cinco itens do inventário, com descrição e imagem.
-- Adicionado diário de bordo visível, com horário e histórico de pistas, itens, inspeções, ações, mudanças de cenário e finais.
-- Adicionado Guia Acessível com lista textual dos mecanismos e itens do ambiente atual; permite abrir mecanismos e recolher itens sem depender da exploração visual do mapa.
-- Ampliado o jogo para dez objetos interativos: os seis mecanismos anteriores e quatro adicionais (cofre, disjuntores, válvulas e caixas).
-- Criados pré-requisitos entre os quatro novos mecanismos; a cadeia é opcional e não impede a fuga principal.
-- Criada modelagem de objetos interativos com propriedades de estado e métodos `inspect`, `interact` e `complete`.
-- Adicionada uma tabela HTML semântica à página de itens.
-- Atualizadas as páginas de enigmas, finais, manual e tecnologia para refletir as mecânicas implementadas.
-- Adicionados estilos para as novas interfaces e controles.
-- Atualizado o verificador para detectar regressões das duas APIs proibidas.
+- Guia Acessível no jogo com navegação textual entre a cidade e os cinco interiores.
+- Pelo Guia Acessível, o jogador pode coletar os itens disponíveis no ambiente atual e abrir os mecanismos daquele ambiente sem depender dos marcadores do canvas.
+- Os cinco itens do inventário agora podem ser inspecionados por botões acessíveis; cada inspeção mostra descrição e uso previsto e é registrada no Diário de Bordo.
+- Diário de Bordo registra início, mudança de ambiente, coleta, inspeção e uso de itens, pistas, desafios resolvidos e finais.
+- Os seis mecanismos (`wood`, `engine`, `circuit`, `cover`, `radio` e `assembly`) oferecem estado e métodos de inspeção, interação, conclusão e reinicialização.
+- Os cinco itens continuam modelados como objetos coletáveis com estado de disponibilidade, proximidade, validação de capacidade e coleta.
+- O teste de puzzles foi atualizado para verificar os seis mecanismos em seus ambientes reais, a API do modelo de objetos, a abertura pelo guia e o reset.
+- O botão de tentar novamente agora limpa itens, mecanismos, rádio, inventário, diário, temporizador, posição e ambiente e retorna à introdução.
+- O loop de animação é iniciado uma única vez, evitando duplicação de velocidade após reinícios.
+- Foi adicionada contenção de foco nos diálogos de puzzles e retorno do foco ao controle que abriu o diálogo.
+- Os verificadores em `tools/` foram reorganizados e integrados ao comando `npm run check`.
 
-## Pendências que exigem teste ou decisão do grupo
+## Contagem de elementos interativos
 
-1. **Testar uma partida completa em navegador real.** A auditoria estática e a verificação headless não substituem uma partida humana de ponta a ponta. Confirmar coleta dos cinco itens, entrada/saída das cinco casas, puzzles, montagem e quatro finais.
-2. **Validar posicionamento dos quatro novos objetos.** As coordenadas foram escolhidas a partir das dimensões e dos pontos já utilizados nos interiores. Confirmar visualmente que o personagem consegue alcançar cada marcador sem ficar atrás de móveis ou barreiras.
-3. **Acessibilidade completa do mapa.** O Guia Acessível oferece lista textual de mecanismos, permite abrir puzzles e recolher itens do ambiente atual. Ainda não substitui a movimentação livre no mapa por uma interface totalmente navegável por leitor de tela. Uma alternativa completa precisaria permitir navegação textual por pontos, indicar rotas/obstáculos e descrever a posição do personagem.
-4. **Duração real de 2 a 5 minutos.** O jogo mantém o limite de cinco minutos, mas o grupo deve cronometrar várias partidas e ajustar o percurso, porque a duração depende da familiaridade do jogador e da quantidade de desafios opcionais.
-5. **Validação formal do HTML.** Os caminhos locais e a sintaxe JavaScript foram verificados. Ainda é necessário passar cada HTML pelo Nu Html Checker (validator.w3.org/nu) e corrigir eventuais avisos de semântica ou acessibilidade.
-6. **Git e Vercel.** O ZIP revisado não inclui a pasta `.git` e não faz push ou deploy. O grupo deve copiar/substituir os arquivos no repositório, revisar o diff, criar commits descritivos de todos os integrantes e publicar a versão final na Vercel.
-7. **Revisar a interpretação do professor sobre funções arrow.** Os novos trechos privilegiam funções nomeadas e laços `for`; ainda há funções arrow e métodos de array no código anterior. O enunciado pede priorizar funções tradicionais, não proíbe explicitamente todas as arrow functions.
-8. **Revisar conteúdo da história e coerência visual.** Os quatro mecanismos extras foram colocados em casas existentes e conectados por dependências, mas o grupo deve confirmar que os textos e os objetos fazem sentido com a arte final de cada interior.
+O projeto contém **11 elementos interativos principais**: cinco itens coletáveis e seis mecanismos/enigmas. Os seis mecanismos são:
 
-## Verificações executadas
+| ID | Ambiente | Interação |
+|---|---|---|
+| `wood` | Cidade costeira | Desafio de precisão e tempo para separar tábuas |
+| `engine` | Casa 05 — oficina | Alinhamento de engrenagens acopladas |
+| `circuit` | Cidade / cais | Rotação de conexões para restabelecer o circuito |
+| `cover` | Casa 04 — enfermaria | Ajuste de quatro tensões relacionadas |
+| `radio` | Casa 02 | Sintonia de frequência e ganho para recuperar mensagem |
+| `assembly` | Cidade / cais | Montagem de componentes e sequência de ignição por teclado ou clique |
 
-- `npm run check`: sintaxe de quatro arquivos JavaScript, caminhos locais e teste isolado dos dez objetos aprovados.
-- Busca por `addEventListener` e `createElement` nos arquivos JavaScript: nenhuma ocorrência ativa encontrada.
-- Contagem dos arquivos HTML: 10 páginas de conteúdo, `index.html` e a página do jogo.
-- Presença de pelo menos uma tabela HTML semântica.
-- Verificação de IDs duplicados na página do jogo: nenhum ID duplicado encontrado.
-- Teste isolado com DOM simulado: os dez objetos foram listados por ambiente, abertos e registrados sem exceção.
-- Tentativa de captura headless em Chromium não terminou dentro do limite do ambiente; por isso, não foi considerada validação visual ou de jogabilidade.
+Os cinco itens são chave de fenda, chave inglesa, fita isolante, fusível de cartucho e galão de gasolina. A página `pages/enigmas.html` apresenta os seis mecanismos; `pages/itens.html` documenta os cinco itens.
+
+## Verificações locais
+
+Executar na raiz do projeto:
+
+```bash
+npm run check
+```
+
+O comando reúne:
+
+- verificação de sintaxe dos quatro arquivos JavaScript ativos;
+- verificação de caminhos locais;
+- auditoria estrutural básica dos 12 arquivos HTML;
+- auditoria básica de acessibilidade das páginas e do jogo;
+- conferência de recursos e restrições do enunciado;
+- teste isolado dos seis mecanismos e da reinicialização dos seus estados.
+
+Para validar cada HTML com o serviço externo Nu HTML Checker, execute com internet disponível:
+
+```bash
+npm run check:nu-html
+```
+
+A auditoria local é uma verificação estática própria; não substitui o resultado do validador oficial nem um teste com leitor de tela.
+
+## Validações que ainda dependem da equipe
+
+1. Jogar uma partida completa em navegador real, verificando os cinco interiores, coleta, enigmas, montagem e os quatro desfechos.
+2. Confirmar visualmente que os objetos e os pontos de coleta estão alcançáveis sem colisões ou bloqueios inesperados.
+3. Cronometrar partidas com pessoas que não conhecem o jogo e ajustar o percurso para a faixa de 2 a 5 minutos pedida pelo trabalho.
+4. Testar o Guia Acessível e o inventário com leitor de tela e navegação somente por teclado; a interface textual elimina a dependência da localização visual de itens e mecanismos, mas não substitui toda a navegação espacial por um mapa acessível completo.
+5. Rodar `npm run check:nu-html` com rede disponível e corrigir mensagens que o serviço oficial apontar.
+6. Revisar o diff no repositório, criar commits descritivos com autoria correta de todos os integrantes e enviar as alterações ao remoto.
+7. Atualizar e abrir o deploy da Vercel em outro navegador/dispositivo.
+
+## Limites desta revisão
+
+O ambiente de trabalho não confirmou uma sessão completa de jogo em navegador nem a publicação na Vercel. Portanto, esses itens permanecem como testes externos, não como aprovações já realizadas.

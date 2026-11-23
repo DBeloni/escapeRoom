@@ -11,6 +11,9 @@ Documentação narrativa básica do jogo. O objetivo é manter as informações 
 - [Integração com o jogo](INTEGRACAO_COM_O_JOGO.md): relação entre a história e o objetivo jogável.
 - [Cânone e pendências](CANONE_E_PENDENCIAS.md): o que está definido e o que pode continuar em aberto.
 - [Desafios procedurais](PUZZLES_PROCEDURAIS.md): mecânicas, variações e garantias de solução dos puzzles.
+- [Revisão técnica](REVISAO_FINAL.md): implementações, verificações e limites da versão atual.
+- [Checklist de entrega](TAREFAS_TRABALHO_FINAL.md): requisitos já implementados e validações externas pendentes.
+- [Ferramentas de verificação](../tools/README.md): comandos disponíveis para testar o projeto.
 
 ## Diretriz
 

@@ -31,6 +31,15 @@
         { id: "assembly", scene: "cidade", x: 470, y: 900, label: "Cais velho", number: "B" }
     ];
 
+    const PUZZLE_DESCRIPTIONS = {
+        wood: "Separar três tábuas do tronco usando precisão e tempo.",
+        engine: "Liberar o motor da oficina ajustando as engrenagens acopladas.",
+        circuit: "Restabelecer a ligação elétrica do guincho girando os segmentos do circuito.",
+        cover: "Aliviar a tensão das quatro presilhas para recuperar lona e cordame.",
+        radio: "Sintonizar a frequência e o ganho para recuperar uma mensagem da oficina.",
+        assembly: "Montar o casco, instalar os componentes, abastecer e dar partida no barco."
+    };
+
     const REQUIRED_FOR_WOOD = ["ITM_001"];
     const REQUIRED_FOR_ENGINE = ["ITM_001", "ITM_002"];
     const REQUIRED_FOR_CIRCUIT = ["ITM_003", "ITM_004"];
@@ -192,6 +201,14 @@
             id: id,
             estado: estado,
             isSolved: function () { return solved.has(id) || this.estado.solved === true; },
+            inspect: function () {
+                return {
+                    id: this.id,
+                    solved: this.isSolved(),
+                    description: PUZZLE_DESCRIPTIONS[this.id] || "Mecanismo interativo da zona costeira."
+                };
+            },
+            interact: function () { return interactById(this.id); },
             complete: function () {
                 if (this.isSolved()) return false;
                 solved.add(id);
@@ -242,6 +259,7 @@
     let prompt = null;
     let promptText = null;
     let activePuzzle = null;
+    let modalReturnFocus = null;
     let victory = false;
     let victoryTime = "";
 
@@ -366,6 +384,19 @@
 
         const location = nearbyLocation(player);
         const canCollect = options?.hasNearbyItem?.(player);
+        // O comando E abre primeiro um mecanismo próximo; a coleta continua
+        // disponível pelo guia acessível ou quando não há mecanismo ao alcance.
+        if (location) {
+            prompt.hidden = false;
+            if (location.id === "assembly") {
+                promptText.textContent = solved.size === TASKS.length
+                    ? "Montar o barco"
+                    : `Cais velho · ${solved.size}/${TASKS.length} peças`;
+            } else {
+                promptText.textContent = `Interagir: ${location.label}`;
+            }
+            return;
+        }
         if (canCollect) {
             prompt.hidden = false;
             promptText.textContent = options?.getNearbyItemName?.(player)
@@ -373,19 +404,7 @@
                 : "Coletar item";
             return;
         }
-        if (!location) {
-            prompt.hidden = true;
-            return;
-        }
-
-        prompt.hidden = false;
-        if (location.id === "assembly") {
-            promptText.textContent = solved.size === TASKS.length
-                ? "Montar o barco"
-                : `Cais velho · ${solved.size}/${TASKS.length} peças`;
-        } else {
-            promptText.textContent = `Interagir: ${location.label}`;
-        }
+        prompt.hidden = true;
     }
 
     function drawMarkers(context, cameraX, cameraY, sceneZoom = 1) {
@@ -904,6 +923,7 @@
 
     function showVictory() {
         victory = true;
+        objetosInterativos.assembly.complete();
         const tempoDecorrido = options?.getSpeedrunTime?.() ?? "00:00.000";
         victoryTime = String(tempoDecorrido);
         if (options?.onVictory) options.onVictory();
@@ -1045,7 +1065,7 @@
             }
             renderShell("Mensagem recebida", "RÁDIO COMUNITÁRIA · TRANSMISSÃO RECUPERADA", `
                 <div class="puzzle-reward">
-                    <p>“Se o motor estiver preso, não force o eixo. As rodas laterais puxam a central; a marca de referência precisa ficar voltada para cima.”</p>
+                    <p>“A senha para passar pela passagem secreta da montanha é 67”</p>
                     <p>A mensagem parece ser uma orientação deixada por alguém da oficina antes da evacuação.</p>
                     <button class="puzzle-button" type="button" data-action="close">Fechar rádio</button>
                 </div>`, "A frequência correta foi encontrada.");
@@ -1129,12 +1149,34 @@
     }
 
     function close(clearActive = true) {
+        const closedPuzzle = activePuzzle;
         if (overlay) overlay.hidden = true;
         if (clearActive) activePuzzle = null;
         if (prompt) prompt.hidden = true;
+        const target = modalReturnFocus;
+        if (clearActive) modalReturnFocus = null;
+        if (target && target.isConnected && typeof target.focus === "function") target.focus();
+        if (clearActive && closedPuzzle && options?.onPuzzleClosed) options.onPuzzleClosed(closedPuzzle);
     }
 
     function handleOverlayKeydown(event) {
+        if (event.key === "Tab" && overlay) {
+            const controls = Array.from(overlay.querySelectorAll("button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"));
+            if (controls.length) {
+                const first = controls[0];
+                const last = controls[controls.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                    return;
+                }
+                if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
+                    return;
+                }
+            }
+        }
         if (event.key === "Escape") {
             event.preventDefault();
             event.stopPropagation();
@@ -1168,11 +1210,88 @@
         if (isModalOpen() || victory) return true;
         const location = nearbyLocation(player);
         if (!location) return false;
+        modalReturnFocus = document.activeElement || null;
         if (location.id === "assembly" && solved.size < TASKS.length) {
             openPuzzle("assembly");
             return true;
         }
         openPuzzle(location.id);
+        return true;
+    }
+
+    function getAccessibleObjects() {
+        const scene = options?.getScene?.();
+        const houseId = options?.getHouseId?.();
+        const result = [];
+
+        for (const location of LOCATIONS) {
+            if (location.scene !== scene) continue;
+            if (location.houseId && location.houseId !== houseId) continue;
+
+            const object = objetosInterativos[location.id];
+            const isSolved = object ? object.isSolved() : false;
+            result.push({
+                id: location.id,
+                label: location.label,
+                scene: location.scene,
+                houseId: location.houseId || null,
+                solved: isSolved,
+                description: PUZZLE_DESCRIPTIONS[location.id] || "Mecanismo interativo da zona costeira."
+            });
+        }
+
+        return result;
+    }
+
+    function interactById(id) {
+        if (!LOCATIONS.some(function (location) {
+            if (location.id !== id) return false;
+            const scene = options?.getScene?.();
+            const houseId = options?.getHouseId?.();
+            return location.scene === scene && (!location.houseId || location.houseId === houseId);
+        })) {
+            return false;
+        }
+
+        if (isModalOpen() || victory) return false;
+        const object = objetosInterativos[id];
+        if (object && object.isSolved()) return false;
+        if (id === "radio" && puzzleState.radio.solved) return false;
+        if (id === "assembly" && victory) return false;
+        modalReturnFocus = document.activeElement || null;
+        openPuzzle(id);
+        return true;
+    }
+
+    function reset() {
+        solved.clear();
+        objetosInterativos.wood.reset({ round: 0, current: createWoodRound(0) });
+        objetosInterativos.engine.reset(createEngineState());
+        objetosInterativos.circuit.reset(createCircuitState());
+        objetosInterativos.cover.reset(createCoverState());
+        objetosInterativos.radio.reset(createRadioState());
+        objetosInterativos.assembly.reset({
+            selected: null,
+            installedWood: [false, false, false],
+            installed: { engine: false, propeller: false, cover: false },
+            fastened: false,
+            fuelled: false,
+            starter: {
+                pattern: Array.from({ length: 6 }, function () { return randomInt(0, 3); }),
+                armed: false,
+                progress: 0
+            }
+        });
+        victory = false;
+        victoryTime = "";
+        activePuzzle = null;
+        modalReturnFocus = null;
+        if (overlay) {
+            overlay.hidden = true;
+            overlay.classList.remove("puzzle-overlay--victory");
+            overlay.innerHTML = "";
+        }
+        if (prompt) prompt.hidden = true;
         return true;
     }
 
@@ -1195,7 +1314,11 @@
         updateProximity,
         drawMarkers,
         interact,
+        interactById,
+        getAccessibleObjects,
+        getObject(id) { return objetosInterativos[id] || null; },
         close,
+        reset,
         setVictoryTime,
         isModalOpen,
         getProgress() {

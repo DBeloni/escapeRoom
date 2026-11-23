@@ -30,7 +30,14 @@ escapeRoom/
 │   └── systems/                # Puzzles e temporizador usados pelo jogo
 ├── assets/                     # Mapas, sprites, itens e identidade visual
 ├── docs/                       # Documentação narrativa e técnica
-├── tools/check-js.mjs          # Verificação de sintaxe JavaScript
+├── tools/                      # Verificadores e testes automatizados
+│   ├── check-js.mjs             # Sintaxe JavaScript
+│   ├── check-links.mjs          # Caminhos locais
+│   ├── check-html.mjs           # Estrutura básica e IDs
+│   ├── check-accessibility.mjs  # Auditoria estática de acessibilidade
+│   ├── check-rules.mjs          # Regras do enunciado
+│   ├── test-puzzles.mjs         # Testes dos mecanismos
+│   └── validate-nu-html.mjs     # Validador oficial Nu (requer internet)
 ├── package.json
 └── README.md
 ```
@@ -54,11 +61,21 @@ Para entender onde cada parte do jogo fica e como a partida funciona, consulte o
 2. Inicie o Live Server pelo arquivo `index.html`, que fica na raiz do projeto.
 3. Acesse o jogo pelo botão **Acessar jogo** do site. O endereço do jogo será `/html/mapaPrincipal.html`.
 4. Para conferir os arquivos antes de entregar, execute `npm run check`.
+5. Para validar todos os HTML com o serviço externo Nu HTML Checker, execute `npm run check:nu-html` com acesso à internet.
 
 Também é possível abrir `index.html` diretamente no navegador, mas o Live Server é recomendado para testar o jogo. Não inicie o servidor dentro de `html`, `pages`, `css` ou `js`, pois isso muda a raiz dos endereços relativos.
 
 Não há etapa de build nem dependências externas instaladas pelo npm. O site usa Google Fonts pela internet.
 
+## Sistemas do jogo
+
+- Seis mecanismos/enigmas e cinco itens coletáveis, totalizando onze elementos interativos principais.
+- Inventário com inspeção textual dos itens.
+- Diário de Bordo com pistas e ações relevantes.
+- Guia Acessível para trocar entre a cidade e os cinco interiores, coletar itens e abrir mecanismos por controles textuais.
+- Quatro desfechos: fuga de barco, rota secreta, infecção e afogamento.
+- Reinício integral dos estados e temporizador.
+
 ## Status
 
-**Em desenvolvimento.** O mapa da Zona Costeira, os interiores, o inventário e os desafios de fuga continuam recebendo ajustes.
+**Versão em revisão final.** A bateria automatizada local está disponível em `npm run check`. Ainda é necessário testar uma partida completa e leitores de tela em navegador real, validar o HTML pelo Nu HTML Checker, atualizar o deploy da Vercel e confirmar os commits finais da equipe.

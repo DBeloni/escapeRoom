@@ -2,16 +2,22 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 
+const focusTarget = {
+    isConnected: true,
+    focus() {}
+};
 const overlay = {
     hidden: true,
-    classList: { remove() {} },
+    classList: { add() {}, remove() {} },
     dataset: {},
     innerHTML: "",
-    querySelector() { return null; }
+    querySelector() { return focusTarget; },
+    querySelectorAll() { return [focusTarget]; }
 };
 const prompt = { hidden: true };
 const promptText = { textContent: "" };
 const document = {
+    activeElement: focusTarget,
     getElementById(id) {
         return {
             puzzleOverlay: overlay,
@@ -20,7 +26,7 @@ const document = {
         }[id] || null;
     }
 };
-const window = {};
+const window = { dispatchEvent() {} };
 const context = {
     window,
     document,
@@ -32,7 +38,8 @@ const context = {
     String,
     Number,
     Boolean,
-    Infinity
+    Infinity,
+    performance: { now: () => 1000 }
 };
 
 runInNewContext(
@@ -43,50 +50,66 @@ runInNewContext(
 let scene = "cidade";
 let houseId = null;
 const logs = [];
+const inventory = ["ITM_001", "ITM_002", "ITM_003", "ITM_004", "ITM_005"];
 window.boatPuzzles.init({
     getScene: () => scene,
     getHouseId: () => houseId,
-    getInventory: () => [],
-    addLog: (message) => logs.push(message)
+    getInventory: () => inventory,
+    addLog: (message) => logs.push(message),
+    onPuzzleSolved: (message) => logs.push(message),
+    onClueFound: (message) => logs.push(message)
 });
 
 const environments = [
-    ["cidade", null],
-    ["casa", "casa-costeira-01"],
-    ["casa", "casa-costeira-02"],
-    ["casa", "casa-costeira-03"],
-    ["casa", "casa-costeira-04"],
-    ["casa", "casa-costeira-05"]
+    { scene: "cidade", houseId: null, expected: ["wood", "circuit", "assembly"] },
+    { scene: "casa", houseId: "casa-costeira-01", expected: [] },
+    { scene: "casa", houseId: "casa-costeira-02", expected: ["radio"] },
+    { scene: "casa", houseId: "casa-costeira-03", expected: [] },
+    { scene: "casa", houseId: "casa-costeira-04", expected: ["cover"] },
+    { scene: "casa", houseId: "casa-costeira-05", expected: ["engine"] }
 ];
+
 const foundIds = [];
-
-for (let environmentIndex = 0; environmentIndex < environments.length; environmentIndex += 1) {
-    scene = environments[environmentIndex][0];
-    houseId = environments[environmentIndex][1];
-
+for (const environment of environments) {
+    scene = environment.scene;
+    houseId = environment.houseId;
     const objects = window.boatPuzzles.getAccessibleObjects();
-    for (let objectIndex = 0; objectIndex < objects.length; objectIndex += 1) {
-        const object = objects[objectIndex];
-        foundIds.push(object.id);
+    const ids = Array.from(objects, (object) => object.id).sort();
+    assert.deepEqual(ids, [...environment.expected].sort(), "Os mecanismos devem aparecer no ambiente correto.");
 
-        assert.equal(
-            window.boatPuzzles.interactById(object.id),
-            true,
-            `O objeto ${object.id} deveria abrir no ambiente correto.`
-        );
-        assert.ok(overlay.innerHTML.length > 0, `A interface de ${object.id} não foi renderizada.`);
+    for (const objectInfo of objects) {
+        foundIds.push(objectInfo.id);
+        const model = window.boatPuzzles.getObject(objectInfo.id);
+        assert.ok(model, `O mecanismo ${objectInfo.id} deve possuir modelo de objeto.`);
+        assert.equal(typeof model.inspect, "function");
+        assert.equal(typeof model.interact, "function");
+        assert.equal(typeof model.complete, "function");
+        assert.equal(typeof model.reset, "function");
+        assert.equal(typeof model.estado, "object");
+        assert.equal(model.inspect().id, objectInfo.id);
+
+        assert.equal(window.boatPuzzles.interactById(objectInfo.id), true,
+            `O mecanismo ${objectInfo.id} deveria abrir pelo guia textual.`);
+        assert.ok(overlay.innerHTML.includes("puzzle-dialog"),
+            `A interface de ${objectInfo.id} deveria ser renderizada.`);
         window.boatPuzzles.close();
     }
 }
 
 const uniqueIds = [...new Set(foundIds)].sort();
-const expectedIds = [
-    "wood", "engine", "circuit", "cover", "radio",
-    "safe", "breaker", "valve", "crates", "assembly"
-].sort();
+assert.equal(uniqueIds.length, 6, "Devem existir seis mecanismos distintos no total.");
+assert.deepEqual(uniqueIds, ["assembly", "circuit", "cover", "engine", "radio", "wood"]);
+assert.equal(window.boatPuzzles.interactById("radio"), false,
+    "Um mecanismo não deve abrir fora do ambiente onde está instalado.");
 
-assert.deepEqual(uniqueIds, expectedIds, "A lista de dez objetos interativos deve estar completa e sem duplicatas.");
-assert.equal(foundIds.length, 10, "Cada objeto deve aparecer em exatamente um ambiente.");
-assert.equal(logs.length, 10, "A inspeção dos dez objetos deve gerar registros no diário.");
+const progressBeforeReset = window.boatPuzzles.getProgress();
+assert.equal(progressBeforeReset.total, 4, "Quatro desafios entregam as peças necessárias para a montagem.");
+window.boatPuzzles.getObject("wood").complete();
+assert.equal(window.boatPuzzles.getObject("wood").isSolved(), true);
+window.boatPuzzles.reset();
+assert.equal(window.boatPuzzles.getObject("wood").isSolved(), false,
+    "O reinício deve limpar o estado de resolução dos mecanismos.");
+assert.equal(window.boatPuzzles.getProgress().solved.length, 0);
+assert.equal(overlay.hidden, true);
 
-console.log("Teste de puzzles OK: 10 objetos listados, abertos e registrados sem exceção.");
+console.log("Puzzles OK: seis mecanismos em seus ambientes, modelos com estado/métodos, abertura acessível e reinicialização verificados.");

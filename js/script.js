@@ -37,7 +37,10 @@ function alternarDiario(aberto) {
     const mostrar = typeof aberto === "boolean" ? aberto : painelDiario.hidden;
     painelDiario.hidden = !mostrar;
     botaoDiario.setAttribute("aria-expanded", String(mostrar));
-    if (mostrar) botaoFecharDiario?.focus();
+    if (mostrar) {
+        teclas = {};
+        botaoFecharDiario?.focus();
+    }
     else botaoDiario.focus();
 }
 
@@ -100,6 +103,34 @@ const nomesItens = {
     ITM_004: "Fusível de Cartucho",
     ITM_005: "Galão de Gasolina"
 };
+const descricoesItens = {
+    ITM_001: {
+        descricao: "Chave de fenda de cabo gasto, usada para soltar parafusos e abrir proteções simples de manutenção.",
+        uso: "Uso no jogo: ajuda a separar as tábuas, liberar a proteção do motor e apertar as fixações do barco."
+    },
+    ITM_002: {
+        descricao: "Chave inglesa ajustável, guardada na oficina para manutenção de porcas e peças metálicas.",
+        uso: "Uso no jogo: auxilia na retirada do motor e na fixação dos componentes da embarcação."
+    },
+    ITM_003: {
+        descricao: "Rolo de fita isolante com parte do material ainda utilizável.",
+        uso: "Uso no jogo: permite reparar o circuito danificado do guincho no cais."
+    },
+    ITM_004: {
+        descricao: "Fusível de cartucho retirado do armário de manutenção da clínica.",
+        uso: "Uso no jogo: substitui o fusível queimado no painel do guincho."
+    },
+    ITM_005: {
+        descricao: "Galão de combustível reservado para equipamentos da oficina.",
+        uso: "Uso no jogo: abastece o motor de popa. É consumido quando utilizado."
+    }
+};
+
+const listaItensInventario = document.getElementById("inventoryItems");
+const dialogoInspecaoItem = document.getElementById("itemInspection");
+const botaoFecharInspecao = document.getElementById("itemInspectionClose");
+const botaoConfirmarInspecao = document.getElementById("itemInspectionConfirm");
+let ultimoItemInspecionado = null;
 
 function encontrarIndiceItemProximo(player) {
     const personagem = player || jogador;
@@ -110,13 +141,35 @@ function encontrarIndiceItemProximo(player) {
 
     for (let indice = 0; indice < itensNoMundo.length; indice += 1) {
         const item = itensNoMundo[indice];
-
-        if (item.estaProximo(personagem, interiorAtual.id, raioInteracaoItem)) {
-            return indice;
-        }
+        if (item.estaProximo(personagem, interiorAtual.id, raioInteracaoItem)) return indice;
     }
 
     return -1;
+}
+
+function coletarItem(item) {
+    const message = document.getElementById("inventoryMessage");
+    if (!item || !item.podeSerColetado(inventario, capacidadeInventario)) {
+        if (message) {
+            message.textContent = item && inventario.includes(item.id)
+                ? "Esse item já está no inventário."
+                : "O inventário está cheio ou o item não está mais disponível.";
+        }
+        return false;
+    }
+
+    if (!item.coletar()) return false;
+    inventario.push(item.id);
+    registrarNoDiario("ITEM COLETADO", `${nomesItens[item.id]} foi adicionado ao inventário.`);
+    atualizarInventarioHUD(`${nomesItens[item.id]} coletado.`);
+    renderGuiaAcessivel();
+    return true;
+}
+
+function coletarItemPorId(itemId) {
+    const item = itensNoMundo.find(function (registro) { return registro.id === itemId; });
+    if (!item || (cenarioAtual !== "casa") || item.casa !== interiorAtual?.id) return false;
+    return coletarItem(item);
 }
 
 function coletarItemProximo() {
@@ -126,23 +179,34 @@ function coletarItemProximo() {
         if (message) message.textContent = "Nenhum item próximo.";
         return false;
     }
+    return coletarItem(itensNoMundo[index]);
+}
 
-    const item = itensNoMundo[index];
-    if (!item.podeSerColetado(inventario, capacidadeInventario)) {
-        if (message) {
-            message.textContent = inventario.includes(item.id)
-                ? "Esse item já está no inventário."
-                : "O inventário está cheio.";
-        }
-        return false;
-    }
+function abrirInspecaoItem(itemId, origem) {
+    if (!inventario.includes(itemId) || !dialogoInspecaoItem) return false;
+    const dados = descricoesItens[itemId];
+    if (!dados) return false;
 
-    if (!item.coletar()) return false;
-    itensNoMundo.splice(index, 1);
-    inventario.push(item.id);
-    registrarNoDiario("ITEM COLETADO", `${nomesItens[item.id]} foi adicionado ao inventário.`);
-    atualizarInventarioHUD(`${nomesItens[item.id]} coletado.`);
+    ultimoItemInspecionado = origem || null;
+    document.getElementById("itemInspectionTitle").textContent = nomesItens[itemId];
+    document.getElementById("itemInspectionDescription").textContent = dados.descricao;
+    document.getElementById("itemInspectionUse").textContent = dados.uso;
+    dialogoInspecaoItem.hidden = false;
+    teclas = {};
+    registrarNoDiario("ITEM INSPECIONADO", `${nomesItens[itemId]}: ${dados.descricao}`);
+    botaoFecharInspecao?.focus();
     return true;
+}
+
+function fecharInspecaoItem() {
+    if (!dialogoInspecaoItem || dialogoInspecaoItem.hidden) return;
+    dialogoInspecaoItem.hidden = true;
+    if (ultimoItemInspecionado && ultimoItemInspecionado.isConnected) {
+        ultimoItemInspecionado.focus();
+    } else {
+        document.getElementById("inventory")?.focus?.();
+    }
+    ultimoItemInspecionado = null;
 }
 
 function atualizarInventarioHUD(message = "") {
@@ -152,41 +216,60 @@ function atualizarInventarioHUD(message = "") {
     if (!list || !count) return;
 
     count.textContent = `${inventario.length}/${capacidadeInventario}`;
-
     let slotsMarkup = "";
 
     for (let slotIndex = 0; slotIndex < capacidadeInventario; slotIndex += 1) {
         const itemId = inventario[slotIndex];
-
         if (itemId) {
             const caminhoSprite = caminhosSpritesItens[itemId];
             const nomeItem = nomesItens[itemId];
-
             slotsMarkup += `
                 <li class="inventory-slot inventory-slot--filled">
-                    <img
-                        class="inventory-slot__icon"
-                        src="${caminhoSprite}"
-                        alt="${nomeItem}"
-                        title="${nomeItem}"
-                        draggable="false"
-                    >
+                    <button type="button" data-inspect-item="${itemId}" aria-label="Inspecionar item: ${nomeItem}" title="Inspecionar ${nomeItem}">
+                        <img class="inventory-slot__icon" src="${caminhoSprite}" alt="" draggable="false">
+                    </button>
                 </li>`;
         } else {
-            slotsMarkup += `
-                <li class="inventory-slot inventory-slot--empty" aria-hidden="true"></li>`;
+            slotsMarkup += `<li class="inventory-slot inventory-slot--empty" aria-hidden="true"></li>`;
         }
     }
 
     list.innerHTML = slotsMarkup;
-
     if (feedback && message) feedback.textContent = message;
+}
+
+if (listaItensInventario) {
+    listaItensInventario.onclick = function (evento) {
+        const botao = evento.target.closest("[data-inspect-item]");
+        if (!botao) return;
+        abrirInspecaoItem(botao.dataset.inspectItem, botao);
+    };
+}
+if (botaoFecharInspecao) botaoFecharInspecao.onclick = fecharInspecaoItem;
+if (botaoConfirmarInspecao) botaoConfirmarInspecao.onclick = fecharInspecaoItem;
+if (dialogoInspecaoItem) {
+    dialogoInspecaoItem.onclick = function (evento) {
+        if (evento.target === dialogoInspecaoItem) fecharInspecaoItem();
+    };
+    dialogoInspecaoItem.onkeydown = function (evento) {
+        if (evento.key !== "Tab") return;
+        const controles = Array.from(dialogoInspecaoItem.querySelectorAll("button:not(:disabled)"));
+        if (!controles.length) return;
+        const primeiro = controles[0];
+        const ultimo = controles[controles.length - 1];
+        if (evento.shiftKey && document.activeElement === primeiro) {
+            evento.preventDefault();
+            ultimo.focus();
+        } else if (!evento.shiftKey && document.activeElement === ultimo) {
+            evento.preventDefault();
+            primeiro.focus();
+        }
+    };
 }
 
 function consumirItemDoInventario(itemId) {
     const index = inventario.indexOf(itemId);
     if (index === -1) return false;
-
     inventario.splice(index, 1);
     registrarNoDiario("ITEM UTILIZADO", `${nomesItens[itemId]} foi utilizado.`);
     atualizarInventarioHUD(`${nomesItens[itemId]} utilizado.`);
@@ -194,8 +277,8 @@ function consumirItemDoInventario(itemId) {
 }
 
 function executarAcaoProxima() {
-    const itemProximo = encontrarIndiceItemProximo() !== -1;
-    if (itemProximo) return coletarItemProximo();
+    // Mecanismos têm prioridade quando o jogador está ao alcance de ambos;
+    // assim, um item no mesmo cômodo não bloqueia o uso de E no puzzle.
     if (window.boatPuzzles?.interact(jogador)) return true;
     return coletarItemProximo();
 }
@@ -257,6 +340,7 @@ let aguaCarregada = false;
 let spritesAquaticosCarregados = false;
 let spritesAquaticosPendentes = 3;
 let jogoIniciado = false;
+let loopDeAnimacaoAtivo = false;
 let modoDebug = false;
 let inicioSpeedrunMs = null;
 
@@ -1682,6 +1766,121 @@ function mudarCenario(destino, porta = null) {
     tempoAnterior = 0;
 
     atualizarCamera();
+    registrarNoDiario("CENÁRIO", destino === "cidade" ? "Retorno à cidade costeira." : `Entrada em ${interiorAtual?.nome || "um ambiente interno"}.`);
+    renderGuiaAcessivel();
+}
+
+// O guia textual oferece os mesmos pontos de interação do mapa, sem exigir
+// que o jogador localize visualmente os marcadores no canvas.
+const botaoGuiaAcessivel = document.getElementById("accessibleGuideToggle");
+const painelGuiaAcessivel = document.getElementById("accessibleGuide");
+const botaoFecharGuia = document.getElementById("accessibleGuideClose");
+const areaDeslocamentoAcessivel = document.getElementById("accessibleTravel");
+const listaItensAcessivel = document.getElementById("accessibleWorldItems");
+const listaInteracoesAcessivel = document.getElementById("accessibleInteractions");
+const etiquetaAmbienteAcessivel = document.getElementById("accessibleEnvironmentLabel");
+
+function renderGuiaAcessivel() {
+    if (!painelGuiaAcessivel) return;
+
+    const nomeAmbiente = cenarioAtual === "cidade"
+        ? "Cidade costeira"
+        : (interiorAtual?.nome || "Interior");
+    if (etiquetaAmbienteAcessivel) {
+        etiquetaAmbienteAcessivel.textContent = `Ambiente atual: ${nomeAmbiente}`;
+    }
+
+    if (areaDeslocamentoAcessivel) {
+        let travelMarkup = `<button type="button" data-accessible-city ${cenarioAtual === "cidade" ? 'aria-current="location"' : ""}>Cidade costeira</button>`;
+        for (let indice = 0; indice < portasZonaCosteira.length; indice += 1) {
+            const porta = portasZonaCosteira[indice];
+            const interior = interioresZonaCosteira[porta.id];
+            const atual = cenarioAtual === "casa" && interiorAtual?.id === porta.id;
+            travelMarkup += `<button type="button" data-accessible-house="${porta.id}" ${atual ? 'aria-current="location"' : ""}>${interior?.nome || `Casa ${indice + 1}`}</button>`;
+        }
+        areaDeslocamentoAcessivel.innerHTML = travelMarkup;
+    }
+
+    if (listaItensAcessivel) {
+        let itemsMarkup = "";
+        if (cenarioAtual === "casa" && interiorAtual) {
+            for (let indice = 0; indice < itensNoMundo.length; indice += 1) {
+                const item = itensNoMundo[indice];
+                if (item.casa !== interiorAtual.id || !item.estaDisponivel) continue;
+                itemsMarkup += `<li><button type="button" data-accessible-collect="${item.id}">Coletar ${nomesItens[item.id]}</button></li>`;
+            }
+        }
+        listaItensAcessivel.innerHTML = itemsMarkup || "<li>Nenhum item disponível neste ambiente.</li>";
+    }
+
+    if (listaInteracoesAcessivel) {
+        const objects = window.boatPuzzles?.getAccessibleObjects?.() || [];
+        let objectsMarkup = "";
+        for (let indice = 0; indice < objects.length; indice += 1) {
+            const object = objects[indice];
+            objectsMarkup += `<li><button type="button" data-accessible-puzzle="${object.id}" ${object.solved ? "disabled" : ""}>${object.label} — ${object.solved ? "resolvido" : "abrir mecanismo"}</button></li>`;
+        }
+        listaInteracoesAcessivel.innerHTML = objectsMarkup || "<li>Nenhum mecanismo neste ambiente.</li>";
+    }
+}
+
+function focarProximoControleGuia() {
+    const primeiroItem = listaItensAcessivel?.querySelector("button");
+    const primeiraInteracao = listaInteracoesAcessivel?.querySelector("button:not(:disabled)");
+    const primeiroDeslocamento = areaDeslocamentoAcessivel?.querySelector("button[aria-current='location']");
+    (primeiroItem || primeiraInteracao || primeiroDeslocamento || botaoFecharGuia)?.focus();
+}
+
+function alternarGuiaAcessivel(aberto) {
+    if (!painelGuiaAcessivel || !botaoGuiaAcessivel) return;
+    const mostrar = typeof aberto === "boolean" ? aberto : painelGuiaAcessivel.hidden;
+    painelGuiaAcessivel.hidden = !mostrar;
+    botaoGuiaAcessivel.setAttribute("aria-expanded", String(mostrar));
+    if (mostrar) {
+        teclas = {};
+        renderGuiaAcessivel();
+        botaoFecharGuia?.focus();
+    } else {
+        botaoGuiaAcessivel.focus();
+    }
+}
+
+if (botaoGuiaAcessivel) botaoGuiaAcessivel.onclick = function () { alternarGuiaAcessivel(); };
+if (botaoFecharGuia) botaoFecharGuia.onclick = function () { alternarGuiaAcessivel(false); };
+if (painelGuiaAcessivel) {
+    painelGuiaAcessivel.onclick = function (evento) {
+        const botaoCidade = evento.target.closest("[data-accessible-city]");
+        if (botaoCidade) {
+            mudarCenario("cidade");
+            areaDeslocamentoAcessivel?.querySelector("[data-accessible-city]")?.focus();
+            return;
+        }
+
+        const botaoCasa = evento.target.closest("[data-accessible-house]");
+        if (botaoCasa) {
+            const houseId = botaoCasa.dataset.accessibleHouse;
+            const porta = portasZonaCosteira.find(function (item) { return item.id === houseId; });
+            if (porta) {
+                mudarCenario("casa", porta);
+                areaDeslocamentoAcessivel?.querySelector(`[data-accessible-house="${houseId}"]`)?.focus();
+            }
+            return;
+        }
+
+        const botaoItem = evento.target.closest("[data-accessible-collect]");
+        if (botaoItem) {
+            coletarItemPorId(botaoItem.dataset.accessibleCollect);
+            renderGuiaAcessivel();
+            focarProximoControleGuia();
+            return;
+        }
+
+        const botaoPuzzle = evento.target.closest("[data-accessible-puzzle]");
+        if (botaoPuzzle) {
+            const aberto = window.boatPuzzles?.interactById?.(botaoPuzzle.dataset.accessiblePuzzle);
+            if (!aberto) registrarNoDiario("GUIA", "Este mecanismo já foi resolvido ou não está disponível neste ambiente.");
+        }
+    };
 }
 
 
@@ -2184,6 +2383,13 @@ function atualizarAfogamento(segundos) {
 function finalizarJogo(final) {
     if (estadoAfogamento.fase === "game-over") return;
 
+    const nomesFinais = {
+        secreto: "Fuga pela rota secreta.",
+        infectado: "O tempo terminou e a infecção alcançou o personagem.",
+        afogamento: "A exploração terminou em afogamento."
+    };
+    registrarNoDiario("FINAL", nomesFinais[final] || "A partida foi encerrada.");
+
     const tempoFinal = final === "secreto" && inicioSpeedrunMs !== null
         ? formatarTempoSpeedrun(performance.now() - inicioSpeedrunMs)
         : null;
@@ -2239,8 +2445,28 @@ function mostrarGameOver() {
 function reiniciarJogo() {
     if (estadoAfogamento.fase !== "game-over") return;
 
-    // O reinício sempre começa na cidade, mesmo que o jogador tenha sido
-    // infectado ou tenha se afogado dentro de uma das casas.
+    // Reinício integral: nenhum item, puzzle, pista ou cronômetro da partida
+    // anterior permanece ativo. O jogador retorna à introdução para iniciar
+    // uma nova tentativa conscientemente.
+    window.boatPuzzles?.reset?.();
+    inventario.length = 0;
+    for (let indice = 0; indice < itensNoMundo.length; indice += 1) {
+        itensNoMundo[indice].estaDisponivel = true;
+    }
+    atualizarInventarioHUD("Inventário reiniciado.");
+
+    registrosDiario.length = 0;
+    if (listaDiario) {
+        listaDiario.innerHTML = '<li class="field-diary__empty">Nenhum registro encontrado.</li>';
+    }
+    alternarDiario(false);
+    if (painelGuiaAcessivel) painelGuiaAcessivel.hidden = true;
+    if (botaoGuiaAcessivel) botaoGuiaAcessivel.setAttribute("aria-expanded", "false");
+    if (dialogoInspecaoItem) dialogoInspecaoItem.hidden = true;
+    ultimoItemInspecionado = null;
+
+    musicaTema.pause();
+    musicaTema.currentTime = 0;
     cenarioAtual = "cidade";
     interiorAtual = null;
     ultimaPortaEntrada = null;
@@ -2251,12 +2477,10 @@ function reiniciarJogo() {
     atualizarZoomDoCenario();
 
     estadoAfogamento.fase = "normal";
-    // O botão de tentar novamente retoma a partida diretamente, sem voltar
-    // à tela de introdução; por isso o novo cronômetro começa aqui.
-    inicioSpeedrunMs = performance.now();
     estadoAfogamento.profundidade = 0;
     estadoAfogamento.tempoBolhas = 0;
     estadoAfogamento.quadroBolhas = 0;
+    inicioSpeedrunMs = null;
     jogador.x = spawn.x;
     jogador.y = spawn.y;
     jogador.direcao = "baixo";
@@ -2265,13 +2489,11 @@ function reiniciarJogo() {
     teclas = {};
     limparEntradaMobile();
     tempoAnterior = 0;
-    window.hordeTimer?.start();
+    window.hordeTimer?.reset?.();
 
-    if (telaGameOver) {
-        telaGameOver.hidden = true;
-    }
+    if (telaGameOver) telaGameOver.hidden = true;
+    if (telaIntroducao) telaIntroducao.hidden = false;
 
-    // Restaura o texto padrão para a próxima partida.
     const titulo = document?.querySelector(".game-over-title");
     const descricao = telaGameOver?.querySelector(".game-over-description");
     const chamada = telaGameOver?.querySelector(".game-over-kicker");
@@ -2284,6 +2506,8 @@ function reiniciarJogo() {
     if (reiniciar) reiniciar.textContent = "tentar novamente";
 
     atualizarCamera();
+    desenharJogo();
+    botaoIniciar?.focus();
 }
 
 function multiplicadorVelocidadeNaAgua() {
@@ -3356,7 +3580,7 @@ function desenharJogo() {
 
 function desenharItensColetaveis() {
     for (const item of itensNoMundo) {
-        if (cenarioAtual !== "casa" || item.casa !== interiorAtual?.id) continue;
+        if (!item.estaDisponivel || cenarioAtual !== "casa" || item.casa !== interiorAtual?.id) continue;
         const sprite = spritesItens[item.id];
         if (!sprite?.complete || sprite.naturalWidth === 0) continue;
 
@@ -3482,7 +3706,10 @@ function confirmarInicioJogo() {
     window.hordeTimer?.start();
     atualizarCamera();
     desenharJogo();
-    requestAnimationFrame(repetirJogo);
+    if (!loopDeAnimacaoAtivo) {
+        loopDeAnimacaoAtivo = true;
+        requestAnimationFrame(repetirJogo);
+    }
 }
 
 
@@ -3514,6 +3741,22 @@ function tratarTeclaPressionada(evento) {
         return;
     }
 
+    if (dialogoInspecaoItem && !dialogoInspecaoItem.hidden) {
+        if (tecla === "escape") {
+            fecharInspecaoItem();
+            evento.preventDefault();
+        }
+        return;
+    }
+
+    if (painelGuiaAcessivel && !painelGuiaAcessivel.hidden) {
+        if (tecla === "escape") {
+            alternarGuiaAcessivel(false);
+            evento.preventDefault();
+        }
+        return;
+    }
+
     if (tecla === "f3") {
         alternarModoDebug();
         evento.preventDefault();
@@ -3525,6 +3768,7 @@ function tratarTeclaPressionada(evento) {
         evento.preventDefault();
         return;
     }
+    if (painelDiario && !painelDiario.hidden) return;
 
     if (tecla === "escape" && passagemSecretaAberta) {
         fecharPassagemSecreta();
@@ -3694,6 +3938,13 @@ window.boatPuzzles?.init({
     onClueFound: function (message) {
         registrarNoDiario("PISTA", message);
     },
+    onPuzzleClosed: function (puzzleId) {
+        if (!painelGuiaAcessivel?.hidden) {
+            renderGuiaAcessivel();
+            const botaoAtualizado = listaInteracoesAcessivel?.querySelector(`[data-accessible-puzzle="${puzzleId}"]:not(:disabled)`);
+            (botaoAtualizado || botaoFecharGuia)?.focus();
+        }
+    },
     getSpeedrunTime: function () {
         const duracao = inicioSpeedrunMs === null
             ? 0
@@ -3701,6 +3952,7 @@ window.boatPuzzles?.init({
         return formatarTempoSpeedrun(duracao);
     },
     onVictory() {
+        registrarNoDiario("FINAL", "Fuga principal: barco montado e pronto para deixar a vila.");
         window.hordeTimer?.stop();
         teclas = {};
         limparEntradaMobile();
