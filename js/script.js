@@ -3651,11 +3651,6 @@ function repetirJogo(
 }
 
 
-// F3 mostra ou esconde as áreas de colisão para ajudar nos testes.
-function alternarModoDebug() {
-    modoDebug = !modoDebug;
-}
-
 
 // ============================================================================
 // INÍCIO
@@ -3741,51 +3736,12 @@ function tratarTeclaPressionada(evento) {
         return;
     }
 
-    if (dialogoInspecaoItem && !dialogoInspecaoItem.hidden) {
-        if (tecla === "escape") {
-            fecharInspecaoItem();
-            evento.preventDefault();
-        }
-        return;
-    }
+    if (dialogoInspecaoItem && !dialogoInspecaoItem.hidden) return;
 
     if (painelGuiaAcessivel && !painelGuiaAcessivel.hidden) {
-        if (tecla === "escape") {
-            alternarGuiaAcessivel(false);
-            evento.preventDefault();
-        }
-        return;
-    }
-
-    if (tecla === "f3") {
-        alternarModoDebug();
-        evento.preventDefault();
-        return;
-    }
-
-    if (tecla === "escape" && painelDiario && !painelDiario.hidden) {
-        alternarDiario(false);
-        evento.preventDefault();
         return;
     }
     if (painelDiario && !painelDiario.hidden) return;
-
-    if (tecla === "escape" && passagemSecretaAberta) {
-        fecharPassagemSecreta();
-        evento.preventDefault();
-        return;
-    }
-
-    if (tecla === "escape" && window.boatPuzzles?.isModalOpen()) {
-        window.boatPuzzles.close();
-        evento.preventDefault();
-        return;
-    }
-
-    if (tecla === "escape" && cenarioAtual === "casa") {
-        mudarCenario("cidade");
-        return;
-    }
 
     if (tecla === "e") {
         if (!evento.repeat) {

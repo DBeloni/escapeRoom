@@ -156,6 +156,30 @@
     }
 }
 
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 600px) {
+    .accessible-guide {
+        top: max(42px, env(safe-area-inset-top));
+        right: max(8px, env(safe-area-inset-right));
+        bottom: max(8px, env(safe-area-inset-bottom));
+        left: auto;
+        width: min(300px, 40vw);
+        max-height: none;
+        padding: 7px;
+    }
+    .accessible-guide__header p,
+    .accessible-guide__intro,
+    .accessible-guide__help { display: none; }
+    .accessible-guide__header h2 { font-size: clamp(14px, 2.8vh, 18px); }
+    .accessible-guide__header button { width: 26px; height: 26px; flex-basis: 26px; }
+    .accessible-guide__location { margin: 4px 0; padding: 4px 6px; font-size: clamp(8px, 1.5vh, 10px); }
+    .accessible-guide section { margin-top: 5px; }
+    .accessible-guide section h3 { margin-bottom: 3px; font-size: clamp(8px, 1.4vh, 9px); }
+    .accessible-guide__travel,
+    .accessible-guide__list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; }
+    .accessible-guide__travel button,
+    .accessible-guide__list button { min-height: 25px; padding: 3px 5px; font-size: clamp(8px, 1.5vh, 10px); line-height: 1.1; }
+}
+
 /* HUD do jogo: usa diretamente o tema global definido neste :root. */
 #inventory {
     border-color: var(--line);
@@ -436,11 +460,33 @@
 }
 
 @media (max-width: 700px) {
-    .accessible-guide-toggle { top: 10px; left: 10px; }
-    .accessible-guide {
-        top: 55px;
-        left: 10px;
-        width: min(360px, calc(100vw - 20px));
-        max-height: min(64vh, 560px);
+    #accessibleGuideToggle {
+        top: 10px;
+        right: 10px;
+        bottom: auto;
+        left: auto;
+        width: auto;
+        height: auto;
+        min-height: 34px;
     }
+    #accessibleGuide {
+        position: fixed;
+        top: 56px;
+        right: 10px;
+        bottom: auto;
+        left: auto;
+        display: block;
+        box-sizing: border-box;
+        width: min(300px, calc(100vw - 32px));
+        height: auto;
+        max-height: min(55dvh, 440px);
+        overflow: auto;
+        padding: 10px;
+        transform: none;
+    }
+    #accessibleGuide[hidden] { display: none; }
+}
+
+@media (max-width: 700px) and (max-aspect-ratio: 1/1) {
+    #accessibleGuide { top: 54px; right: 8px; width: min(300px, calc(100vw - 24px)); max-height: min(50dvh, 420px); }
 }
