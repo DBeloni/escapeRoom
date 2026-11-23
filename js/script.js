@@ -2207,10 +2207,10 @@ function multiplicadorVelocidadeNaAgua() {
 }
 
 function multiplicadorVelocidadeDoCenario() {
-    // Os interiores são maiores e não possuem água; 1,5× torna a exploração
-    // mais ágil sem alterar o ritmo de movimento na costa.
+    // A exploração dentro das casas é mais rápida que na área externa.
+    // 2× representa o dobro da velocidade usada na costa.
     return cenarioAtual === "casa" && interiorAtual !== null
-        ? 1.5
+        ? 2
         : 1;
 }
 
@@ -2304,40 +2304,20 @@ function atualizarCamera() {
     const alturaVisivel =
         alturaTela / zoom;
 
-    cameraX =
-        jogador.x -
-        larguraVisivel / 2;
-
-    cameraY =
-        jogador.y -
-        alturaVisivel / 2;
-
-    if (
-        cameraX >
-        larguraMapa -
-        larguraVisivel
-    ) {
-        cameraX =
-            larguraMapa -
-            larguraVisivel;
+    // Quando o mapa é menor que a área visível, mantém o cenário
+    // centralizado na tela em vez de prendê-lo ao canto superior esquerdo.
+    if (larguraMapa <= larguraVisivel) {
+        cameraX = (larguraMapa - larguraVisivel) / 2;
+    } else {
+        cameraX = jogador.x - larguraVisivel / 2;
+        cameraX = Math.max(0, Math.min(cameraX, larguraMapa - larguraVisivel));
     }
 
-    if (
-        cameraY >
-        alturaMapa -
-        alturaVisivel
-    ) {
-        cameraY =
-            alturaMapa -
-            alturaVisivel;
-    }
-
-    if (cameraX < 0) {
-        cameraX = 0;
-    }
-
-    if (cameraY < 0) {
-        cameraY = 0;
+    if (alturaMapa <= alturaVisivel) {
+        cameraY = (alturaMapa - alturaVisivel) / 2;
+    } else {
+        cameraY = jogador.y - alturaVisivel / 2;
+        cameraY = Math.max(0, Math.min(cameraY, alturaMapa - alturaVisivel));
     }
 }
 
