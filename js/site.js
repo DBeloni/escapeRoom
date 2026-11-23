@@ -1,114 +1,189 @@
 /* Interações do site institucional. Não controla o motor do jogo. */
-(() => {
-  'use strict';
+(function () {
+    "use strict";
 
-  const $ = (selector, scope = document) => scope.querySelector(selector);
-  const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+    function selecionar(seletor, escopo) {
+        return (escopo || document).querySelector(seletor);
+    }
 
-  function setupYear() {
-    const year = $('[data-year]');
-    if (year) year.textContent = String(new Date().getFullYear());
-  }
+    function selecionarTodos(seletor, escopo) {
+        return Array.from((escopo || document).querySelectorAll(seletor));
+    }
 
-  function setupNavigation() {
-    const toggle = $('.nav-toggle');
-    const nav = $('#site-navigation');
-    if (!toggle || !nav) return;
+    function configurarAno() {
+        const elementoAno = selecionar("[data-year]");
+        if (elementoAno) {
+            elementoAno.textContent = String(new Date().getFullYear());
+        }
+    }
 
-    const closeMenu = () => {
-      toggle.setAttribute('aria-expanded', 'false');
-      nav.classList.remove('is-open');
-    };
+    function configurarNavegacao() {
+        const botaoMenu = selecionar(".nav-toggle");
+        const navegacao = selecionar("#site-navigation");
 
-    toggle.addEventListener('click', () => {
-      const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-      toggle.setAttribute('aria-expanded', String(!isOpen));
-      nav.classList.toggle('is-open', !isOpen);
-    });
+        if (!botaoMenu || !navegacao) {
+            return;
+        }
 
-    $$('a', nav).forEach((link) => link.addEventListener('click', closeMenu));
-    document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeMenu();
-    });
-    document.addEventListener('click', (event) => {
-      if (!nav.contains(event.target) && !toggle.contains(event.target)) closeMenu();
-    });
-  }
+        function fecharMenu() {
+            botaoMenu.setAttribute("aria-expanded", "false");
+            navegacao.classList.remove("is-open");
+        }
 
-  function setupFilters() {
-    $$('[data-filter-input]').forEach((input) => {
-      const key = input.dataset.filterInput;
-      const list = $(`[data-filter-list="${key}"]`);
-      if (!list) return;
+        botaoMenu.onclick = function () {
+            const menuAberto = botaoMenu.getAttribute("aria-expanded") === "true";
+            botaoMenu.setAttribute("aria-expanded", String(!menuAberto));
+            navegacao.classList.toggle("is-open", !menuAberto);
+        };
 
-      const entries = $$('[data-search]', list);
-      const count = $('[data-filter-count]');
-      const empty = $('[data-empty-state]', list);
-      const originalCount = entries.length;
+        const links = selecionarTodos("a", navegacao);
+        for (let indice = 0; indice < links.length; indice += 1) {
+            links[indice].onclick = fecharMenu;
+        }
 
-      const update = () => {
-        const term = input.value.trim().toLocaleLowerCase('pt-BR');
-        let visible = 0;
-        entries.forEach((entry) => {
-          const haystack = `${entry.dataset.search || ''} ${entry.textContent}`.toLocaleLowerCase('pt-BR');
-          const match = haystack.includes(term);
-          entry.hidden = !match;
-          if (match) visible += 1;
-        });
-        if (empty) empty.hidden = visible !== 0;
-        if (count) count.textContent = `${String(visible).padStart(2, '0')} / ${String(originalCount).padStart(2, '0')} REGISTROS`;
-      };
+        document.onkeydown = function (evento) {
+            if (evento.key === "Escape") {
+                fecharMenu();
+            }
+        };
 
-      input.addEventListener('input', update);
-      update();
-    });
-  }
+        document.onclick = function (evento) {
+            const clicouNaNavegacao = navegacao.contains(evento.target);
+            const clicouNoBotao = botaoMenu.contains(evento.target);
 
-  function setupLightbox() {
-    const dialog = $('[data-lightbox-dialog]');
-    if (!dialog) return;
-    const image = $('[data-lightbox-image]', dialog);
-    const caption = $('[data-lightbox-caption]', dialog);
-    const close = $('[data-lightbox-close]', dialog);
+            if (!clicouNaNavegacao && !clicouNoBotao) {
+                fecharMenu();
+            }
+        };
+    }
 
-    $$('[data-lightbox]').forEach((trigger) => {
-      trigger.addEventListener('click', () => {
-        image.src = trigger.dataset.lightbox;
-        image.alt = trigger.querySelector('img')?.alt || 'Imagem ampliada da galeria';
-        caption.textContent = trigger.dataset.caption || '';
-        if (typeof dialog.showModal === 'function') dialog.showModal();
-      });
-    });
+    function configurarFiltros() {
+        const entradas = selecionarTodos("[data-filter-input]");
 
-    close?.addEventListener('click', () => dialog.close());
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) dialog.close();
-    });
-    dialog.addEventListener('close', () => {
-      image.removeAttribute('src');
-    });
-  }
+        for (let indiceEntrada = 0; indiceEntrada < entradas.length; indiceEntrada += 1) {
+            configurarFiltro(entradas[indiceEntrada]);
+        }
+    }
 
-  function setupContactForm() {
-    const form = $('[data-fake-form]');
-    const status = $('[data-form-status]');
-    if (!form || !status) return;
+    function configurarFiltro(entrada) {
+        const chave = entrada.dataset.filterInput;
+        const lista = selecionar('[data-filter-list="' + chave + '"]');
 
-    form.addEventListener('submit', (event) => {
-      event.preventDefault();
-      if (!form.reportValidity()) return;
+        if (!lista) {
+            return;
+        }
 
-      const data = new FormData(form);
-      const name = String(data.get('nome') || 'jogador').trim() || 'jogador';
-      const protocol = `QP-${Math.floor(1000 + Math.random() * 9000)}`;
-      status.textContent = `Transmissão simulada com sucesso, ${name}. Protocolo ${protocol}. Nenhum dado foi enviado.`;
-      form.reset();
-    });
-  }
+        const registros = selecionarTodos("[data-search]", lista);
+        const contador = selecionar("[data-filter-count]");
+        const estadoVazio = selecionar("[data-empty-state]", lista);
+        const quantidadeOriginal = registros.length;
 
-  setupYear();
-  setupNavigation();
-  setupFilters();
-  setupLightbox();
-  setupContactForm();
+        function atualizarFiltro() {
+            const termo = entrada.value.trim().toLocaleLowerCase("pt-BR");
+            let quantidadeVisivel = 0;
+
+            for (let indice = 0; indice < registros.length; indice += 1) {
+                const registro = registros[indice];
+                const textoBusca = (registro.dataset.search || "") + " " + registro.textContent;
+                const corresponde = textoBusca.toLocaleLowerCase("pt-BR").includes(termo);
+
+                registro.hidden = !corresponde;
+                if (corresponde) {
+                    quantidadeVisivel += 1;
+                }
+            }
+
+            if (estadoVazio) {
+                estadoVazio.hidden = quantidadeVisivel !== 0;
+            }
+
+            if (contador) {
+                contador.textContent =
+                    String(quantidadeVisivel).padStart(2, "0") +
+                    " / " +
+                    String(quantidadeOriginal).padStart(2, "0") +
+                    " REGISTROS";
+            }
+        }
+
+        entrada.oninput = atualizarFiltro;
+        atualizarFiltro();
+    }
+
+    function configurarLightbox() {
+        const dialogo = selecionar("[data-lightbox-dialog]");
+        if (!dialogo) {
+            return;
+        }
+
+        const imagem = selecionar("[data-lightbox-image]", dialogo);
+        const legenda = selecionar("[data-lightbox-caption]", dialogo);
+        const botaoFechar = selecionar("[data-lightbox-close]", dialogo);
+        const acionadores = selecionarTodos("[data-lightbox]");
+
+        for (let indice = 0; indice < acionadores.length; indice += 1) {
+            configurarAcionadorLightbox(acionadores[indice], imagem, legenda, dialogo);
+        }
+
+        if (botaoFechar) {
+            botaoFechar.onclick = function () {
+                dialogo.close();
+            };
+        }
+
+        dialogo.onclick = function (evento) {
+            if (evento.target === dialogo) {
+                dialogo.close();
+            }
+        };
+
+        dialogo.onclose = function () {
+            imagem.removeAttribute("src");
+        };
+    }
+
+    function configurarAcionadorLightbox(acionador, imagem, legenda, dialogo) {
+        acionador.onclick = function () {
+            imagem.src = acionador.dataset.lightbox;
+
+            const imagemOriginal = acionador.querySelector("img");
+            imagem.alt = imagemOriginal ? imagemOriginal.alt : "Imagem ampliada da galeria";
+            legenda.textContent = acionador.dataset.caption || "";
+
+            if (typeof dialogo.showModal === "function") {
+                dialogo.showModal();
+            }
+        };
+    }
+
+    function configurarFormularioContato() {
+        const formulario = selecionar("[data-fake-form]");
+        const status = selecionar("[data-form-status]");
+
+        if (!formulario || !status) {
+            return;
+        }
+
+        formulario.onsubmit = function (evento) {
+            evento.preventDefault();
+            if (!formulario.reportValidity()) {
+                return;
+            }
+
+            const dados = new FormData(formulario);
+            const nome = String(dados.get("nome") || "jogador").trim() || "jogador";
+            const protocolo = "QP-" + Math.floor(1000 + Math.random() * 9000);
+
+            status.textContent =
+                "Transmissão simulada com sucesso, " + nome +
+                ". Protocolo " + protocolo + ". Nenhum dado foi enviado.";
+            formulario.reset();
+        };
+    }
+
+    configurarAno();
+    configurarNavegacao();
+    configurarFiltros();
+    configurarLightbox();
+    configurarFormularioContato();
 })();

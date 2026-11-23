@@ -2,9 +2,10 @@
  * Cronômetro de cinco minutos.
  * O script principal chama update() durante o jogo.
  */
-(() => {
-    const TEMPO_TOTAL = 5 * 60;
+(function () {
+    "use strict";
 
+    const TEMPO_TOTAL = 5 * 60;
     const painel = document.querySelector("#endTimer");
     const contador = document.querySelector("#endCountdown");
     const status = document.querySelector("#endTimerStatus");
@@ -20,34 +21,48 @@
         const minutos = Math.floor(tempo / 60);
         const resto = tempo % 60;
 
-        return `${String(minutos).padStart(2, "0")}:${String(resto).padStart(2, "0")}`;
+        return String(minutos).padStart(2, "0") + ":" + String(resto).padStart(2, "0");
+    }
+
+    function atualizarStatus() {
+        if (!status) {
+            return;
+        }
+
+        if (finalizado) {
+            status.textContent = "EXPOSIÇÃO FATAL";
+        } else if (ativo) {
+            status.textContent = "EXPOSIÇÃO CRÍTICA";
+        } else {
+            status.textContent = "CONTAGEM PAUSADA";
+        }
+    }
+
+    function atualizarSegmentos() {
+        for (let indice = 0; indice < segmentos.length; indice += 1) {
+            segmentos[indice].dataset.state = finalizado ? "complete" : "current";
+        }
     }
 
     function atualizarTela() {
-        if (!painel) return;
+        if (!painel) {
+            return;
+        }
 
         const texto = formatarTempo(tempoRestante);
-        const [minutos, segundos] = texto.split(":").map(Number);
+        const separador = texto.indexOf(":");
+        const minutos = Number(texto.slice(0, separador));
+        const segundos = Number(texto.slice(separador + 1));
 
         if (contador) {
             contador.textContent = texto;
-            contador.setAttribute("datetime", `PT${minutos}M${segundos}S`);
-            contador.setAttribute("aria-label", `Tempo restante: ${texto}`);
+            contador.setAttribute("datetime", "PT" + minutos + "M" + segundos + "S");
+            contador.setAttribute("aria-label", "Tempo restante: " + texto);
         }
 
-        if (status) {
-            if (finalizado) {
-                status.textContent = "EXPOSIÇÃO FATAL";
-            } else {
-                status.textContent = ativo ? "EXPOSIÇÃO CRÍTICA" : "CONTAGEM PAUSADA";
-            }
-        }
-
-        painel.dataset.status = finalizado ? "complete" : ativo ? "running" : "paused";
-
-        segmentos.forEach(segmento => {
-            segmento.dataset.state = finalizado ? "complete" : "current";
-        });
+        atualizarStatus();
+        painel.dataset.status = finalizado ? "complete" : (ativo ? "running" : "paused");
+        atualizarSegmentos();
     }
 
     function iniciar() {
@@ -56,7 +71,10 @@
         finalizado = false;
         ultimoInstante = performance.now();
 
-        if (painel) painel.hidden = false;
+        if (painel) {
+            painel.hidden = false;
+        }
+
         atualizarTela();
     }
 
@@ -78,7 +96,9 @@
     }
 
     function atualizar() {
-        if (!ativo) return;
+        if (!ativo) {
+            return;
+        }
 
         const agora = performance.now();
         tempoRestante -= (agora - ultimoInstante) / 1000;
@@ -94,7 +114,7 @@
         atualizarTela();
     }
 
-    // O jogo usa estes quatro comandos para controlar o cronômetro.
+    // Mantém os mesmos quatro comandos usados pelo script principal.
     window.hordeTimer = {
         start: iniciar,
         stop: parar,

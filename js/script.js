@@ -14,13 +14,13 @@ const caminhosSpritesItens = {
     ITM_004: "../assets/itens/fusivel.png",
     ITM_005: "../assets/itens/galao.png"
 };
-const spritesItens = Object.fromEntries(
-    Object.entries(caminhosSpritesItens).map(([itemId, path]) => {
-        const sprite = new Image();
-        sprite.src = path;
-        return [itemId, sprite];
-    })
-);
+const spritesItens = {};
+
+for (const itemId of Object.keys(caminhosSpritesItens)) {
+    const sprite = new Image();
+    sprite.src = caminhosSpritesItens[itemId];
+    spritesItens[itemId] = sprite;
+}
 
 // Ferramentas e suprimentos ficam em locais ligados ao uso de cada objeto.
 // A gasolina foi levada para a oficina: não faz sentido deixá-la na enfermaria.
@@ -42,12 +42,28 @@ const nomesItens = {
     ITM_005: "Galão de Gasolina"
 };
 
+function encontrarIndiceItemProximo(player) {
+    const personagem = player || jogador;
+
+    if (cenarioAtual !== "casa" || !interiorAtual || !personagem) {
+        return -1;
+    }
+
+    for (let indice = 0; indice < itensNoMundo.length; indice += 1) {
+        const item = itensNoMundo[indice];
+        const distancia = Math.hypot(item.x - personagem.x, item.y - personagem.y);
+
+        if (item.casa === interiorAtual.id && distancia <= raioInteracaoItem) {
+            return indice;
+        }
+    }
+
+    return -1;
+}
+
 function coletarItemProximo() {
     const message = document.getElementById("inventoryMessage");
-    const index = itensNoMundo.findIndex(item =>
-        item.casa === interiorAtual?.id && cenarioAtual === "casa" &&
-        Math.hypot(item.x - jogador.x, item.y - jogador.y) <= raioInteracaoItem
-    );
+    const index = encontrarIndiceItemProximo();
     if (index === -1) {
         if (message) message.textContent = "Nenhum item próximo.";
         return false;
@@ -76,29 +92,33 @@ function atualizarInventarioHUD(message = "") {
     if (!list || !count) return;
 
     count.textContent = `${inventario.length}/${capacidadeInventario}`;
-    list.replaceChildren();
+
+    let slotsMarkup = "";
 
     for (let slotIndex = 0; slotIndex < capacidadeInventario; slotIndex += 1) {
         const itemId = inventario[slotIndex];
-        const slot = document.createElement("li");
-        slot.className = "inventory-slot";
 
         if (itemId) {
-            const icon = document.createElement("img");
-            icon.className = "inventory-slot__icon";
-            icon.src = caminhosSpritesItens[itemId];
-            icon.alt = nomesItens[itemId];
-            icon.title = nomesItens[itemId];
-            icon.draggable = false;
-            slot.classList.add("inventory-slot--filled");
-            slot.append(icon);
-        } else {
-            slot.classList.add("inventory-slot--empty");
-            slot.setAttribute("aria-hidden", "true");
-        }
+            const caminhoSprite = caminhosSpritesItens[itemId];
+            const nomeItem = nomesItens[itemId];
 
-        list.append(slot);
+            slotsMarkup += `
+                <li class="inventory-slot inventory-slot--filled">
+                    <img
+                        class="inventory-slot__icon"
+                        src="${caminhoSprite}"
+                        alt="${nomeItem}"
+                        title="${nomeItem}"
+                        draggable="false"
+                    >
+                </li>`;
+        } else {
+            slotsMarkup += `
+                <li class="inventory-slot inventory-slot--empty" aria-hidden="true"></li>`;
+        }
     }
+
+    list.innerHTML = slotsMarkup;
 
     if (feedback && message) feedback.textContent = message;
 }
@@ -113,10 +133,7 @@ function consumirItemDoInventario(itemId) {
 }
 
 function executarAcaoProxima() {
-    const itemProximo = itensNoMundo.some(item =>
-        item.casa === interiorAtual?.id && cenarioAtual === "casa" &&
-        Math.hypot(item.x - jogador.x, item.y - jogador.y) <= raioInteracaoItem
-    );
+    const itemProximo = encontrarIndiceItemProximo() !== -1;
     if (itemProximo) return coletarItemProximo();
     if (window.boatPuzzles?.interact(jogador)) return true;
     return coletarItemProximo();
@@ -305,34 +322,36 @@ function configurarControlesMobile() {
         evento.preventDefault();
     }
 
-    joystick.addEventListener("pointerdown", iniciarJoystick, { passive: false });
-    joystick.addEventListener("pointermove", moverJoystick, { passive: false });
-    joystick.addEventListener("pointerup", finalizarJoystick, { passive: false });
-    joystick.addEventListener("pointercancel", finalizarJoystick, { passive: false });
-    joystick.addEventListener("lostpointercapture", limparEntradaMobile);
+    joystick.onpointerdown = iniciarJoystick;
+    joystick.onpointermove = moverJoystick;
+    joystick.onpointerup = finalizarJoystick;
+    joystick.onpointercancel = finalizarJoystick;
+    joystick.onlostpointercapture = limparEntradaMobile;
 
-    pickupButton?.addEventListener("click", executarAcaoProxima);
+    if (pickupButton) {
+        pickupButton.onclick = executarAcaoProxima;
+    }
 
-    backButton.addEventListener("click", () => {
+    backButton.onclick = function () {
         if (cenarioAtual === "casa") {
             mudarCenario("cidade");
-        } else {
-            // Fora da casa, o botão funciona como um equivalente seguro de Esc:
-            // em vez de fechar a página, volta para a página anterior quando existir.
-            if (window.history.length > 1) {
-                window.history.back();
-            }
+            return;
         }
-    });
 
-    window.addEventListener("touchmove", event => {
-        if (event.target.closest?.("#mobileControls")) {
-            event.preventDefault();
+        // Fora da casa, o botão funciona como um equivalente seguro de Esc:
+        // em vez de fechar a página, volta para a página anterior quando existir.
+        if (window.history.length > 1) {
+            window.history.back();
         }
-    }, { passive: false });
+    };
 
-    window.addEventListener("pagehide", limparEntradaMobile);
-    window.addEventListener("blur", limparEntradaMobile);
+    window.ontouchmove = function (evento) {
+        if (evento.target.closest?.("#mobileControls")) {
+            evento.preventDefault();
+        }
+    };
+
+    window.onpagehide = limparEntradaMobile;
 }
 
 // O cenário pode ser "cidade" ou "casa".
@@ -560,7 +579,7 @@ function atualizarZoomDoCenario() {
 for (const interior of Object.values(interioresZonaCosteira)) {
     const imagem = new Image();
 
-    imagem.onload = () => {
+    imagem.onload = function () {
         if (interiorAtual === interior) {
             aplicarDimensoesDoCenario(imagem);
             posicionarJogadorNaEntradaInterna();
@@ -686,7 +705,7 @@ function criarMascaraAgua() {
     const altura = alturaMapa;
     const total = largura * altura;
 
-    const canvasAnalise = document.createElement("canvas");
+    const canvasAnalise = document.getElementById("waterAnalysisCanvas");
     canvasAnalise.width = largura;
     canvasAnalise.height = altura;
 
@@ -818,7 +837,7 @@ function criarMascaraAgua() {
     criarMapaProfundidadeAgua();
 
     // Criamos a camada azul usada pelo modo debug.
-    const canvasDebug = document.createElement("canvas");
+    const canvasDebug = document.getElementById("waterDebugCanvas");
     canvasDebug.width = largura;
     canvasDebug.height = altura;
 
@@ -1024,8 +1043,12 @@ function obterTipoLagoaInterna(menorX, menorY, maiorX, maiorY) {
     const centroX = (menorX + maiorX) / 2;
     const centroY = (menorY + maiorY) / 2;
 
-    const lagoa = lagoasInternas.find(({ limites }) => {
-        const [esquerda, topo, direita, base] = limites;
+    const lagoa = lagoasInternas.find(function (lagoaAtual) {
+        const limites = lagoaAtual.limites;
+        const esquerda = limites[0];
+        const topo = limites[1];
+        const direita = limites[2];
+        const base = limites[3];
 
         return (
             centroX >= esquerda &&
@@ -1245,10 +1268,18 @@ function profundidadeAguaNoJogador(x, y) {
         [hitbox.x + hitbox.largura / 2, hitbox.base - 2],
         [hitbox.x + hitbox.largura / 2, hitbox.y + hitbox.altura / 2]
     ];
-    const profundidades = amostras
-        .map(([amostraX, amostraY]) => profundidadeAguaEm(amostraX, amostraY))
-        .filter(profundidade => profundidade > 0)
-        .sort((a, b) => a - b);
+    const profundidades = [];
+
+    for (const amostra of amostras) {
+        const profundidade = profundidadeAguaEm(amostra[0], amostra[1]);
+        if (profundidade > 0) {
+            profundidades.push(profundidade);
+        }
+    }
+
+    profundidades.sort(function (a, b) {
+        return a - b;
+    });
 
     if (profundidades.length === 0) return 0;
 
@@ -1591,9 +1622,15 @@ const obstaculos = [
 ];
 
 function criarPoligonoSolido(pontos) {
+    const pontosNormalizados = [];
+
+    for (const ponto of pontos) {
+        pontosNormalizados.push({ x: ponto[0], y: ponto[1] });
+    }
+
     return {
         tipo: "poligono",
-        pontos: pontos.map(([x, y]) => ({ x, y }))
+        pontos: pontosNormalizados
     };
 }
 
@@ -1834,9 +1871,10 @@ function pontoDentroDoPoligono(ponto, pontos) {
 }
 
 function segmentosSeCruzam(a, b, c, d) {
-    const orientacao = (p1, p2, p3) =>
-        (p2.x - p1.x) * (p3.y - p1.y) -
-        (p2.y - p1.y) * (p3.x - p1.x);
+    function orientacao(p1, p2, p3) {
+        return (p2.x - p1.x) * (p3.y - p1.y) -
+            (p2.y - p1.y) * (p3.x - p1.x);
+    }
 
     const abC = orientacao(a, b, c);
     const abD = orientacao(a, b, d);
@@ -1857,19 +1895,22 @@ function retanguloColideComPoligono(retangulo, pontos) {
         { x: retangulo.x, y: retangulo.base }
     ];
 
-    if (cantos.some(canto => pontoDentroDoPoligono(canto, pontos))) {
-        return true;
+    for (const canto of cantos) {
+        if (pontoDentroDoPoligono(canto, pontos)) {
+            return true;
+        }
     }
 
-    if (
-        pontos.some(ponto =>
+    for (const ponto of pontos) {
+        const pontoDentroDoRetangulo =
             ponto.x >= retangulo.x &&
             ponto.x <= retangulo.direita &&
             ponto.y >= retangulo.y &&
-            ponto.y <= retangulo.base
-        )
-    ) {
-        return true;
+            ponto.y <= retangulo.base;
+
+        if (pontoDentroDoRetangulo) {
+            return true;
+        }
     }
 
     for (let i = 0; i < pontos.length; i++) {
@@ -3306,117 +3347,86 @@ function confirmarInicioJogo() {
 // EVENTOS
 // ============================================================================
 
-window.addEventListener(
-    "keydown",
-    function (evento) {
+function tratarTeclaPressionada(evento) {
+    const tecla = evento.key.toLowerCase();
 
-        const tecla =
-            evento.key.toLowerCase();
-
-        if (estadoAfogamento.fase === "game-over") {
-            if (tecla === "r" || tecla === "enter") {
-                reiniciarJogo();
-                evento.preventDefault();
-            }
-
-            return;
-        }
-
-        if (estadoAfogamento.fase === "bolhas") {
-            evento.preventDefault();
-            return;
-        }
-
-        if (telaIntroducao && !telaIntroducao.hidden) {
-            if ((tecla === "enter" || tecla === " ") && !botaoIniciar.disabled) {
-                confirmarInicioJogo();
-                evento.preventDefault();
-            }
-            return;
-        }
-
-        if (
-            tecla === "f3"
-        ) {
-
-            alternarModoDebug();
-
-            evento.preventDefault();
-
-            return;
-        }
-
-        if (tecla === "escape" && window.boatPuzzles?.isModalOpen()) {
-            window.boatPuzzles.close();
-            evento.preventDefault();
-            return;
-        }
-
-        if (
-            tecla === "escape" &&
-            cenarioAtual ===
-            "casa"
-        ) {
-
-            mudarCenario(
-                "cidade"
-            );
-
-            return;
-        }
-
-        if (tecla === "e") {
-            if (!evento.repeat) executarAcaoProxima();
-            evento.preventDefault();
-            return;
-        }
-
-        teclas[tecla] =
-            true;
-
-        if (
-            tecla === "arrowup" ||
-            tecla === "arrowdown" ||
-            tecla === "arrowleft" ||
-            tecla === "arrowright"
-        ) {
-
+    if (estadoAfogamento.fase === "game-over") {
+        if (tecla === "r" || tecla === "enter") {
+            reiniciarJogo();
             evento.preventDefault();
         }
+        return;
     }
-);
 
-window.addEventListener(
-    "keyup",
-    function (evento) {
-
-        const tecla =
-            evento.key.toLowerCase();
-
-        teclas[tecla] =
-            false;
+    if (estadoAfogamento.fase === "bolhas") {
+        evento.preventDefault();
+        return;
     }
-);
 
-
-// Se sair da janela,
-// limpamos as teclas.
-window.addEventListener(
-    "blur",
-    function () {
-        teclas = {};
-        limparEntradaMobile();
+    if (telaIntroducao && !telaIntroducao.hidden) {
+        if ((tecla === "enter" || tecla === " ") && !botaoIniciar.disabled) {
+            confirmarInicioJogo();
+            evento.preventDefault();
+        }
+        return;
     }
-);
 
-window.addEventListener("orientationchange", () => {
+    if (tecla === "f3") {
+        alternarModoDebug();
+        evento.preventDefault();
+        return;
+    }
+
+    if (tecla === "escape" && window.boatPuzzles?.isModalOpen()) {
+        window.boatPuzzles.close();
+        evento.preventDefault();
+        return;
+    }
+
+    if (tecla === "escape" && cenarioAtual === "casa") {
+        mudarCenario("cidade");
+        return;
+    }
+
+    if (tecla === "e") {
+        if (!evento.repeat) {
+            executarAcaoProxima();
+        }
+        evento.preventDefault();
+        return;
+    }
+
+    teclas[tecla] = true;
+
+    if (
+        tecla === "arrowup" ||
+        tecla === "arrowdown" ||
+        tecla === "arrowleft" ||
+        tecla === "arrowright"
+    ) {
+        evento.preventDefault();
+    }
+}
+
+function tratarTeclaLiberada(evento) {
+    const tecla = evento.key.toLowerCase();
+    teclas[tecla] = false;
+}
+
+function limparControlesAoPerderFoco() {
+    teclas = {};
+    limparEntradaMobile();
+}
+
+function ajustarTelaAposRotacao() {
     window.setTimeout(ajustarTela, 50);
-});
+}
 
-window.addEventListener(
-    "resize",
-    ajustarTela
-);
+window.onkeydown = tratarTeclaPressionada;
+window.onkeyup = tratarTeclaLiberada;
+window.onblur = limparControlesAoPerderFoco;
+window.onorientationchange = ajustarTelaAposRotacao;
+window.onresize = ajustarTela;
 
 
 // ============================================================================
@@ -3503,24 +3513,32 @@ ajustarTela();
 configurarControlesMobile();
 
 window.boatPuzzles?.init({
-    getInventory: () => inventario,
-    getScene: () => cenarioAtual,
-    getHouseId: () => interiorAtual?.id ?? null,
-    hasNearbyItem: player => itensNoMundo.some(item =>
-        cenarioAtual === "casa" && item.casa === interiorAtual?.id &&
-        Math.hypot(item.x - player.x, item.y - player.y) <= raioInteracaoItem
-    ),
-    getNearbyItemName: player => {
-        const item = itensNoMundo.find(candidate =>
-            cenarioAtual === "casa" && candidate.casa === interiorAtual?.id &&
-            Math.hypot(candidate.x - player.x, candidate.y - player.y) <= raioInteracaoItem
-        );
-        return item ? nomesItens[item.id] : null;
+    getInventory: function () {
+        return inventario;
+    },
+    getScene: function () {
+        return cenarioAtual;
+    },
+    getHouseId: function () {
+        return interiorAtual?.id ?? null;
+    },
+    hasNearbyItem: function (player) {
+        return encontrarIndiceItemProximo(player) !== -1;
+    },
+    getNearbyItemName: function (player) {
+        const indiceItem = encontrarIndiceItemProximo(player);
+        if (indiceItem === -1) {
+            return null;
+        }
+        return nomesItens[itensNoMundo[indiceItem].id];
     },
     consumeItem: consumirItemDoInventario,
-    getSpeedrunTime: () => formatarTempoSpeedrun(
-        inicioSpeedrunMs === null ? 0 : performance.now() - inicioSpeedrunMs
-    ),
+    getSpeedrunTime: function () {
+        const duracao = inicioSpeedrunMs === null
+            ? 0
+            : performance.now() - inicioSpeedrunMs;
+        return formatarTempoSpeedrun(duracao);
+    },
     onVictory() {
         window.hordeTimer?.stop();
         teclas = {};
@@ -3546,5 +3564,10 @@ carregarSpriteAquatico(
     "../assets/maps/particula-afogamento-spritesheet-3x3.png"
 );
 
-botaoReiniciar?.addEventListener("click", reiniciarJogo);
-botaoIniciar?.addEventListener("click", confirmarInicioJogo);
+if (botaoReiniciar) {
+    botaoReiniciar.onclick = reiniciarJogo;
+}
+
+if (botaoIniciar) {
+    botaoIniciar.onclick = confirmarInicioJogo;
+}

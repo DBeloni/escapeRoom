@@ -68,7 +68,7 @@
     function createCircuitPath() {
         const start = [0, 0];
         const finish = [3, 3];
-        const keyOf = point => `${point[0]},${point[1]}`;
+        function keyOf(point) { return `${point[0]},${point[1]}`; }
 
         function search(current, path, visited) {
             if (current[0] === finish[0] && current[1] === finish[1]) {
@@ -79,9 +79,11 @@
             const candidates = shuffled([
                 [row - 1, column], [row + 1, column],
                 [row, column - 1], [row, column + 1]
-            ]).filter(([nextRow, nextColumn]) =>
-                nextRow >= 0 && nextRow < 4 && nextColumn >= 0 && nextColumn < 4
-            );
+            ]).filter(function (candidate) {
+                const nextRow = candidate[0];
+                const nextColumn = candidate[1];
+                return nextRow >= 0 && nextRow < 4 && nextColumn >= 0 && nextColumn < 4;
+            });
 
             for (const candidate of candidates) {
                 const key = keyOf(candidate);
@@ -119,7 +121,7 @@
 
     function createCircuitState() {
         const path = createCircuitPath();
-        const tiles = path.map((point, index) => {
+        const tiles = path.map(function (point, index) {
             const basePorts = [];
             if (index === 0) basePorts.push("W");
             else basePorts.push(directionBetween(point, path[index - 1]));
@@ -137,7 +139,7 @@
 
     function createEngineState() {
         let gears = [randomInt(0, 3), randomInt(0, 3), randomInt(0, 3)];
-        while (gears.every(value => value === 0)) {
+        while (gears.every(function (value) { return value === 0; })) {
             gears = [randomInt(0, 3), randomInt(0, 3), randomInt(0, 3)];
         }
         return { gears, moves: 0 };
@@ -156,7 +158,7 @@
             left: randomInt(0, 5),
             right: randomInt(0, 5)
         };
-        if (Object.keys(target).every(key => target[key] === values[key])) {
+        if (Object.keys(target).every(function (key) { return target[key] === values[key]; })) {
             values.head = (values.head + 1) % 6;
         }
         return {
@@ -196,7 +198,7 @@
             fastened: false,
             fuelled: false,
             starter: {
-                pattern: Array.from({ length: 6 }, () => randomInt(0, 3)),
+                pattern: Array.from({ length: 6 }, function () { return randomInt(0, 3); }),
                 armed: false,
                 progress: 0
             }
@@ -212,19 +214,26 @@
     let victoryTime = "";
 
     function escapeHTML(value) {
-        return String(value).replace(/[&<>"']/g, character => ({
-            "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-        })[character]);
+        return String(value).replace(/[&<>"']/g, function (character) {
+            const entities = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            };
+            return entities[character];
+        });
     }
 
     function hasItems(itemIds) {
         const inventory = options?.getInventory?.() ?? [];
-        return itemIds.every(itemId => inventory.includes(itemId));
+        return itemIds.every(function (itemId) { return inventory.includes(itemId); });
     }
 
     function missingItems(itemIds) {
         const inventory = options?.getInventory?.() ?? [];
-        return itemIds.filter(itemId => !inventory.includes(itemId));
+        return itemIds.filter(function (itemId) { return !inventory.includes(itemId); });
     }
 
     function isModalOpen() {
@@ -263,7 +272,7 @@
 
     function renderLocked(title, context, missing, explanation) {
         const missingMarkup = missing.length
-            ? `<ul class="puzzle-requirements">${missing.map(id => `<li>${escapeHTML(ITEM_NAMES[id] || id)}</li>`).join("")}</ul>`
+            ? `<ul class="puzzle-requirements">${missing.map(function (id) { return `<li>${escapeHTML(ITEM_NAMES[id] || id)}</li>`; }).join("")}</ul>`
             : "";
         renderShell(title, context, `
             <div class="puzzle-locked">
@@ -297,7 +306,7 @@
         for (const location of LOCATIONS) {
             if (location.scene !== scene) continue;
             if (location.houseId && location.houseId !== houseId) continue;
-            if (TASKS.some(task => task.id === location.id) && solved.has(location.id)) continue;
+            if (TASKS.some(function (task) { return task.id === location.id; }) && solved.has(location.id)) continue;
             if (location.id === "radio" && puzzleState.radio.solved) continue;
             if (location.id === "assembly" && victory) continue;
 
@@ -355,7 +364,7 @@
         for (const location of LOCATIONS) {
             if (location.scene !== scene) continue;
             if (location.houseId && location.houseId !== houseId) continue;
-            if (TASKS.some(task => task.id === location.id) && solved.has(location.id)) continue;
+            if (TASKS.some(function (task) { return task.id === location.id; }) && solved.has(location.id)) continue;
             if (location.id === "radio" && puzzleState.radio.solved) continue;
             if (location.id === "assembly" && victory) continue;
 
@@ -421,12 +430,12 @@
         if (id === "radio") return renderRadio();
 
         if (id === "assembly") {
-            const missingParts = TASKS.filter(task => !solved.has(task.id));
+            const missingParts = TASKS.filter(function (task) { return !solved.has(task.id); });
             if (missingParts.length) {
                 renderShell("Ainda faltam peças", "CAIS VELHO", `
                     <div class="puzzle-locked">
                     <p>Antes de montar, reúna os materiais necessários para construir o barco.</p>
-                        <ul class="puzzle-requirements">${missingParts.map(task => `<li>${escapeHTML(task.reward)}</li>`).join("")}</ul>
+                        <ul class="puzzle-requirements">${missingParts.map(function (task) { return `<li>${escapeHTML(task.reward)}</li>`; }).join("")}</ul>
                         <button class="puzzle-button puzzle-button--quiet" type="button" data-action="close">Voltar</button>
                     </div>`);
                 return;
@@ -518,15 +527,15 @@
     // ---------------------------------------------------------------------
     function renderEngine() {
         const state = puzzleState.engine;
-        const solvedGears = state.gears.every(value => value === 0);
+        const solvedGears = state.gears.every(function (value) { return value === 0; });
         const gearNames = ["ENGRENAGEM ESQUERDA", "ENGRENAGEM CENTRAL", "ENGRENAGEM DIREITA"];
-        const gearsMarkup = state.gears.map((orientation, index) => `
+        const gearsMarkup = state.gears.map(function (orientation, index) { return `
             <button class="gear-control${solvedGears ? " is-aligned" : ""}" type="button" data-gear="${index}" ${solvedGears ? "disabled" : ""} aria-label="Girar ${gearNames[index].toLowerCase()}. Posição atual ${DIRECTION_GLYPHS[DIRECTIONS[orientation]]}">
                 <span class="gear-control__target"></span>
                 <span class="gear-wheel" style="transform:rotate(${orientation * 90}deg)"><i>${DIRECTION_GLYPHS[DIRECTIONS[orientation]]}</i></span>
                 <strong>${index + 1}</strong>
                 <small>${DIRECTION_GLYPHS[DIRECTIONS[orientation]]} · ${gearNames[index].replace("ENGRENAGEM ", "")}</small>
-            </button>`).join("");
+            </button>`; }).join("");
 
         renderShell("Sincronizar o suporte", "CASA 05 · OFICINA", `
             <p class="puzzle-story-note">O motor está preso por um conjunto de engrenagens de segurança. Alinhe as três marcas com o pino superior. Girar uma roda também movimenta as rodas acopladas — não são independentes.</p>
@@ -549,24 +558,24 @@
 
     function handleGearTurn(index) {
         const state = puzzleState.engine;
-        if (state.gears.every(value => value === 0)) return;
+        if (state.gears.every(function (value) { return value === 0; })) return;
         const coupled = [[0, 1], [0, 1, 2], [1, 2]];
         if (!Number.isInteger(index) || index < 0 || index > 2) return;
-        coupled[index].forEach(gearIndex => {
+        coupled[index].forEach(function (gearIndex) {
             state.gears[gearIndex] = (state.gears[gearIndex] + 1) % 4;
         });
         state.moves += 1;
         renderEngine();
-        setFeedback(state.gears.every(value => value === 0)
+        setFeedback(state.gears.every(function (value) { return value === 0; })
             ? "As três marcas coincidiram. O suporte está destravado."
-            : "O eixo respondeu. Observe como as rodas acopladas também mudaram.", state.gears.every(value => value === 0) ? "success" : "normal");
+            : "O eixo respondeu. Observe como as rodas acopladas também mudaram.", state.gears.every(function (value) { return value === 0; }) ? "success" : "normal");
     }
 
     // ---------------------------------------------------------------------
     // 3. CIRCUITO — roteamento procedural em uma matriz 4 x 4
     // ---------------------------------------------------------------------
     function rotatePorts(ports, amount) {
-        return ports.map(port => DIRECTIONS[(DIRECTIONS.indexOf(port) + amount) % 4]);
+        return ports.map(function (port) { return DIRECTIONS[(DIRECTIONS.indexOf(port) + amount) % 4]; });
     }
 
     function getCircuitPorts(tile) {
@@ -575,7 +584,7 @@
 
     function circuitHasConnection() {
         const state = puzzleState.circuit;
-        const board = new Map(state.tiles.map(tile => [`${tile.row},${tile.column}`, tile]));
+        const board = new Map(state.tiles.map(function (tile) { return [`${tile.row},${tile.column}`, tile]; }));
         const start = state.tiles[0];
         const finish = state.tiles[state.tiles.length - 1];
         if (!getCircuitPorts(start).includes("W")) return false;
@@ -604,7 +613,7 @@
 
     function renderCircuit() {
         const state = puzzleState.circuit;
-        const tileMap = new Map(state.tiles.map((tile, index) => [`${tile.row},${tile.column}`, { tile, index }]));
+        const tileMap = new Map(state.tiles.map(function (tile, index) { return [`${tile.row},${tile.column}`, { tile, index }]; }));
         const cells = [];
         for (let row = 0; row < 4; row += 1) {
             for (let column = 0; column < 4; column += 1) {
@@ -615,7 +624,7 @@
                 }
                 const { tile, index } = entry;
                 const ports = getCircuitPorts(tile);
-                const arms = ports.map(port => `<i class="pipe-arm pipe-arm--${port.toLowerCase()}"></i>`).join("");
+                const arms = ports.map(function (port) { return `<i class="pipe-arm pipe-arm--${port.toLowerCase()}"></i>`; }).join("");
                 const endpoint = index === 0 ? " is-source" : index === state.tiles.length - 1 ? " is-sink" : "";
                 const shape = ports.length === 2 && (DIRECTIONS.indexOf(ports[0]) + 2) % 4 === DIRECTIONS.indexOf(ports[1])
                     ? "straight" : "corner";
@@ -684,15 +693,15 @@
             state.values.head + state.values.left === state.clues[2].value,
             state.values.head + state.values.right === state.clues[3].value
         ];
-        const controls = labels.map(item => `
+        const controls = labels.map(function (item) { return `
             <div class="tension-control">
                 <div class="tension-control__name"><b>${item.short}</b><span>${item.label}</span></div>
                 <button type="button" data-tension="${item.id}" data-delta="-1" aria-label="Diminuir tensão da ${item.label.toLowerCase()}" ${state.values[item.id] <= 0 ? "disabled" : ""}>−</button>
                 <strong>${state.values[item.id]}</strong>
                 <button type="button" data-tension="${item.id}" data-delta="1" aria-label="Aumentar tensão da ${item.label.toLowerCase()}" ${state.values[item.id] >= 5 ? "disabled" : ""}>+</button>
-            </div>`).join("");
-        const clues = state.clues.map((clue, index) => `
-            <li class="${matches[index] ? "is-matched" : ""}"><span>${escapeHTML(clue.label)}</span><b>= ${clue.value}</b></li>`).join("");
+            </div>`; }).join("");
+        const clues = state.clues.map(function (clue, index) { return `
+            <li class="${matches[index] ? "is-matched" : ""}"><span>${escapeHTML(clue.label)}</span><b>= ${clue.value}</b></li>`; }).join("");
 
         renderShell("Equilibrar a lona", "CASA 04 · ENFERMARIA", `
             <p class="puzzle-story-note">A lona está presa à armação da maca. Se soltar um lado com tensão desigual, o tecido rasga. Ajuste as quatro presilhas usando as relações anotadas no verso da etiqueta.</p>
@@ -792,7 +801,7 @@
             { id: "propeller", title: "Hélice", detail: "Propulsão", amount: 1 }
         ];
 
-        const partButtons = availableParts.map(part => {
+        const partButtons = availableParts.map(function (part) {
             const installed = part.id === "wood"
                 ? woodCount >= 3
                 : state.installed[part.id];
@@ -809,7 +818,7 @@
                 starterMarkup = `
                     <div class="starter-challenge">
                         <div><span class="assembly-tray__label">PARTIDA MANUAL · SEQUÊNCIA DE IGNIÇÃO</span><p>O cabo do arranque está travado. Memorize a sequência de seis movimentos; depois arme o motor e repita sem inverter a ordem.</p></div>
-                        <div class="starter-pattern" aria-label="Sequência de partida">${starter.pattern.map(index => `<span>${CRANK_GLYPHS[index]}</span>`).join("")}</div>
+                        <div class="starter-pattern" aria-label="Sequência de partida">${starter.pattern.map(function (index) { return `<span>${CRANK_GLYPHS[index]}</span>`; }).join("")}</div>
                         <button class="puzzle-button" type="button" data-action="arm-starter">Memorizei — armar o motor</button>
                     </div>`;
             } else {
@@ -818,7 +827,7 @@
                         <div><span class="assembly-tray__label">PARTIDA MANUAL · REPITA A SEQUÊNCIA</span><p>Use os botões ou as setas do teclado. Um movimento errado faz o cabo voltar ao início, mas não apaga a montagem.</p></div>
                         <div class="starter-progress"><strong>${starter.progress}/6</strong><span class="puzzle-progress__track"><i style="width:${(starter.progress / 6) * 100}%"></i></span></div>
                         <div class="starter-controls">
-                            ${CRANK_GLYPHS.map((glyph, index) => `<button type="button" data-crank="${index}" aria-label="Movimento ${glyph}">${glyph}</button>`).join("")}
+                            ${CRANK_GLYPHS.map(function (glyph, index) { return `<button type="button" data-crank="${index}" aria-label="Movimento ${glyph}">${glyph}</button>`; }).join("")}
                         </div>
                     </div>`;
             }
@@ -830,7 +839,7 @@
                 <div class="boat-blueprint" aria-label="Esquema do barco em construção">
                     <div class="boat-blueprint__cover${state.installed.cover ? " is-installed" : ""}"><span>LONA</span></div>
                     <div class="boat-blueprint__hull">
-                        ${state.installedWood.map((installed, index) => `<button class="assembly-slot assembly-slot--wood${installed ? " is-installed" : ""}" type="button" data-slot="wood" data-index="${index}" aria-label="Tábua ${index + 1}: ${installed ? "instalada" : "encaixar"}">${installed ? "OK" : `TÁBUA ${index + 1}`}</button>`).join("")}
+                        ${state.installedWood.map(function (installed, index) { return `<button class="assembly-slot assembly-slot--wood${installed ? " is-installed" : ""}" type="button" data-slot="wood" data-index="${index}" aria-label="Tábua ${index + 1}: ${installed ? "instalada" : "encaixar"}">${installed ? "OK" : `TÁBUA ${index + 1}`}</button>`; }).join("")}
                     </div>
                     <button class="assembly-slot assembly-slot--engine${state.installed.engine ? " is-installed" : ""}" type="button" data-slot="engine">${state.installed.engine ? "MOTOR OK" : "MOTOR"}</button>
                     <button class="assembly-slot assembly-slot--propeller${state.installed.propeller ? " is-installed" : ""}" type="button" data-slot="propeller">${state.installed.propeller ? "HÉLICE OK" : "HÉLICE"}</button>
@@ -956,7 +965,7 @@
             return;
         }
         if (action === "engine-lift") {
-            if (puzzleState.engine.gears.every(value => value === 0)) {
+            if (puzzleState.engine.gears.every(function (value) { return value === 0; })) {
                 completePuzzle("engine", "Motor de popa", "O conjunto destravou e o motor saiu do suporte. Está sujo e enferrujado, mas ainda pode funcionar.");
             }
             return;
@@ -1133,9 +1142,9 @@
         promptText = document.getElementById("interactionPromptText");
 
         if (overlay && !overlay.dataset.bound) {
-            overlay.addEventListener("click", handleOverlayClick);
-            overlay.addEventListener("input", handleFrequencyInput);
-            overlay.addEventListener("keydown", handleOverlayKeydown);
+            overlay.onclick = handleOverlayClick;
+            overlay.oninput = handleFrequencyInput;
+            overlay.onkeydown = handleOverlayKeydown;
             overlay.dataset.bound = "true";
         }
     }
