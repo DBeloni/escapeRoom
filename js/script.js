@@ -6,6 +6,8 @@ const telaGameOver = document.getElementById("gameOver");
 const botaoReiniciar = document.getElementById("restartGame");
 const telaIntroducao = document.getElementById("introScreen");
 const botaoIniciar = document.getElementById("startGame");
+const musicaTema = new Audio("../assets/musicTheme.mp3");
+musicaTema.loop = true;
 
 const caminhosSpritesItens = {
     ITM_001: "../assets/itens/chaveDeFenda.png",
@@ -3335,6 +3337,9 @@ function iniciarJogo() {
 function confirmarInicioJogo() {
     if (!jogoIniciado || telaIntroducao?.hidden !== false) return;
     telaIntroducao.hidden = true;
+    musicaTema.play().catch(() => {
+        // A reprodução depende da permissão do navegador para áudio iniciado pelo usuário.
+    });
     inicioSpeedrunMs = performance.now();
     window.hordeTimer?.start();
     atualizarCamera();
