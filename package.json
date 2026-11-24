@@ -12,5 +12,8 @@
     "check:rules": "node tools/check-rules.mjs",
     "test:puzzles": "node tools/test-puzzles.mjs",
     "check:nu-html": "node tools/validate-nu-html.mjs"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }
